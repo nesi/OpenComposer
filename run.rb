@@ -30,6 +30,8 @@ JOB_ID                 ||= "id"
 JOB_APP_NAME           ||= "appName"
 JOB_DIR_NAME           ||= "appPath"
 JOB_STATUS_ID          ||= "status"
+INTERNAL_APP_NAME      ||= "_app_name"
+INTERNAL_DIR_NAME      ||= "_app_dir_name"
 HEADER_SCRIPT_LOCATION ||= "_script_location"
 HEADER_SCRIPT_NAME     ||= "_script_1"
 HEADER_JOB_NAME        ||= "_script_2"
@@ -423,7 +425,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
           return erb :error
         end
         record = find_job(db, id)
-        cache = job_record_to_legacy_hash(record)
+        cache = job_record_to_legacy_hash(record, internal_values: false)
 
         if cache.nil?
           @error_msg = "Specified Job ID (#{id}) is not found."
@@ -711,22 +713,22 @@ post "/*" do
       return show_website(nil, nil, params, script_path)
     end
 
+    submission_time = nil
     Dir.chdir(script_dir) do
       job_id, error_msg = scheduler.submit(script_path, escape_html(job_name.strip), submit_options, bin, bin_overrides, ssh_wrapper)
-      params[JOB_SUBMISSION_TIME] = Time.now.iso8601
+      submission_time = Time.now.iso8601
     end
 
     # Save a job history
     FileUtils.mkdir_p(data_dir)
     db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-    submission_time = params[JOB_SUBMISSION_TIME]
     submit_data = params.to_h.merge(
-      "_app_name" => params[JOB_APP_NAME],
-      "_app_dir_name" => params[JOB_DIR_NAME],
+      INTERNAL_APP_NAME => params[INTERNAL_APP_NAME] || manifest["name"],
+      INTERNAL_DIR_NAME => params[INTERNAL_DIR_NAME] || manifest["dirname"],
       "_script_location" => params[HEADER_SCRIPT_LOCATION],
       "_script_name" => params[HEADER_SCRIPT_NAME],
       "_job_name" => params[HEADER_JOB_NAME].to_s,
-      "_partition" => params[JOB_PARTITION].to_s,
+      "_partition" => "",
       "_submission_time" => submission_time,
       "_updated_time" => submission_time,
       "_status" => JOB_STATUS["queued"]

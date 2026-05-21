@@ -728,20 +728,14 @@ helpers do
     ]
   end
 
-  # Return legacy/external keys whose values duplicate dedicated DB columns.
-  # These keys are candidates for removal from payload_json because the values
-  # can be reconstructed from the dedicated columns.
+  # Return reserved form keys whose values are stored in dedicated DB columns.
+  # User-definable names such as appName, Partition, and status must not be
+  # excluded here because they should remain cacheable in payload_json.
   def payload_duplicate_legacy_keys
     [
-      JOB_APP_NAME,
-      JOB_DIR_NAME,
       HEADER_SCRIPT_LOCATION,
       HEADER_SCRIPT_NAME,
-      HEADER_JOB_NAME,
-      JOB_NAME,
-      JOB_PARTITION,
-      JOB_SUBMISSION_TIME,
-      JOB_STATUS_ID
+      HEADER_JOB_NAME
     ]
   end
 
@@ -993,11 +987,11 @@ helpers do
   end
 
   # Parse payload_json and merge it back with dedicated columns using legacy key names.
-  def job_record_to_legacy_hash(record)
+  def job_record_to_legacy_hash(record, internal_values: true)
     return nil unless record
 
     payload_hash = JSON.parse(record["payload_json"] || "{}")
-    payload_hash.merge(
+    values = {
       JOB_APP_NAME => record["_app_name"],
       JOB_DIR_NAME => record["_app_dir_name"],
       HEADER_SCRIPT_LOCATION => record["_script_location"],
@@ -1008,7 +1002,9 @@ helpers do
       JOB_PARTITION => record["_partition"],
       JOB_SUBMISSION_TIME => record["_submission_time"],
       JOB_STATUS_ID => record["_status"]
-    )
+    }
+
+    internal_values ? payload_hash.merge(values) : values.merge(payload_hash)
   end
 
   # Parse payload_json and merge it back with dedicated columns using internal key names.
@@ -1082,6 +1078,14 @@ helpers do
         scheduler_data["_partition"] = scheduler_data[JOB_PARTITION.to_s]
         scheduler_data["_updated_time"] = Time.now.iso8601
         scheduler_data[JOB_KEYS.to_s] = info.keys
+        [
+          HEADER_SCRIPT_LOCATION,
+          HEADER_SCRIPT_NAME,
+          JOB_NAME,
+          JOB_PARTITION,
+          JOB_STATUS_ID,
+          JOB_SUBMISSION_TIME
+        ].each { |key| scheduler_data.delete(key.to_s) }
 
         upsert_job(
           db,

@@ -175,6 +175,8 @@ end
 
 # Create an array of manifest objects for all applications.
 def create_all_manifests(apps_dir)
+  halt 500, "apps_dir (#{apps_dir}) does not exist. Create the directory or update apps_dir in conf.yml.erb." unless Dir.exist?(apps_dir)
+
   all_manifests = Dir.children(apps_dir).each_with_object([]) do |dir, manifests|
     next if dir.start_with?(".") # Skip hidden files and directories
 

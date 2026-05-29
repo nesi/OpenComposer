@@ -658,10 +658,7 @@ post "/*" do
           option = form["form"][base_key]["options"].find { |x| x[0].to_s == value }
           if option.nil?
             set_check_value(base_key, value, separator) if widget == "multi_select"
-            next
-          end
-
-          if option.size == 1
+          elsif option.size == 1
             set_check_value(base_key, option[0], separator)
           else
             set_check_value(base_key, option[1], separator)

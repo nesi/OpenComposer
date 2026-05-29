@@ -62,7 +62,7 @@ ocForm.showSuggestions = function(id, showAll = false) {
   const validSuggestions = ocForm.getValidSuggestions(id);
   const query = searchInput.value.toLowerCase();
   suggestionsList.innerHTML = '';
-  ocForm.updateAddButtonState(id, validSuggestions);
+  ocForm.updateAddButtonState(id);
 
   let i = 0;
   validSuggestions.forEach((suggestion) => {
@@ -82,13 +82,13 @@ ocForm.showSuggestions = function(id, showAll = false) {
       li.addEventListener('click', () => {
         searchInput.value = suggestion;
         suggestionsList.innerHTML = '';
-        ocForm.updateAddButtonState(id, validSuggestions);
+        ocForm.updateAddButtonState(id);
       });
 
       li.addEventListener('mousedown', () => {
         searchInput.value = suggestion;
         suggestionsList.innerHTML = '';
-        ocForm.updateAddButtonState(id, validSuggestions);
+        ocForm.updateAddButtonState(id);
       });
 
       li.addEventListener('mouseover', () => {
@@ -131,11 +131,11 @@ ocForm.handleKeyDown = function(event, id) {
     }
     else if (event.key === 'Enter') {
       const input = ocForm.getSearchInput(id);
-      if (input.value !== "") {
-        ocForm.addSelectedItem(id);
-      }
       if (currentIndex >= 0) {
-  input.value = items[currentIndex].textContent;
+        input.value = items[currentIndex].textContent;
+      }
+      if (input.value.trim() !== "") {
+        ocForm.addSelectedItem(id);
       }
       suggestionsList.innerHTML = '';
     }
@@ -156,12 +156,12 @@ ocForm.clearActiveItems = function(id) {
   Array.from(items).forEach(item => item.classList.remove('active'));
 };
 
-// Enable or disable an add button based on the validity of the selected suggestion.
-ocForm.updateAddButtonState = function(id, validSuggestions) {
-  const searchInput = ocForm.getSearchInput(id).value;
+// Enable or disable an add button based on whether the input has a value.
+ocForm.updateAddButtonState = function(id) {
+  const searchInput = ocForm.getSearchInput(id).value.trim();
   const addButton = ocForm.getAddButton(id);
 
-  addButton.disabled = !validSuggestions.includes(searchInput);
+  addButton.disabled = searchInput === "";
 };
 
 // Update hidden values which are used in cache.
@@ -265,12 +265,12 @@ ocForm.addSelectedItem = function(id) {
     ocForm.updateHiddenValues(id);
     ocForm.checkSubmitState(id);
     searchInput.value = '';
-    ocForm.updateAddButtonState(id, validSuggestions);
+    ocForm.updateAddButtonState(id);
     if (scriptOverwriteFlag) ocForm.updateArea('script', id);
     if (submitOverwriteFlag) ocForm.updateArea('submit', id);
   };
 
-  if (selectedText && validSuggestions.includes(selectedText)) {
+  if (selectedText.trim() !== "") {
     const runAddBadge = () => addBadge();
 
     if (!scriptOverwriteFlag && !submitOverwriteFlag) {
@@ -561,7 +561,7 @@ ocForm.getValue = function(key, widget) {
       return null;
     }
     else {
-      const mValue = a.getAttribute('data-value');
+      const mValue = a.getAttribute('data-value') ?? a.textContent;
       try {
         return (mKey.number !== null) ? JSON.parse(mValue)[Number(mKey.number)-1] : mValue;
       }

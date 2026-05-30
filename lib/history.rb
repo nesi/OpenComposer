@@ -161,6 +161,35 @@ helpers do
     HTML
   end
 
+  def output_job_slurm_script_modal(job)
+    modal_id     = "_historyJobScript#{job[JOB_ID]}"
+    job_id_esc   = escape_html(job[JOB_ID].to_s)
+    cluster_attr = @cluster_name ? " data-cluster=\"#{escape_html(@cluster_name)}\"" : ""
+
+    <<~HTML
+    <div class="modal" aria-hidden="true" id="#{modal_id}" tabindex="-1">
+      <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content" style="resize: horizontal; padding-right: 16px;">
+          <div class="modal-header">
+            <h5>Job Script (Slurm)</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" data-script-job-id="#{job_id_esc}"#{cluster_attr}>
+            <div class="text-center py-3">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    HTML
+  end
+
   # Output a pagination link for history navigation.
   def output_link(is_active, i, rows = 1)
     if is_active

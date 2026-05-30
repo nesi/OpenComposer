@@ -149,7 +149,7 @@ class Slurm < Scheduler
       next unless idx && idx > 0
       key   = token[0...idx]
       value = token[idx + 1..]
-      parsed[key] = value unless key.empty? || value.to_s.empty?
+      parsed[key] = value unless key.empty?
     end
     parsed.empty? ? [nil, nil, command] : [parsed, nil, command]
   rescue Exception => e
@@ -195,7 +195,7 @@ class Slurm < Scheduler
     result = {}
     data_row.split('|').each_with_index do |value, idx|
       key = header[idx]
-      next unless key && !value.strip.empty?
+      next unless key
       result[key] = value
     end
     result.empty? ? [nil, nil, command] : [result, nil, command]

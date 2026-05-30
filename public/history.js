@@ -239,12 +239,8 @@ ocHistory.buildJobDetailsContent = function(data) {
     return `<div class="alert alert-warning">${ocHistory.escapeHtml(data.error)}</div>`;
   }
 
-  const skipKeys   = new Set(['status', 'Job Name', 'Partition']);
-  const skipValues = new Set(['N/A', '(null)', 'None', 'none', '']);
-  const entries    = data.data ? Object.entries(data.data) : [];
-  const rows       = entries.filter(([k, v]) =>
-    !skipKeys.has(k) && v != null && !skipValues.has(String(v))
-  );
+  const entries = data.data ? Object.entries(data.data) : [];
+  const rows    = entries.slice().sort(([a], [b]) => a.localeCompare(b));
 
   if (rows.length === 0) {
     let html = '<p class="text-muted">(No details available for this job.)</p>';

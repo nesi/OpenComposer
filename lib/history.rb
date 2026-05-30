@@ -408,14 +408,14 @@ helpers do
   end
 
   # Return whether the selected sort column can be ordered directly in SQLite.
+  # JOB_NAME and JOB_PARTITION are excluded because they now live in payload_json
+  # (sourced from sacct) rather than in dedicated indexed columns.
   def history_sql_sortable_column?(sort)
     [
       JOB_ID,
       JOB_APP_NAME,
       HEADER_SCRIPT_LOCATION,
       HEADER_SCRIPT_NAME,
-      JOB_NAME,
-      JOB_PARTITION,
       JOB_STATUS_ID,
       JOB_SUBMISSION_TIME
     ].include?(sort)
@@ -482,10 +482,6 @@ helpers do
       "_script_location #{direction}, _job_id #{direction}"
     when HEADER_SCRIPT_NAME
       "_script_name #{direction}, _job_id #{direction}"
-    when JOB_NAME
-      "_job_name #{direction}, _job_id #{direction}"
-    when JOB_PARTITION
-      "_partition #{direction}, _job_id #{direction}"
     when JOB_STATUS_ID
       status_case = <<~SQL.gsub(/\s+/, " ").strip
         CASE _status
@@ -636,6 +632,9 @@ helpers do
   end
 
   # Insert or update a job record.
+  # Note: _job_name, _partition, _updated_time columns are kept in the schema
+  # for backward compatibility but are no longer written by this function.
+  # Job name and partition are now stored in payload_json (sourced from sacct).
   def upsert_job(db, record)
     params = [
       record["_job_id"],
@@ -643,10 +642,7 @@ helpers do
       record["_app_dir_name"],
       record["_script_location"],
       record["_script_name"],
-      record["_job_name"],
-      record["_partition"],
       record["_submission_time"],
-      record["_updated_time"],
       record["_status"],
       record["payload_json"]
     ]
@@ -658,23 +654,17 @@ helpers do
         _app_dir_name,
         _script_location,
         _script_name,
-        _job_name,
-        _partition,
         _submission_time,
-        _updated_time,
         _status,
         payload_json
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(_job_id) DO UPDATE SET
         _app_name = excluded._app_name,
         _app_dir_name = excluded._app_dir_name,
         _script_location = excluded._script_location,
         _script_name = excluded._script_name,
-        _job_name = excluded._job_name,
-        _partition = excluded._partition,
         _submission_time = excluded._submission_time,
-        _updated_time = excluded._updated_time,
         _status = excluded._status,
         payload_json = excluded.payload_json
     SQL
@@ -720,28 +710,30 @@ helpers do
       _app_dir_name
       _script_location
       _script_name
-      _job_name
-      _partition
       _submission_time
-      _updated_time
       _status
     ]
   end
 
-  # Return legacy/external keys whose values duplicate dedicated DB columns.
-  # These keys are candidates for removal from payload_json because the values
-  # can be reconstructed from the dedicated columns.
+  # Return keys whose values should be excluded from payload_json because they
+  # are stored in dedicated DB columns, can be reconstructed from those columns,
+  # or are internal column names that must not leak into the JSON blob.
+  # Note: JOB_NAME ("Job Name"), JOB_PARTITION ("Partition"), and HEADER_JOB_NAME
+  # ("_script_2") are intentionally NOT excluded so they flow through payload_json
+  # and are sourced from sacct / the form submission respectively.
   def payload_duplicate_legacy_keys
     [
       JOB_APP_NAME,
       JOB_DIR_NAME,
       HEADER_SCRIPT_LOCATION,
       HEADER_SCRIPT_NAME,
-      HEADER_JOB_NAME,
-      JOB_NAME,
-      JOB_PARTITION,
       JOB_SUBMISSION_TIME,
-      JOB_STATUS_ID
+      JOB_STATUS_ID,
+      # Legacy internal column names — still in the DB schema for backward
+      # compatibility but no longer actively written; keep them out of payload_json.
+      "_job_name",
+      "_partition",
+      "_updated_time"
     ]
   end
 
@@ -917,10 +909,7 @@ helpers do
       "_app_dir_name" => merged["_app_dir_name"],
       "_script_location" => merged["_script_location"],
       "_script_name" => merged["_script_name"],
-      "_job_name" => merged["_job_name"] || "",
-      "_partition" => merged["_partition"] || "",
       "_submission_time" => merged["_submission_time"],
-      "_updated_time" => merged["_updated_time"],
       "_status" => merged["_status"]
     }
 
@@ -993,6 +982,9 @@ helpers do
   end
 
   # Parse payload_json and merge it back with dedicated columns using legacy key names.
+  # Job name and partition are read from payload_json (populated by sacct) with
+  # fallbacks to the legacy _job_name/_partition columns (preserved for old records)
+  # and then to the form-entered job name widget value (_script_2).
   def job_record_to_legacy_hash(record)
     return nil unless record
 
@@ -1002,10 +994,8 @@ helpers do
       JOB_DIR_NAME => record["_app_dir_name"],
       HEADER_SCRIPT_LOCATION => record["_script_location"],
       HEADER_SCRIPT_NAME => record["_script_name"],
-      # Keep this legacy fallback because some jobs may not have a resolved
-      # scheduler-side job name yet when the record is first created.
-      JOB_NAME => record["_job_name"].to_s.empty? ? payload_hash[HEADER_JOB_NAME] : record["_job_name"],
-      JOB_PARTITION => record["_partition"],
+      JOB_NAME => payload_hash[JOB_NAME] || record["_job_name"] || payload_hash[HEADER_JOB_NAME],
+      JOB_PARTITION => payload_hash[JOB_PARTITION] || record["_partition"],
       JOB_SUBMISSION_TIME => record["_submission_time"],
       JOB_STATUS_ID => record["_status"]
     )
@@ -1038,8 +1028,7 @@ helpers do
 
       existing = job_record_to_internal_hash(record)
       scheduler_data = {
-        "_status" => JOB_STATUS["completed"],
-        "_updated_time" => Time.now.iso8601
+        "_status" => JOB_STATUS["completed"]
       }
 
       upsert_job(
@@ -1078,9 +1067,6 @@ helpers do
         scheduler_data["_status"] = scheduler_data[JOB_STATUS_ID.to_s]
         scheduler_data["_script_location"] = scheduler_data[HEADER_SCRIPT_LOCATION.to_s]
         scheduler_data["_script_name"] = scheduler_data[HEADER_SCRIPT_NAME.to_s]
-        scheduler_data["_job_name"] = scheduler_data[JOB_NAME.to_s]
-        scheduler_data["_partition"] = scheduler_data[JOB_PARTITION.to_s]
-        scheduler_data["_updated_time"] = Time.now.iso8601
         scheduler_data[JOB_KEYS.to_s] = info.keys
 
         upsert_job(

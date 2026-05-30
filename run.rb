@@ -61,7 +61,9 @@ DEFINED_KEYS ||= {
 HISTORY_KEY_MAP ||= {
   "OC_HISTORY_JOB_NAME"        => JOB_NAME,
   "OC_HISTORY_PARTITION"       => JOB_PARTITION,
-  "OC_HISTORY_SUBMISSION_TIME" => JOB_SUBMISSION_TIME
+  "OC_HISTORY_SUBMISSION_TIME" => JOB_SUBMISSION_TIME,
+  "OC_HISTORY_START_TIME"      => "Start",
+  "OC_HISTORY_END_TIME"        => "End"
 }.freeze
 CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "sge_root"].freeze
 
@@ -727,10 +729,7 @@ post "/*" do
       "_app_dir_name" => params[JOB_DIR_NAME],
       "_script_location" => params[HEADER_SCRIPT_LOCATION],
       "_script_name" => params[HEADER_SCRIPT_NAME],
-      "_job_name" => params[HEADER_JOB_NAME].to_s,
-      "_partition" => params[JOB_PARTITION].to_s,
       "_submission_time" => submission_time,
-      "_updated_time" => submission_time,
       "_status" => JOB_STATUS["queued"]
     )
     db.transaction do

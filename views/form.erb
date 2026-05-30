@@ -252,6 +252,8 @@ ocForm.previousScript = ""
 ocForm.multiSelectDisabledIndexes = {};
 ocForm.previousValues = {};
 ocForm.previousRadioValues = {};
+ocForm.lastGeneratedScript = "";
+ocForm.lastGeneratedSubmit = "";
 
 // Save the current value of a form element before modification.
 ocForm.storePreviousValue = function(id) {
@@ -311,51 +313,12 @@ ocForm.markManuallyModified = function(content_type) {
   }
 };
 
-// Show the overwrite warning modal if the script was manually modified.
-// If the user chooses "Discard and continue", execute the provided callback (onDiscard).
+// When a form widget changes, apply its effect to the script/submit areas.
+// If the area was manually edited, only the lines driven by the changed widget
+// are updated (via mergeScriptChanges); the rest of the manual edits are kept.
 // content_type is "both", "script" or "submit"
 ocForm.confirmOverwrite = function(content_type, id, onDiscard) {
-  const types = content_type === "both" ? ["script", "submit"] : [content_type];
-  const modifiedKeys = types.map(t => t === "script" ? "scriptManuallyModified" : "submitManuallyModified");
-  const contentAreas = types.map(t => t === "script" ? ocForm.scriptArea : ocForm.submitArea);
-  const area = content_type === "both"
-             ? (ocForm["scriptManuallyModified"] && ocForm["submitManuallyModified"] ? "script and submit areas" :
-                ocForm["scriptManuallyModified"] ? "script area" :
-                ocForm["submitManuallyModified"] ? "submit area" :
-                "script and submit areas")
-             : (content_type === "script" ? "script area" : "submit area");
-  const element = document.getElementById(id);
-
-  if (modifiedKeys.every(k => !ocForm[k])) {
-    onDiscard();
-    return;
-  }
-
-  if (!ocForm.overwriteModal) {
-    ocForm.overwriteModal = new bootstrap.Modal(document.getElementById('<%= WARNING_MODAL %>'));
-  }
-
-  document.getElementById('<%= WARNING_MESSAGE %>').textContent =
-    `Your manual changes in the ${area} will be discarded. Do you want to continue?`;
-
-  ocForm.overwriteModal.show();
-
-  document.getElementById('<%= WARNING_MODAL_CANCEL %>').onclick = () => {
-    ocForm.restorePreviousValue(id);
-
-    contentAreas.forEach(a => {
-      ocForm.restorePreviousValue(a.id);
-      ocForm.updateHeight(a);
-    });
-
-    ocForm.execDynamicWidget(id);
-    modifiedKeys.forEach(k => ocForm[k] = true);
-  };
-
-  document.getElementById('<%= WARNING_MODAL_DISCARD %>').onclick = () => {
-    modifiedKeys.forEach(k => ocForm[k] = false);
-    onDiscard();
-  };
+  onDiscard();
 };
 
 // content_type is "both", "script" or "submit"
@@ -367,14 +330,22 @@ ocForm.updateArea = function(content_type, id = null) {
 
   if (content_type === "both" || content_type === "script") {
     ocForm.updateScriptContents(scriptValues);
-    ocForm.scriptArea.value = Object.values(scriptValues).join('\n');
+    const newGeneratedScript = Object.values(scriptValues).join('\n');
+    ocForm.scriptArea.value = ocForm.scriptManuallyModified
+      ? ocForm.mergeScriptChanges(ocForm.scriptArea.value, ocForm.lastGeneratedScript, newGeneratedScript)
+      : newGeneratedScript;
+    ocForm.lastGeneratedScript = newGeneratedScript;
     ocForm.updateHeight(ocForm.scriptArea);
     ocForm.syncScriptHighlight();
   }
 
   if (content_type === "both" || content_type === "submit") {
     ocForm.updateSubmitContents(submitValues);
-    ocForm.submitArea.value = Object.values(submitValues).join('\n');
+    const newGeneratedSubmit = Object.values(submitValues).join('\n');
+    ocForm.submitArea.value = ocForm.submitManuallyModified
+      ? ocForm.mergeScriptChanges(ocForm.submitArea.value, ocForm.lastGeneratedSubmit, newGeneratedSubmit)
+      : newGeneratedSubmit;
+    ocForm.lastGeneratedSubmit = newGeneratedSubmit;
     ocForm.updateHeight(ocForm.submitArea);
     ocForm.syncSubmitHighlight();
   }
@@ -388,8 +359,12 @@ window.onload = function() {
   ocForm.onceExec();
   ocForm.updateScriptContents(scriptValues);
   ocForm.updateSubmitContents(submitValues);
-  ocForm.scriptArea.value = ocForm.isScriptCache() ? ocForm.loadScriptCache() : Object.values(scriptValues).join('\n');
-  ocForm.submitArea.value = ocForm.isSubmitCache() ? ocForm.loadSubmitCache() : Object.values(submitValues).join('\n');
+  const generatedScript = Object.values(scriptValues).join('\n');
+  const generatedSubmit = Object.values(submitValues).join('\n');
+  ocForm.scriptArea.value = ocForm.isScriptCache() ? ocForm.loadScriptCache() : generatedScript;
+  ocForm.submitArea.value = ocForm.isSubmitCache() ? ocForm.loadSubmitCache() : generatedSubmit;
+  ocForm.lastGeneratedScript = generatedScript;
+  ocForm.lastGeneratedSubmit = generatedSubmit;
   ocForm.refreshEditorLayout();
 
   window.addEventListener('resize', () => {

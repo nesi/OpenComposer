@@ -572,18 +572,18 @@ get "/job_details" do
   if scontrol_data && !scontrol_data.empty?
     result["source"] = "scontrol"
     result["data"]   = scontrol_data
-    cmd = scontrol_data["Command"]
-    if cmd && cmd != "(null)" && !cmd.strip.empty?
+    cmd = scontrol_data["command"]
+    if cmd && !cmd.strip.empty?
       result["script_location"] = File.dirname(cmd)
       result["script_name"]     = File.basename(cmd)
     end
-    result["script_location"] ||= scontrol_data["WorkDir"]
+    result["script_location"] ||= scontrol_data["work_dir"]
   else
     sacct_data, sacct_err = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper)
     if sacct_data && !sacct_data.empty?
       result["source"] = "sacct"
       result["data"]   = sacct_data
-      workdir = sacct_data["WorkDir"]
+      workdir = sacct_data["working_directory"]
       result["script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
     else
       errors = { "scontrol" => scontrol_err, "sacct" => sacct_err }.compact

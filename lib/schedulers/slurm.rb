@@ -134,64 +134,44 @@ class Slurm < Scheduler
     return nil, e.message
   end
 
-  # Run scontrol show job for one job ID and parse the key=value output.
+  # Run scontrol show job --yaml for one job ID and return a flattened hash.
   # Returns [hash, nil] on success, [nil, nil] when the job is not found,
   # or [nil, error_message] on failure.
   def scontrol_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    require 'yaml'
     scontrol = get_command_path("scontrol", bin, bin_overrides)
-    command = [ssh_wrapper, scontrol, "show job", job_id].compact.join(" ")
+    command = [ssh_wrapper, scontrol, "show job", job_id, "--yaml"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
-    return nil, nil unless status.success?
+    return nil, [stdout, stderr].join(" ").strip unless status.success?
+    return nil, nil if stdout.strip.empty?
 
-    parsed = {}
-    stdout.split.each do |token|
-      idx = token.index('=')
-      next unless idx && idx > 0
-      key = token[0...idx]
-      value = token[idx + 1..]
-      parsed[key] = value unless key.empty?
-    end
-    parsed.empty? ? [nil, nil] : [parsed, nil]
+    parsed = YAML.safe_load(stdout)
+    jobs   = parsed&.dig("jobs")
+    return nil, nil unless jobs.is_a?(Array) && !jobs.empty?
+
+    result = {}
+    flatten_yaml_job(jobs.first, "", result)
+    result.empty? ? [nil, nil] : [result, nil]
   rescue Exception => e
     return nil, e.message
   end
 
-  # Fetch all available sacct fields for a single job (for the Job Details modal).
-  # Uses --helpformat to discover all fields, then queries with every field.
+  # Fetch all sacct fields for a single job via --yaml (for the Job Details modal).
   # Returns [hash, nil] on success or [nil, error_message] on failure.
   def sacct_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
-    sacct = get_command_path("sacct", bin, bin_overrides)
-
-    # Discover all available fields
-    help_cmd = [ssh_wrapper, sacct, "--helpformat"].compact.join(" ")
-    help_out, help_err, help_status = Open3.capture3(help_cmd)
-    return nil, "sacct --helpformat failed: #{[help_out, help_err].join(' ').strip}" unless help_status.success?
-
-    fields = help_out.split
-    return nil, "sacct --helpformat returned no fields" if fields.empty?
-
-    # Query the job with all fields
-    command = [ssh_wrapper, sacct, "-j", job_id,
-               "--format=#{fields.join(',')}", "--parsable2"].compact.join(" ")
+    require 'yaml'
+    sacct   = get_command_path("sacct", bin, bin_overrides)
+    command = [ssh_wrapper, sacct, "-j", job_id, "-X", "--yaml"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     return nil, [stdout, stderr].join(" ").strip unless status.success?
+    return nil, nil if stdout.strip.empty?
 
-    lines = stdout.lines.map(&:chomp)
-    return nil, nil if lines.size < 2
-
-    header = lines[0].split('|')
-    data_row = lines[1..].find { |l|
-      id = l.split('|').first.to_s
-      !id.end_with?(".batch", ".extern") && !id.strip.empty?
-    }
-    return nil, nil unless data_row
+    parsed = YAML.safe_load(stdout)
+    jobs   = parsed&.dig("jobs")
+    return nil, nil unless jobs.is_a?(Array) && !jobs.empty?
 
     result = {}
-    data_row.split('|').each_with_index do |value, idx|
-      key = header[idx]
-      next unless key && !value.strip.empty?
-      result[key] = value
-    end
+    flatten_yaml_job(jobs.first, "", result)
     result.empty? ? [nil, nil] : [result, nil]
   rescue Exception => e
     return nil, e.message
@@ -212,5 +192,24 @@ class Slurm < Scheduler
     content.strip.empty? ? [nil, nil] : [content, nil]
   rescue Exception => e
     return nil, e.message
+  end
+
+  private
+
+  # Recursively flatten a YAML job hash into dot-notation key/value pairs.
+  # The "steps" key is skipped — it contains per-step accounting data.
+  def flatten_yaml_job(obj, prefix, result)
+    return unless obj.is_a?(Hash)
+    obj.each do |key, value|
+      next if key.to_s == "steps"
+      full_key = prefix.empty? ? key.to_s : "#{prefix}.#{key}"
+      case value
+      when Hash     then flatten_yaml_job(value, full_key, result)
+      when Array    then result[full_key] = value.join(", ") unless value.empty?
+      when NilClass then # skip
+      when String   then result[full_key] = value unless value.empty?
+      else               result[full_key] = value.to_s
+      end
+    end
   end
 end

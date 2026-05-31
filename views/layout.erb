@@ -178,7 +178,7 @@
                 <a href="<%= @script_name %>/" class="nav-link <%= active?("" == @dir_name) %>">Home</a>
               </li>
               <li class="nav-item dropdown">
-                <a href="#" class="nav-link dropdown-toggle <%= active?("" != @dir_name && "history" != @dir_name) %>" data-bs-toggle="dropdown">
+                <a href="#" class="nav-link dropdown-toggle <%= active?("" != @dir_name && "history" != @dir_name && "nodes" != @dir_name) %>" data-bs-toggle="dropdown">
                   Application
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>;">

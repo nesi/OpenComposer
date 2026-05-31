@@ -186,13 +186,11 @@
 
   // Scan all rows and return ordered list of unique top-level GRES type names.
   function discoverGresTypes(rows) {
-    var seen = {}, order = [];
+    var seen = {};
     rows.forEach(function(row) {
-      Object.keys(parseGresMap(row.gres || '')).forEach(function(t) {
-        if (!seen[t]) { seen[t] = true; order.push(t); }
-      });
+      Object.keys(parseGresMap(row.gres || '')).forEach(function(t) { seen[t] = true; });
     });
-    return order;
+    return Object.keys(seen).sort();
   }
 
   function parseCpus(cpusState) {

@@ -431,3 +431,84 @@ if (ocHistory.selectAllCheckbox && ocHistory.tbody) {
     }
   });
 }
+
+// Cancel jobs one-by-one, showing a progress bar in the CancelJob modal.
+ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
+  var modal  = document.getElementById('_historyCancelJob');
+  var body   = document.getElementById('_historyCancelJobBody');
+  if (!modal || !body) return;
+
+  var total  = jobIds.length;
+  var done   = 0;
+  var errors = [];
+
+  body.innerHTML =
+    '<div class="mb-2">Cancelling ' + total + ' job' + (total !== 1 ? 's' : '') + '...</div>' +
+    '<div class="progress mb-2" style="height:1.4rem;">' +
+      '<div id="_ocCancelBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"' +
+           ' role="progressbar" style="width:0%;min-width:2.5rem;"' +
+           ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">' +
+        '0 / ' + total +
+      '</div>' +
+    '</div>' +
+    '<div id="_ocCancelStatus" class="small text-muted"></div>';
+
+  var footer = modal.querySelector('.modal-footer');
+  if (footer) footer.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+
+  var base = window.location.pathname.replace(/\/history$/, '');
+
+  for (var i = 0; i < jobIds.length; i++) {
+    var jobId    = jobIds[i];
+    var statusEl = document.getElementById('_ocCancelStatus');
+    if (statusEl) statusEl.textContent = 'Cancelling ' + jobId + '…';
+
+    try {
+      var fd = new URLSearchParams({ jobId: jobId });
+      if (cluster) fd.set('cluster', cluster);
+      var r    = await fetch(base + '/history/cancel_one', { method: 'POST', body: fd });
+      var data = await r.json();
+      if (!data.ok) errors.push(jobId + ': ' + (data.error || 'Unknown error'));
+    } catch (e) {
+      errors.push(jobId + ': ' + e.message);
+    }
+
+    done++;
+    var pct = Math.round((done / total) * 100);
+    var bar = document.getElementById('_ocCancelBar');
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.textContent = done + ' / ' + total;
+      bar.setAttribute('aria-valuenow', pct);
+    }
+  }
+
+  var bar      = document.getElementById('_ocCancelBar');
+  var statusEl = document.getElementById('_ocCancelStatus');
+  if (errors.length === 0) {
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-success'); }
+    if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold">All jobs cancelled successfully.</span>';
+    setTimeout(function() { window.location.reload(); }, 1000);
+  } else {
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-warning'); }
+    if (statusEl) {
+      statusEl.innerHTML = '<span class="text-danger fw-semibold">Errors occurred:</span>' +
+        '<ul class="mb-0 mt-1">' +
+        errors.map(function(e) { return '<li>' + ocHistory.escapeHtml(e) + '</li>'; }).join('') +
+        '</ul>';
+    }
+    if (footer) footer.querySelectorAll('button[data-bs-dismiss]').forEach(function(b) { b.disabled = false; });
+  }
+};
+
+var _ocCancelForm = document.getElementById('_historyCancelJobForm');
+if (_ocCancelForm) {
+  _ocCancelForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var input  = document.getElementById('_historyCancelJobInput');
+    var jobIds = (input && input.value) ? input.value.split(',').filter(Boolean) : [];
+    if (!jobIds.length) return;
+    var cluster = new URLSearchParams(window.location.search).get('cluster');
+    ocHistory.cancelJobsOneByOne(jobIds, cluster);
+  });
+}

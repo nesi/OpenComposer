@@ -807,6 +807,36 @@ rescue Exception => e
   { "error" => e.message }.to_json
 end
 
+post "/history/cancel_one" do
+  conf         = create_conf
+  job_id       = params["jobId"].to_s.strip
+  content_type :json
+  return JSON.generate({ ok: false, error: "No job ID" }) if job_id.empty?
+  return JSON.generate({ ok: false, error: "Invalid job ID" }) unless job_id.match?(/\A[\d_.\[\]+]+\z/)
+
+  cluster_name  = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
+  scheduler     = conf.key?("clusters") ? create_scheduler(conf)[cluster_name] : create_scheduler(conf)
+  bin           = conf.key?("clusters") ? conf["bin"][cluster_name]           : conf["bin"]
+  bin_overrides = conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
+  ssh_wrapper   = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]   : conf["ssh_wrapper"]
+  history_db    = conf.key?("clusters") ? conf["history_db"][cluster_name]    : conf["history_db"]
+
+  error_msg = scheduler.cancel([job_id], bin, bin_overrides, ssh_wrapper)
+  if error_msg.nil?
+    if history_db && File.exist?(history_db.to_s)
+      db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
+      db.transaction { mark_jobs_as_canceled(db, [job_id]) }
+    end
+    output_log("Cancel job", scheduler, cluster: cluster_name, job_ids: [job_id])
+    JSON.generate({ ok: true })
+  else
+    JSON.generate({ ok: false, error: error_msg.to_s })
+  end
+rescue => e
+  content_type :json
+  JSON.generate({ ok: false, error: e.message })
+end
+
 get "/nodes/data" do
   conf = create_conf
   if conf.key?("clusters")

@@ -62,32 +62,6 @@
 
         </div>
 
-        <%# Node type + arch filters %>
-        <div class="d-flex flex-wrap gap-1 align-items-center mt-2">
-          <span class="text-muted small me-1">Type:</span>
-          <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input nodes-type-cb" type="checkbox" id="ntp-compute" value="compute" checked>
-            <label class="form-check-label small" for="ntp-compute">Compute</label>
-          </div>
-          <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input nodes-type-cb" type="checkbox" id="ntp-large" value="large" checked>
-            <label class="form-check-label small" for="ntp-large">Large</label>
-          </div>
-          <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input nodes-type-cb" type="checkbox" id="ntp-gpu" value="gpu" checked>
-            <label class="form-check-label small" for="ntp-gpu">GPU</label>
-          </div>
-          <span class="text-muted small ms-3 me-1">Arch:</span>
-          <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input nodes-arch-cb" type="checkbox" id="ntp-milan" value="milan" checked>
-            <label class="form-check-label small" for="ntp-milan">Milan</label>
-          </div>
-          <div class="form-check form-check-inline mb-0">
-            <input class="form-check-input nodes-arch-cb" type="checkbox" id="ntp-genoa" value="genoa" checked>
-            <label class="form-check-label small" for="ntp-genoa">Genoa</label>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -106,8 +80,6 @@
             <th data-col="1" class="user-select-none" style="white-space:nowrap;">State <span class="text-muted nodes-sort-neutral" style="font-size:.7em;">⇅</span></th>
             <th data-col="2" class="user-select-none" style="white-space:nowrap;">CPUs <span class="text-muted nodes-sort-neutral" style="font-size:.7em;">⇅</span></th>
             <th data-col="3" class="user-select-none" style="white-space:nowrap;">Memory <span class="text-muted nodes-sort-neutral" style="font-size:.7em;">⇅</span></th>
-            <th data-col="4" class="user-select-none" style="white-space:nowrap;">GPUs <span class="text-muted nodes-sort-neutral" style="font-size:.7em;">⇅</span></th>
-            <th data-col="5" class="user-select-none" style="white-space:nowrap;display:none;" id="_nodesSsdTh">SSD <span class="text-muted nodes-sort-neutral" style="font-size:.7em;">⇅</span></th>
           </tr>
         </thead>
         <tbody id="_nodesTbody"></tbody>
@@ -135,13 +107,12 @@
   var errorEl    = document.getElementById('_nodesErrorAlert');
   var fetchedEl  = document.getElementById('_nodesFetchedAt');
   var summaryEl  = document.getElementById('_nodesSummary');
-  var ssdTh      = document.getElementById('_nodesSsdTh');
 
   var allRows    = [];
+  var gresTypes  = [];
   var sortCol    = null;
   var sortAsc    = true;
   var totalNodes = 0;
-  var showDisk   = false;
 
   function escHtml(s) {
     var d = document.createElement('div');
@@ -164,46 +135,64 @@
     return '<span class="badge bg-' + css + '">' + escHtml(state) + '</span>';
   }
 
-  function extractGpuCounts(gresStr) {
-    var h = {};
+  // Parse a GRES string into { type: { subtype: { val, unit } } }.
+  // Strips "(IDX:...)" annotations; handles "gpu:a100:4", "gpu:4", "nvme:1000G".
+  function parseGresMap(gresStr) {
+    var result = {};
     (gresStr || '').replace(/\([^)]*\)/g, '').split(',').forEach(function(e) {
       e = e.trim();
-      var m1 = e.match(/^gpu:([^:]+):(\d+)$/);
-      var m2 = e.match(/^gpu:(\d+)$/);
-      if (m1) {
-        h[m1[1]] = (h[m1[1]] || 0) + parseInt(m1[2], 10);
-      } else if (m2) {
-        h['gpu'] = (h['gpu'] || 0) + parseInt(m2[1], 10);
-      }
-    });
-    return h;
-  }
-
-  function parseGresGpus(gresStr, gresUsedStr) {
-    var total = extractGpuCounts(gresStr);
-    var used  = extractGpuCounts(gresUsedStr);
-    return Object.keys(total).map(function(type) {
-      var n = total[type];
-      return { type: type, available: Math.max(n - (used[type] || 0), 0), total: n };
-    });
-  }
-
-  function parseDiskGb(gresStr) {
-    var totalGb = 0;
-    var found   = false;
-    (gresStr || '').replace(/\([^)]*\)/g, '').split(',').forEach(function(e) {
-      e = e.trim();
-      var m = e.match(/^(?:tmpfs|disk|ssd|nvme):(\d+)([TGMK]?)$/i);
+      if (!e) return;
+      var parts = e.split(':');
+      var type, sub, valStr;
+      if (parts.length >= 3) {
+        type = parts[0]; sub = parts[1]; valStr = parts[2];
+      } else if (parts.length === 2) {
+        type = parts[0]; sub = ''; valStr = parts[1];
+      } else { return; }
+      var m = valStr.match(/^(\d+)([TGMK]?)$/i);
       if (!m) return;
-      found = true;
-      var val  = parseInt(m[1], 10);
-      var unit = (m[2] || '').toUpperCase();
-      if      (unit === 'T') totalGb += val * 1024;
-      else if (unit === 'G') totalGb += val;
-      else if (unit === 'M') totalGb += Math.max(Math.floor(val / 1024), 1);
-      else                   totalGb += val;
+      if (!result[type]) result[type] = {};
+      var unit = m[2].toUpperCase();
+      if (!result[type][sub]) result[type][sub] = { val: 0, unit: unit };
+      result[type][sub].val += parseInt(m[1], 10);
     });
-    return found ? totalGb : null;
+    return result;
+  }
+
+  function formatGresVal(val, unit) {
+    if      (unit === 'T') return val + ' TB';
+    else if (unit === 'G') return val + ' GB';
+    else if (unit === 'M') return val + ' MB';
+    else if (unit === 'K') return val + ' KB';
+    else                   return String(val);
+  }
+
+  // Build the cell HTML for one GRES type column given the node's total and used maps.
+  function gresCellHtml(totalSubs, usedSubs) {
+    var subtypes = Object.keys(totalSubs || {});
+    if (!subtypes.length) return '<span class="text-muted small">—</span>';
+    var html = '';
+    subtypes.forEach(function(sub) {
+      var t = totalSubs[sub];
+      var u = (usedSubs && usedSubs[sub]) ? usedSubs[sub] : { val: 0, unit: t.unit };
+      var avail = Math.max(t.val - u.val, 0);
+      var label = (sub ? escHtml(sub) + ': ' : '') +
+                  escHtml(formatGresVal(avail, t.unit)) + ' / ' +
+                  escHtml(formatGresVal(t.val, t.unit));
+      html += nodeResourceBar(avail, t.val, label);
+    });
+    return html || '<span class="text-muted small">—</span>';
+  }
+
+  // Scan all rows and return ordered list of unique top-level GRES type names.
+  function discoverGresTypes(rows) {
+    var seen = {}, order = [];
+    rows.forEach(function(row) {
+      Object.keys(parseGresMap(row.gres || '')).forEach(function(t) {
+        if (!seen[t]) { seen[t] = true; order.push(t); }
+      });
+    });
+    return order;
   }
 
   function parseCpus(cpusState) {
@@ -228,53 +217,13 @@
     return new Set(checked.map(function(cb) { return cb.value; }));
   }
 
-  function activeChecked(selector) {
-    var cbs = Array.from(document.querySelectorAll(selector));
-    if (!cbs.length) return null;
-    var checked = cbs.filter(function(cb) { return cb.checked; });
-    if (checked.length === cbs.length) return null;
-    return checked.map(function(cb) { return cb.value; });
-  }
-
-  function nodeMatchesType(n, types) {
-    if (!types) return true;
-    return types.some(function(t) {
-      switch (t) {
-        case 'compute': return n.includes('c');
-        case 'large':   return n.includes('l');
-        case 'gpu':     return n.includes('g');
-        default:        return false;
-      }
-    });
-  }
-
-  function nodeMatchesArch(n, archs) {
-    if (!archs) return true;
-    return archs.some(function(a) {
-      switch (a) {
-        case 'milan': return  n.includes('m');
-        case 'genoa': return !n.includes('m');
-        default:      return false;
-      }
-    });
-  }
-
   function rowVisible(row) {
-    var state    = (row.dataset.state  || '').toLowerCase();
-    var nodeName = (row.dataset.node   || '').toLowerCase();
-    var text     = (row.dataset.search || '').toLowerCase();
-    var search   = (searchEl ? searchEl.value : '').toLowerCase().trim();
-    var states   = activeStates();
-    var types    = activeChecked('.nodes-type-cb');
-    var archs    = activeChecked('.nodes-arch-cb');
-
-    var typesAllOff = (types !== null && types.length === 0);
-    var archsAllOff = (archs !== null && archs.length === 0);
+    var state  = (row.dataset.state  || '').toLowerCase();
+    var text   = (row.dataset.search || '').toLowerCase();
+    var search = (searchEl ? searchEl.value : '').toLowerCase().trim();
+    var states = activeStates();
 
     if (states && !states.has(state)) return false;
-    if (typesAllOff && archsAllOff) return false;
-    if (!typesAllOff && !nodeMatchesType(nodeName, types)) return false;
-    if (!archsAllOff && !nodeMatchesArch(nodeName, archs)) return false;
     if (search && !text.includes(search)) return false;
     return true;
   }
@@ -346,20 +295,33 @@
   }
 
   function buildTable(rows) {
+    // Discover GRES types from all rows and rebuild dynamic header columns.
+    gresTypes = discoverGresTypes(rows);
+    var thead = table.querySelector('thead tr');
+    Array.from(thead.querySelectorAll('.gres-col-th')).forEach(function(th) { th.remove(); });
+    gresTypes.forEach(function(type, i) {
+      var th = document.createElement('th');
+      th.className = 'user-select-none gres-col-th';
+      th.style.whiteSpace = 'nowrap';
+      th.dataset.col = 4 + i;
+      th.innerHTML = escHtml(type.charAt(0).toUpperCase() + type.slice(1)) +
+                     ' <span class="text-muted nodes-sort-neutral" style="font-size:.7em;">⇅</span>';
+      setupSortTh(th);
+      thead.appendChild(th);
+    });
+
     tbody.innerHTML = '';
     allRows = [];
     rows.forEach(function(row) {
-      var gpus      = parseGresGpus(row.gres || '', row.gresused || '');
       var cpu       = parseCpus(row.cpus || '');
       var freememMb = parseInt((row.freemem || '').replace(/[^\d]/g, ''), 10) || 0;
       var memoryMb  = parseInt((row.memory  || '').replace(/[^\d]/g, ''), 10) || 0;
       var freeGb    = (freememMb / 1024).toFixed(1).replace(/\.0$/, '');
       var totalGb   = (memoryMb  / 1024).toFixed(1).replace(/\.0$/, '');
-      var gpuSearch = gpus.map(function(g) { return g.type; }).join(' ');
-      var diskGb    = showDisk ? parseDiskGb(row.gres     || '') : null;
-      var diskUsed  = showDisk ? parseDiskGb(row.gresused || '') : null;
-      var diskAvail = (diskGb !== null && diskUsed !== null) ? Math.max(diskGb - diskUsed, 0) : diskGb;
-      var searchStr = [row.node, row.state, row.cpus, freeGb + ' ' + totalGb, gpuSearch].join(' ').toLowerCase();
+      var totalGres = parseGresMap(row.gres     || '');
+      var usedGres  = parseGresMap(row.gresused || '');
+      var gresSearch = Object.keys(totalGres).join(' ');
+      var searchStr  = [row.node, row.state, row.cpus, freeGb + ' ' + totalGb, gresSearch].join(' ').toLowerCase();
 
       var tr = document.createElement('tr');
       tr.dataset.state  = (row.state || '').toLowerCase().trim();
@@ -369,32 +331,19 @@
       var cpuHtml = cpu
         ? nodeResourceBar(cpu.idle, cpu.total, cpu.idle + ' / ' + cpu.total)
         : '<span class="text-muted small">—</span>';
-
       var memHtml = nodeResourceBar(freememMb, memoryMb, freeGb + ' / ' + totalGb + ' GB');
-
-      var gpuHtml = '';
-      if (gpus.length === 0) {
-        gpuHtml = '<span class="text-muted small">—</span>';
-      } else {
-        gpus.forEach(function(g) {
-          gpuHtml += nodeResourceBar(g.available, g.total, g.type + ': ' + g.available + '/' + g.total);
-        });
-      }
-
-      var diskHtml = '';
-      if (showDisk) {
-        diskHtml = diskGb !== null
-          ? nodeResourceBar(diskAvail !== null ? diskAvail : diskGb, diskGb, (diskAvail !== null ? diskAvail : diskGb) + ' / ' + diskGb)
-          : '<span class="text-muted small">—</span>';
-      }
 
       tr.innerHTML =
         '<td><code>' + escHtml(row.node || '') + '</code></td>' +
         '<td>' + nodeStateBadge(row.state || '') + '</td>' +
         '<td>' + cpuHtml + '</td>' +
-        '<td>' + memHtml + '</td>' +
-        '<td>' + gpuHtml + '</td>' +
-        (showDisk ? '<td>' + diskHtml + '</td>' : '');
+        '<td>' + memHtml + '</td>';
+
+      gresTypes.forEach(function(type) {
+        var td = document.createElement('td');
+        td.innerHTML = gresCellHtml(totalGres[type] || {}, usedGres[type]);
+        tr.appendChild(td);
+      });
 
       tbody.appendChild(tr);
       allRows.push(tr);
@@ -426,9 +375,6 @@
         if (data.error) { showError(data.error); return; }
         var rows = data.rows || [];
 
-        showDisk = rows.some(function(r) { return parseDiskGb(r.gres || '') !== null; });
-        if (showDisk && ssdTh) ssdTh.style.display = '';
-
         var uniqueStates = [], statesSeen = {};
         rows.forEach(function(r) {
           var st = (r.state || '').toLowerCase();
@@ -446,7 +392,8 @@
   }
 
   var table = document.getElementById('_nodesTable');
-  table.querySelectorAll('thead th[data-col]').forEach(function(th) {
+
+  function setupSortTh(th) {
     th.style.cursor = 'pointer';
     th.title = 'Click to sort';
     th.addEventListener('click', function() {
@@ -468,15 +415,11 @@
       this.appendChild(ind);
       update();
     });
-  });
+  }
+
+  table.querySelectorAll('thead th[data-col]').forEach(setupSortTh);
 
   if (searchEl) searchEl.addEventListener('input', update);
-  document.querySelectorAll('.nodes-type-cb').forEach(function(cb) {
-    cb.addEventListener('change', update);
-  });
-  document.querySelectorAll('.nodes-arch-cb').forEach(function(cb) {
-    cb.addEventListener('change', update);
-  });
   document.querySelectorAll('.nodes-cluster-radio').forEach(function(radio) {
     radio.addEventListener('change', function() {
       var url = new URL(window.location.href);

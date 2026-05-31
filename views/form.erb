@@ -102,11 +102,18 @@
           </div>
         </div>
       </div>
-      <!-- Save as Template Button -->
+      <!-- Save / Save as Template Button -->
+      <% if @template_slug %>
+      <button type="button" class="btn btn-outline-secondary d-block w-100 mt-2"
+              onclick="ocSaveTemplateOverwrite()">
+        Save
+      </button>
+      <% else %>
       <button type="button" class="btn btn-outline-secondary d-block w-100 mt-2"
               data-bs-toggle="modal" data-bs-target="#modal-save-template">
         Save as Template
       </button>
+      <% end %>
     </div>
   </div>
 </form>
@@ -137,7 +144,27 @@
   </div>
 </div>
 <form id="save-template-form" method="post" action="<%= @script_name %>/templates"></form>
+<% if @template_slug %>
+<form id="save-template-overwrite-form" method="post" action="<%= @script_name %>/templates/<%= ERB::Util.u(@template_slug) %>/overwrite"></form>
+<% end %>
 <script>
+<% if @template_slug %>
+function ocSaveTemplateOverwrite() {
+  var form = document.getElementById('save-template-overwrite-form');
+  form.innerHTML = '';
+  function addHidden(n, v) {
+    var inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = n; inp.value = v;
+    form.appendChild(inp);
+  }
+  var mainForm = document.getElementById('<%= SUBMIT_FORM %>');
+  var data = new FormData(mainForm);
+  data.forEach(function(val, key) {
+    if (key !== 'splat') addHidden(key, val);
+  });
+  form.submit();
+}
+<% end %>
 function ocSaveTemplate() {
   var name = document.getElementById('tmpl-name-input').value.trim();
   if (!name) { document.getElementById('tmpl-name-input').focus(); return; }

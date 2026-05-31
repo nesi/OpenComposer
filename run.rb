@@ -579,8 +579,11 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
             cache = tmpl.is_a?(Hash) ? (tmpl["values"] || {}) : {}
             replace_with_cache(@header, cache)
             replace_with_cache(@body["form"], cache)
-            @script_content = escape_html(cache[OC_SCRIPT_CONTENT].to_s) if cache[OC_SCRIPT_CONTENT]
-            @submit_content = escape_html(cache[SUBMIT_CONTENT].to_s) if cache[SUBMIT_CONTENT]
+            @script_content          = escape_html(cache[OC_SCRIPT_CONTENT].to_s) if cache[OC_SCRIPT_CONTENT]
+            @submit_content          = escape_html(cache[SUBMIT_CONTENT].to_s) if cache[SUBMIT_CONTENT]
+            @template_slug           = slug
+            @template_name           = tmpl.is_a?(Hash) ? tmpl["name"].to_s : ''
+            @template_description    = tmpl.is_a?(Hash) ? tmpl["description"].to_s : ''
           rescue
           end
         end
@@ -824,6 +827,55 @@ get "/nodes/data" do
   end
   content_type :json
   { error: error, rows: rows, fetched_at: Time.now.strftime("%H:%M:%S") }.to_json
+end
+
+post "/templates/:slug/overwrite" do
+  conf = create_conf
+  slug = params["slug"].gsub(/[^a-zA-Z0-9_\-]/, '')
+  path = File.join(conf["data_dir"], "templates", "#{slug}.yml")
+  halt 404, "Template not found." unless File.exist?(path)
+
+  begin
+    existing = YAML.safe_load(File.read(path))
+  rescue
+    existing = {}
+  end
+  existing = {} unless existing.is_a?(Hash)
+
+  skip   = %w[template_name template_description _tmpl_icon splat captures]
+  values = params.each_with_object({}) { |(k, v), h| h[k.to_s] = v.to_s unless skip.include?(k) }
+
+  File.write(path, existing.merge({
+    "app_path" => params[JOB_DIR_NAME].to_s.strip,
+    "icon"     => params["_tmpl_icon"].to_s,
+    "values"   => values
+  }).to_yaml)
+
+  redirect request.script_name.empty? ? "/" : request.script_name
+end
+
+post "/templates/:slug/rename" do
+  conf = create_conf
+  slug = params["slug"].gsub(/[^a-zA-Z0-9_\-]/, '')
+  path = File.join(conf["data_dir"], "templates", "#{slug}.yml")
+  halt 404, "Template not found." unless File.exist?(path)
+
+  name = params["template_name"].to_s.strip
+  halt 400, "Template name is required." if name.empty?
+
+  begin
+    data = YAML.safe_load(File.read(path))
+  rescue
+    data = {}
+  end
+  data = {} unless data.is_a?(Hash)
+
+  File.write(path, data.merge({
+    "name"        => name,
+    "description" => params["template_description"].to_s.strip
+  }).to_yaml)
+
+  redirect request.script_name.empty? ? "/" : request.script_name
 end
 
 post "/templates" do

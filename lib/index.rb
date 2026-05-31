@@ -71,14 +71,21 @@ helpers do
     <<~HTML
       <div class="col text-center">
         <div class="d-flex flex-column h-100 align-items-center position-relative">
-          <form method="post" action="#{@script_name}/templates/#{enc_slug}/delete"
-                class="position-absolute top-0 end-0" style="z-index:5;">
-            <button type="submit" class="btn btn-sm btn-link text-danger p-0 lh-1"
-                    title="Delete template"
-                    onclick="return confirm('Delete template \\'#{safe_cfm}\\'?')">
-              <i class="bi bi-x-circle-fill fs-6"></i>
+          <div class="position-absolute top-0 end-0 d-flex gap-1" style="z-index:5;">
+            <button type="button" class="btn btn-sm btn-link text-secondary p-0 lh-1"
+                    title="Edit template"
+                    data-bs-toggle="modal" data-bs-target="#modal-rename-template"
+                    data-slug="#{enc_slug}" data-name="#{safe_nm}" data-desc="#{safe_dsc}">
+              <i class="bi bi-pencil-fill fs-6"></i>
             </button>
-          </form>
+            <form method="post" action="#{@script_name}/templates/#{enc_slug}/delete">
+              <button type="submit" class="btn btn-sm btn-link text-danger p-0 lh-1"
+                      title="Delete template"
+                      onclick="return confirm('Delete template \\'#{safe_cfm}\\'?')">
+                <i class="bi bi-x-circle-fill fs-6"></i>
+              </button>
+            </form>
+          </div>
           <div class="flex-grow-1 d-flex align-items-center">
             <a href="#{@script_name}/#{safe_app}?template=#{enc_slug}" class="stretched-link position-relative text-reset">
               #{icon_html}

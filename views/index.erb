@@ -41,3 +41,51 @@
     <% end %>
   </div>
 <% end %>
+
+<div class="modal fade" id="modal-rename-template" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Template</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold" for="rename-tmpl-name">Name</label>
+          <input type="text" id="rename-tmpl-name" class="form-control">
+        </div>
+        <div class="mb-1">
+          <label class="form-label" for="rename-tmpl-desc">Description <span class="text-muted fw-normal">(optional)</span></label>
+          <input type="text" id="rename-tmpl-desc" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+        <button class="btn btn-primary" type="button" onclick="ocRenameTemplate()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+<form id="rename-template-form" method="post" action=""></form>
+<script>
+document.getElementById('modal-rename-template').addEventListener('show.bs.modal', function(e) {
+  var btn = e.relatedTarget;
+  document.getElementById('rename-tmpl-name').value = btn.getAttribute('data-name') || '';
+  document.getElementById('rename-tmpl-desc').value = btn.getAttribute('data-desc') || '';
+  document.getElementById('rename-template-form').action =
+    '<%= @script_name %>/templates/' + (btn.getAttribute('data-slug') || '') + '/rename';
+});
+function ocRenameTemplate() {
+  var name = document.getElementById('rename-tmpl-name').value.trim();
+  if (!name) { document.getElementById('rename-tmpl-name').focus(); return; }
+  var form = document.getElementById('rename-template-form');
+  form.innerHTML = '';
+  function addHidden(n, v) {
+    var inp = document.createElement('input'); inp.type = 'hidden'; inp.name = n; inp.value = v;
+    form.appendChild(inp);
+  }
+  addHidden('template_name', name);
+  addHidden('template_description', document.getElementById('rename-tmpl-desc').value.trim());
+  form.submit();
+}
+</script>

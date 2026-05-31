@@ -165,6 +165,8 @@ helpers do
     modal_id     = "_historyJobScript#{job[JOB_ID]}"
     job_id_esc   = escape_html(job[JOB_ID].to_s)
     cluster_attr = @cluster_name ? " data-cluster=\"#{escape_html(@cluster_name)}\"" : ""
+    job_link     = "#{File.join(@script_name.to_s, "Slurm")}?jobId=#{URI.encode_www_form_component(job[JOB_ID].to_s)}"
+    job_link    += "&cluster=#{@cluster_name}" if @cluster_name
 
     <<~HTML
     <div class="modal" aria-hidden="true" id="#{modal_id}" tabindex="-1">
@@ -182,6 +184,7 @@ helpers do
             </div>
           </div>
           <div class="modal-footer">
+            <a href="#{job_link}" class="btn btn-primary text-white text-decoration-none">Load parameters</a>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">Close</button>
           </div>
         </div>

@@ -327,20 +327,12 @@ ocForm.confirmOverwrite = function(content_type, id, onDiscard) {
 
 // content_type is "both", "script" or "submit"
 ocForm.updateArea = function(content_type, id = null) {
-  let scriptValues = [];
   let submitValues = [];
 
   ocForm.execDynamicWidget(id);
 
   if (content_type === "both" || content_type === "script") {
-    ocForm.updateScriptContents(scriptValues);
-    const newGeneratedScript = Object.values(scriptValues).join('\n');
-    ocForm.scriptArea.value = ocForm.scriptManuallyModified
-      ? ocForm.mergeScriptChanges(ocForm.scriptArea.value, ocForm.lastGeneratedScript, newGeneratedScript)
-      : newGeneratedScript;
-    ocForm.lastGeneratedScript = newGeneratedScript;
-    ocForm.updateHeight(ocForm.scriptArea);
-    ocForm.syncScriptHighlight();
+    ocForm.patchScript();
   }
 
   if (content_type === "both" || content_type === "submit") {
@@ -367,7 +359,6 @@ window.onload = function() {
   const generatedSubmit = Object.values(submitValues).join('\n');
   ocForm.scriptArea.value = ocForm.isScriptCache() ? ocForm.loadScriptCache() : generatedScript;
   ocForm.submitArea.value = ocForm.isSubmitCache() ? ocForm.loadSubmitCache() : generatedSubmit;
-  ocForm.lastGeneratedScript = generatedScript;
   ocForm.lastGeneratedSubmit = generatedSubmit;
   ocForm.refreshEditorLayout();
 

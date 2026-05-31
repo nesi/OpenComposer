@@ -63,6 +63,114 @@ ocForm.debouncedParseScript = (function() {
   };
 })();
 
+// Patch only the template-driven lines in the script, preserving manually added lines.
+// Newly revealed lines are inserted in template order before any trailing user-added lines.
+ocForm.patchScript = function() {
+  if (!ocForm.scriptArea) return;
+
+  const newValues = [];
+  ocForm.updateScriptContents(newValues);
+  const newLines = Object.values(newValues);
+
+  // Fall back to full replacement when no patterns are available.
+  if (!ocForm.scriptLinePatterns || ocForm.scriptLinePatterns.length === 0) {
+    ocForm.scriptArea.value = newLines.join('\n');
+    ocForm.updateHeight(ocForm.scriptArea);
+    ocForm.syncScriptHighlight();
+    return;
+  }
+
+  // Sort patterns by prefix length descending so longer (more specific) prefixes match first.
+  const sortedPatterns = [...ocForm.scriptLinePatterns].sort((a, b) => b.prefix.length - a.prefix.length);
+
+  // Assign each new line to the first pattern whose prefix matches it.
+  // A new line is claimed only once, preventing duplicate placement when several
+  // conditional template lines share the same prefix.
+  const patNewLineIdx = new Array(sortedPatterns.length).fill(-1);
+  const usedNLIdx = new Set();
+  for (let pi = 0; pi < sortedPatterns.length; pi++) {
+    const pfx = sortedPatterns[pi].prefix;
+    if (!pfx) continue;
+    const ni = newLines.findIndex(function(nl, i) { return !usedNLIdx.has(i) && nl.startsWith(pfx); });
+    if (ni >= 0) { patNewLineIdx[pi] = ni; usedNLIdx.add(ni); }
+  }
+
+  // Classify each current script line as template-matched or user-added.
+  const currentLines = ocForm.scriptArea.value.split('\n');
+  const consumed = new Set();
+  let lastAnchor = -1;
+  const lineClass = currentLines.map(function(line) {
+    for (let pi = 0; pi < sortedPatterns.length; pi++) {
+      const pfx = sortedPatterns[pi].prefix;
+      if (pfx && line.startsWith(pfx) && !consumed.has(pi)) {
+        consumed.add(pi);
+        lastAnchor = pi;
+        return { template: true, pi: pi };
+      }
+    }
+    return { template: false, anchor: lastAnchor };
+  });
+
+  // Locate the last template line so we can distinguish "between-template" user lines
+  // from "trailing" user lines. Trailing lines always go after all template output so
+  // that newly-revealed template lines appear inside the #SBATCH block, not after user code.
+  let lastTplPos = -1;
+  for (let i = lineClass.length - 1; i >= 0; i--) {
+    if (lineClass[i].template) { lastTplPos = i; break; }
+  }
+
+  // If no template lines exist in the current script, fall back to full replacement.
+  if (lastTplPos < 0) {
+    ocForm.scriptArea.value = newLines.join('\n');
+    ocForm.updateHeight(ocForm.scriptArea);
+    ocForm.syncScriptHighlight();
+    return;
+  }
+
+  // Split user-added lines into "between templates" (keep anchor position) and "tail".
+  const midUser = new Map([[-1, []]]);
+  const tailLines = [];
+  for (let i = 0; i < currentLines.length; i++) {
+    if (!lineClass[i].template) {
+      if (i > lastTplPos) {
+        tailLines.push(currentLines[i]);
+      } else {
+        const a = lineClass[i].anchor;
+        if (!midUser.has(a)) midUser.set(a, []);
+        midUser.get(a).push(currentLines[i]);
+      }
+    }
+  }
+
+  // Build reverse map: newLines index → pattern index that owns it.
+  const nlOwner = new Map();
+  for (let pi = 0; pi < sortedPatterns.length; pi++) {
+    const ni = patNewLineIdx[pi];
+    if (ni >= 0 && !nlOwner.has(ni)) nlOwner.set(ni, pi);
+  }
+
+  // Assemble output: pre-template user lines, then all new template lines in order
+  // (each followed by any between-template user lines anchored to it), then tail.
+  const out = [...(midUser.get(-1) || [])];
+  for (let ni = 0; ni < newLines.length; ni++) {
+    out.push(newLines[ni]);
+    const pi = nlOwner.get(ni);
+    if (pi !== undefined) out.push(...(midUser.get(pi) || []));
+  }
+  out.push(...tailLines);
+
+  // Orphaned user lines (anchored to a now-hidden template line) go at the very end.
+  for (const [anchor, lines] of midUser) {
+    if (anchor >= 0 && lines.length > 0 && patNewLineIdx[anchor] < 0) {
+      out.push(...lines);
+    }
+  }
+
+  ocForm.scriptArea.value = out.join('\n');
+  ocForm.updateHeight(ocForm.scriptArea);
+  ocForm.syncScriptHighlight();
+};
+
 // Adjust a textarea height based on the content.
 ocForm.updateHeight = function(area) {
   if (!area) return;

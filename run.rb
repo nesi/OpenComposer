@@ -192,6 +192,95 @@ def create_all_manifests(apps_dir)
   return all_manifests.compact
 end
 
+# Parse #SBATCH directives in a batch script into a cache hash suitable for
+# replace_with_cache, driven by the app's own script template so no hardcoded
+# field mappings are needed.
+def parse_sbatch_into_cache(script_content, body, app_name, dir_name)
+  return {} if script_content.nil? || !body.is_a?(Hash)
+
+  script_template = body["script"].to_s
+  return {} if script_template.strip.empty?
+
+  form_fields = body["form"] || {}
+
+  # Mirror substitute_oc_constants + normalize_interpolation from form.rb
+  # without requiring a Sinatra helper context.
+  t = script_template.dup
+  t.gsub!(/#\{\s*(.*?)\s*\}/, '#{\1}')
+  t.gsub!(/\#\{OC_APP_NAME\}/,        app_name.to_s)
+  t.gsub!(/\#\{:OC_APP_NAME\}/,       app_name.to_s)
+  t.gsub!(/\#\{OC_DIR_NAME\}/,        dir_name.to_s)
+  t.gsub!(/\#\{:OC_DIR_NAME\}/,       dir_name.to_s)
+  t.gsub!(/\#\{OC_JOB_NAME\}/,        "\#{#{HEADER_JOB_NAME}}")
+  t.gsub!(/\#\{:OC_JOB_NAME\}/,       "\#{#{HEADER_JOB_NAME}}")
+  t.gsub!(/\#\{OC_SCRIPT_LOCATION\}/, "\#{#{HEADER_SCRIPT_LOCATION}}")
+  t.gsub!(/\#\{:OC_SCRIPT_LOCATION\}/,"\#{#{HEADER_SCRIPT_LOCATION}}")
+  t.gsub!(/\#\{OC_SCRIPT_NAME\}/,     "\#{#{HEADER_SCRIPT_NAME}}")
+  t.gsub!(/\#\{:OC_SCRIPT_NAME\}/,    "\#{#{HEADER_SCRIPT_NAME}}")
+  t.gsub!(/\#\{OC_CLUSTER_NAME\}/,    "\#{#{HEADER_CLUSTER_NAME}}")
+  t.gsub!(/\#\{:OC_CLUSTER_NAME\}/,   "\#{#{HEADER_CLUSTER_NAME}}")
+
+  # Build one regex pattern per #SBATCH template line
+  directive_patterns = []
+  t.each_line do |tline|
+    tline = tline.strip
+    next unless tline.start_with?('#SBATCH')
+
+    fields      = []
+    pattern_str = Regexp.escape(tline)
+
+    tline.scan(/#\{([^}]+)\}/).each do |interp|
+      expr = interp[0]
+      if (m = expr.match(/^zeropadding\((\w+),\s*\d+\)$/))
+        fields      << m[1]
+        pattern_str  = pattern_str.sub(Regexp.escape("\#{#{expr}}"), '(\d+)')
+      else
+        fields      << expr
+        pattern_str  = pattern_str.sub(Regexp.escape("\#{#{expr}}"), '(.*?)')
+      end
+    end
+
+    next if fields.empty?
+    begin
+      directive_patterns << { regex: Regexp.new("^#{pattern_str}$"), fields: fields }
+    rescue RegexpError
+    end
+  end
+
+  # Match each #SBATCH line in the script against the template patterns
+  raw_cache = {}
+  script_content.each_line do |sline|
+    sline = sline.strip
+    next unless sline.start_with?('#SBATCH')
+    directive_patterns.each do |dp|
+      next unless (m = dp[:regex].match(sline))
+      dp[:fields].each_with_index do |field, idx|
+        val = m[idx + 1]&.strip
+        raw_cache[field] = val if val && !val.empty? && !raw_cache.key?(field)
+      end
+    end
+  end
+
+  # Expand checkbox fields: split captured comma-separated values into
+  # the per-option cache keys that replace_with_cache expects.
+  cache = {}
+  raw_cache.each do |field, val|
+    widget_def = form_fields[field]
+    if widget_def.is_a?(Hash) && widget_def["widget"] == "checkbox"
+      sep          = widget_def["separator"] || ","
+      checked_vals = val.split(sep).map(&:strip)
+      (widget_def["options"] || []).each_with_index do |opt, idx|
+        opt_val = (opt.is_a?(Array) ? opt[1] : opt).to_s
+        cache["#{field}_#{idx + 1}"] = opt_val if checked_vals.include?(opt_val)
+      end
+    else
+      cache[field] = val
+    end
+  end
+
+  cache
+end
+
 # Replace with cached value.
 def replace_with_cache(form, cache)
   form.each do |key, value|
@@ -459,7 +548,12 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
             bin_ov_s2   = @conf.key?("clusters") ? bin_ov_val[cluster_name] : bin_ov_val
             ssh_s2      = @conf.key?("clusters") ? ssh_val[cluster_name]    : ssh_val
             script_content, _err = sched_s.batch_script(id, bin_s2, bin_ov_s2, ssh_s2)
-            @script_content = escape_html(script_content) if script_content
+            if script_content
+              @script_content = escape_html(script_content)
+              sbatch_cache = parse_sbatch_into_cache(script_content, @body, @OC_APP_NAME, @OC_DIR_NAME)
+              replace_with_cache(@header, sbatch_cache)
+              replace_with_cache(@body["form"], sbatch_cache)
+            end
           else
             @error_msg = "Specified Job ID (#{id}) is not found."
             return erb :error

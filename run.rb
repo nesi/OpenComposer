@@ -476,13 +476,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
     return erb :history
   when "nodes"
-    @name       = "Nodes"
-    scheduler   = create_scheduler(@conf)
-    scheduler_s = @conf.key?("clusters") ? scheduler[@cluster_name] : scheduler
-    bin_s           = @conf.key?("clusters") ? @conf["bin"][@cluster_name]           : @conf["bin"]
-    bin_overrides_s = @conf.key?("clusters") ? @conf["bin_overrides"][@cluster_name] : @conf["bin_overrides"]
-    ssh_wrapper_s   = @conf.key?("clusters") ? @conf["ssh_wrapper"][@cluster_name]   : @conf["ssh_wrapper"]
-    @nodes, @nodes_error = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s)
+    @name = "Nodes"
     return erb :nodes
   else # application form
     @table_index     = 1
@@ -763,6 +757,28 @@ get "/job_details" do
   result.to_json
 rescue Exception => e
   { "error" => e.message }.to_json
+end
+
+get "/nodes/data" do
+  conf = create_conf
+  if conf.key?("clusters")
+    cluster_name    = params["cluster"] || conf["clusters"].keys.first
+    scheduler_s     = create_scheduler(conf)[cluster_name]
+    bin_s           = conf["bin"][cluster_name]
+    bin_overrides_s = conf["bin_overrides"][cluster_name]
+    ssh_wrapper_s   = conf["ssh_wrapper"][cluster_name]
+  else
+    scheduler_s     = create_scheduler(conf)
+    bin_s           = conf["bin"]
+    bin_overrides_s = conf["bin_overrides"]
+    ssh_wrapper_s   = conf["ssh_wrapper"]
+  end
+  nodes, error = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s)
+  rows = (nodes || []).map do |cols|
+    { node: cols[0], state: cols[1], cpus: cols[2], memory: cols[3], freemem: cols[4], gres: cols[5], gresused: cols[6] }
+  end
+  content_type :json
+  { error: error, rows: rows, fetched_at: Time.now.strftime("%H:%M:%S") }.to_json
 end
 
 get "/*" do

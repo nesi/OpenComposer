@@ -334,7 +334,11 @@ helpers do
       if has_complex
         unless prefix.empty?
           prefix_js  = escape_js_string(prefix)
-          pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:null, keys:[], widgets:[], separators:[], canHide:[]});\n"
+          if raw_line.lstrip.start_with?("#SBATCH --time=")
+            pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:null, keys:#{keys_array}, widgets:#{widgets_array}, separators:#{separators_array}, canHide:#{can_hide_array}, parseType:'slurm_time'});\n"
+          else
+            pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:null, keys:[], widgets:[], separators:[], canHide:[]});\n"
+          end
         end
       else
         unless prefix.empty?

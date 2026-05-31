@@ -115,12 +115,12 @@ form:
 
   time_days_hours_minutes:
     widget: number
-    label: [Time (Days), (Hours), (Minutes)]
-    size: 3
-    value: [0, 0, 15]
-    min:   [0, 0, 01]
-    max:   [21, 23, 59]
-    step:  [1, 1, 1]
+    label: [Time (Days), (Hours), (Minutes), (Seconds)]
+    size: 4
+    value: [0, 0, 15, 0]
+    min:   [0, 0, 0, 0]
+    max:   [21, 23, 59, 59]
+    step:  [1, 1, 1, 1]
 
   show_advanced_option:
     widget: checkbox
@@ -135,7 +135,7 @@ form:
     separator: ","
     indent: 1
     options:
-      - [ "Perform a high priority test (15 mins)", 'debug', set-time_days_hours_minutes_1: 0, set-time_days_hours_minutes_2: 0, set-time_days_hours_minutes_3: 15]
+      - [ "Perform a high priority test (15 mins)", 'debug', set-time_days_hours_minutes_1: 0, set-time_days_hours_minutes_2: 0, set-time_days_hours_minutes_3: 15, set-time_days_hours_minutes_4: 0]
 
   profiling:
     widget: checkbox
@@ -189,7 +189,7 @@ script: |
   #SBATCH --gpus-per-node=#{gpu_any}:#{number_of_gpus_any} 
   #SBATCH --gpus-per-node=#{gpu_genoa}:#{number_of_gpus_genoa}
   #SBATCH --gpus-per-node=#{gpu_milan}:#{number_of_gpus_milan}
-  #SBATCH --time=#{time_days_hours_minutes_1}-#{zeropadding(time_days_hours_minutes_2,2)}:#{zeropadding(time_days_hours_minutes_3,2)}:00
+  #SBATCH --time=#{time_days_hours_minutes_1}-#{zeropadding(time_days_hours_minutes_2,2)}:#{zeropadding(time_days_hours_minutes_3,2)}:#{zeropadding(time_days_hours_minutes_4,2)}
   #SBATCH --array=#{array_1}-#{array_2}%#{array_3}
   #SBATCH --qos=#{testing}
   #SBATCH --profile=#{profiling}

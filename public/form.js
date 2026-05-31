@@ -1,4 +1,33 @@
 
+// Parse any Slurm --time= value into {days, hours, minutes, seconds}.
+// Handles all accepted Slurm formats: D-HH:MM:SS, D-HH:MM, D-HH, HH:MM:SS, MM:SS, MM.
+ocForm.parseSlurmTime = function(val) {
+  var m;
+  // D-HH:MM:SS  /  D-HH:MM  /  D-HH
+  m = val.match(/^(\d+)-(\d+)(?::(\d+)(?::(\d+))?)?$/);
+  if (m) {
+    return { days: parseInt(m[1]) || 0, hours: parseInt(m[2]) || 0,
+             minutes: parseInt(m[3]) || 0, seconds: parseInt(m[4]) || 0 };
+  }
+  // HH:MM:SS
+  m = val.match(/^(\d+):(\d+):(\d+)$/);
+  if (m) {
+    return { days: 0, hours: parseInt(m[1]) || 0,
+             minutes: parseInt(m[2]) || 0, seconds: parseInt(m[3]) || 0 };
+  }
+  // MM:SS
+  m = val.match(/^(\d+):(\d+)$/);
+  if (m) {
+    return { days: 0, hours: 0, minutes: parseInt(m[1]) || 0, seconds: parseInt(m[2]) || 0 };
+  }
+  // MM (minutes only)
+  m = val.match(/^(\d+)$/);
+  if (m) {
+    return { days: 0, hours: 0, minutes: parseInt(m[1]) || 0, seconds: 0 };
+  }
+  return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+};
+
 // Parse #SBATCH / scheduler directives in the script textarea into form widgets
 // using the patterns registered in ocForm.scriptLinePatterns by form.rb.
 ocForm.parseScriptToWidgets = function() {
@@ -6,6 +35,7 @@ ocForm.parseScriptToWidgets = function() {
 
   const lines = ocForm.scriptArea.value.split('\n');
 
+  // Standard regex-based parsing for simple template lines.
   for (const pat of ocForm.scriptLinePatterns) {
     if (!pat.regex || pat.keys.length === 0) continue;
     const matchingLine = lines.find(function(line) { return pat.regex.test(line); });
@@ -47,6 +77,23 @@ ocForm.parseScriptToWidgets = function() {
         }
         break;
       }
+      }
+    }
+  }
+
+  // Custom parsing for complex patterns that cannot be handled by a single regex.
+  for (const pat of ocForm.scriptLinePatterns) {
+    if (pat.regex !== null || !pat.parseType || !pat.prefix || pat.keys.length === 0) continue;
+    const matchingLine = lines.find(function(line) { return line.startsWith(pat.prefix); });
+    if (!matchingLine) continue;
+    const val = matchingLine.slice(pat.prefix.length).trim();
+
+    if (pat.parseType === 'slurm_time') {
+      const p = ocForm.parseSlurmTime(val);
+      const components = [p.days, p.hours, p.minutes, p.seconds];
+      for (var i = 0; i < pat.keys.length; i++) {
+        var el = document.getElementById(pat.keys[i]);
+        if (el && !el.disabled) el.value = String(components[i] !== undefined ? components[i] : 0);
       }
     }
   }

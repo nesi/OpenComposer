@@ -15,10 +15,6 @@
         <% end %>
       <% end %>
       <span class="text-muted small" id="_nodesFetchedAt"></span>
-      <div class="form-check form-switch mb-0">
-        <input class="form-check-input" type="checkbox" id="_nodesAutoRefresh" style="cursor:pointer;">
-        <label class="form-check-label small" for="_nodesAutoRefresh">Auto-refresh (30s)</label>
-      </div>
       <a href="<%= @script_name %>/nodes" class="btn btn-sm btn-outline-secondary">&#8635; Refresh</a>
     </div>
   </div>
@@ -424,16 +420,6 @@
       url.searchParams.set('cluster', radio.value);
       window.location.href = url.toString();
     });
-  });
-
-  var refreshTimer = null;
-  document.getElementById('_nodesAutoRefresh').addEventListener('change', function() {
-    if (this.checked) {
-      refreshTimer = setInterval(function() { window.location.reload(); }, 30000);
-    } else {
-      clearInterval(refreshTimer);
-      refreshTimer = null;
-    }
   });
 
   loadData();

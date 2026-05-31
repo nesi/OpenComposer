@@ -87,17 +87,22 @@
         border-color: #86b7fe;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
       }
+      html, body {
+        height: 100%;
+      }
       body {
         min-width: 768px;
-      }
-      /* Sticky footer: keep the footer at the bottom of the viewport when the
-         page content is short, while still flowing below tall content. */
-      #_form_container {
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
+      }
+      #_form_container {
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
       }
       .footer {
+        flex-shrink: 0;
         margin-top: auto;
       }
       .ood-logo {

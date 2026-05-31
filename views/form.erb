@@ -11,9 +11,9 @@
     Job was successfully submitted (Job ID is <code><%= @job_id %></code>).
     <%= script_msg %>
     <% if @conf.key?("clusters") && @conf["clusters"].size > 1 %>
-      Go to the <a href="./history?cluster=<%= @cluster_name %>">History page</a>.
+      Go to the <a href="<%= @script_name %>/history?cluster=<%= @cluster_name %>">History page</a>.
     <% else %>
-      Go to the <a href="./history">History page</a>.
+      Go to the <a href="<%= @script_name %>/history">History page</a>.
     <% end %>
     <button class="btn-close" data-bs-dismiss="alert"></button>
   </div>
@@ -131,7 +131,7 @@ ocForm.submitArea = document.getElementById('<%= SUBMIT_CONTENT %>');
 ocForm.submitHighlightContainer = document.getElementById('<%= SUBMIT_CONTENT %>_highlight_container');
 ocForm.submitHighlight = document.getElementById('<%= SUBMIT_CONTENT %>_highlight');
 </script>
-<script src="form.js"></script>
+<script src="<%= @script_name %>/form.js"></script>
 <script>
 ocForm.scriptLinePatterns = [];
 <%= @js["script_patterns"].chomp %>

@@ -34,7 +34,6 @@ ocForm.parseScriptToWidgets = function() {
   if (!ocForm.scriptArea || !ocForm.scriptLinePatterns) return;
 
   const lines = ocForm.scriptArea.value.split('\n');
-  const guardiansToTick = new Set();
 
   // Standard regex-based parsing for simple template lines.
   for (const pat of ocForm.scriptLinePatterns) {
@@ -45,12 +44,9 @@ ocForm.parseScriptToWidgets = function() {
     const m = matchingLine.match(pat.regex);
     if (!m) continue;
 
-    if (pat.guardians) pat.guardians.forEach(function(g) { guardiansToTick.add(g); });
-
     for (var i = 0; i < pat.keys.length; i++) {
       var key    = pat.keys[i];
       var widget = pat.widgets[i];
-      var sep    = pat.separators ? pat.separators[i] : null;
       var value  = m[i + 1];
       if (value === undefined || value === null) continue;
 
@@ -59,12 +55,12 @@ ocForm.parseScriptToWidgets = function() {
       case 'text':
       case 'email': {
         var el = document.getElementById(key);
-        if (el) el.value = value;
+        if (el && !el.disabled) el.value = value;
         break;
       }
       case 'select': {
         var el = document.getElementById(key);
-        if (el) {
+        if (el && !el.disabled) {
           var opts = Array.from(el.querySelectorAll('option'));
           var idx  = opts.findIndex(function(o) { return o.dataset.value === value; });
           if (idx >= 0) el.selectedIndex = idx;
@@ -74,18 +70,10 @@ ocForm.parseScriptToWidgets = function() {
       case 'radio': {
         var radios = document.getElementsByName(key);
         for (var r of radios) {
-          if (r.dataset.value === value) { r.checked = true; break; }
-        }
-        break;
-      }
-      case 'checkbox': {
-        var vals = sep ? value.split(sep).map(function(v) { return v.trim(); }) : [value.trim()];
-        var ci = 1;
-        while (true) {
-          var cb = document.getElementById(key + '_' + ci);
-          if (!cb) break;
-          cb.checked = vals.indexOf(cb.dataset.value) >= 0;
-          ci++;
+          if (!r.disabled && r.dataset.value === value) {
+            r.checked = true;
+            break;
+          }
         }
         break;
       }
@@ -100,29 +88,15 @@ ocForm.parseScriptToWidgets = function() {
     if (!matchingLine) continue;
     const val = matchingLine.slice(pat.prefix.length).trim();
 
-    if (pat.guardians) pat.guardians.forEach(function(g) { guardiansToTick.add(g); });
-
     if (pat.parseType === 'slurm_time') {
       const p = ocForm.parseSlurmTime(val);
       const components = [p.days, p.hours, p.minutes, p.seconds];
       for (var i = 0; i < pat.keys.length; i++) {
         var el = document.getElementById(pat.keys[i]);
-        if (el) el.value = String(components[i] !== undefined ? components[i] : 0);
+        if (el && !el.disabled) el.value = String(components[i] !== undefined ? components[i] : 0);
       }
     }
   }
-
-  // Tick all guardian checkboxes so their controlled fields become visible before
-  // execDynamicWidget runs the show/hide logic.
-  guardiansToTick.forEach(function(guardianKey) {
-    var ci = 1;
-    while (true) {
-      var cb = document.getElementById(guardianKey + '_' + ci);
-      if (!cb) break;
-      cb.checked = true;
-      ci++;
-    }
-  });
 
   ocForm.execDynamicWidget();
 };

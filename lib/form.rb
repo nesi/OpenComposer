@@ -227,41 +227,6 @@ helpers do
     s
   end
 
-  # Build a map of field_name => [guardian_checkbox_ids] for fields that are initially
-  # hidden by a checkbox toggle.  Resolved transitively so nested toggles are included.
-  def build_guardian_map(form)
-    direct = Hash.new { |h, k| h[k] = [] }
-
-    form.each do |widget_key, widget_value|
-      next unless widget_value.is_a?(Hash) && widget_value['widget'] == 'checkbox'
-      next if widget_value['options'].nil?
-
-      widget_value['options'].each do |option|
-        next if option.is_a?(Hash) || option.size < 3
-        option[2..].each do |action|
-          next unless action.is_a?(String) && action =~ /^(?:show|enable)-([A-Za-z_]\w*)$/
-          target = $1
-          direct[target] << widget_key unless direct[target].include?(widget_key)
-        end
-      end
-    end
-
-    # BFS from each field upward to collect the full transitive guardian chain
-    result = {}
-    direct.each_key do |field|
-      visited = []
-      queue   = direct[field].dup
-      until queue.empty?
-        g = queue.shift
-        next if visited.include?(g)
-        visited << g
-        (direct[g] || []).each { |gg| queue << gg }
-      end
-      result[field] = visited
-    end
-    result
-  end
-
   # Output a JavaScript code based on a given yml, line in script, and matches data.
   def output_script_js(form, line, app_name, dir_name)
     line = normalize_interpolation(line)
@@ -362,14 +327,6 @@ helpers do
 
       show_js = "  ocForm.showLine(selectedValues, '#{line}', #{keys_array}, #{widgets_array}, #{can_hide_array}, #{separators_array});\n"
 
-      # Compute guardian checkbox IDs needed to reveal each key in this pattern.
-      guardians = exist_keys.flat_map do |ek|
-        base = ek.rpartition('_').first
-        lookup = form.key?(ek) ? ek : (form.key?(base) ? base : nil)
-        lookup ? (@guardian_map&.fetch(lookup, []) || []) : []
-      end.uniq
-      guardians_js = guardians.empty? ? "[]" : "['" + guardians.map { |g| escape_js_string(g) }.join("', '") + "']"
-
       has_complex = raw_line.match?(/\#\{(calc|zeropadding|dirname|basename)\(/)
       raw_parts   = raw_line.split(/\#\{[^}]+\}/, -1)
       prefix      = raw_parts[0]
@@ -378,9 +335,9 @@ helpers do
         unless prefix.empty?
           prefix_js  = escape_js_string(prefix)
           if raw_line.lstrip.start_with?("#SBATCH --time=")
-            pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:null, keys:#{keys_array}, widgets:#{widgets_array}, separators:#{separators_array}, canHide:#{can_hide_array}, parseType:'slurm_time', guardians:#{guardians_js}});\n"
+            pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:null, keys:#{keys_array}, widgets:#{widgets_array}, separators:#{separators_array}, canHide:#{can_hide_array}, parseType:'slurm_time'});\n"
           else
-            pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:null, keys:[], widgets:[], separators:[], canHide:[], guardians:[]});\n"
+            pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:null, keys:[], widgets:[], separators:[], canHide:[]});\n"
           end
         end
       else
@@ -392,7 +349,7 @@ helpers do
           end
           regex_str  = ("^" + regex_parts.join("") + "$").gsub("/", "\\/")
           prefix_js  = escape_js_string(prefix)
-          pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:/#{regex_str}/, keys:#{keys_array}, widgets:#{widgets_array}, separators:#{separators_array}, canHide:#{can_hide_array}, guardians:#{guardians_js}});\n"
+          pattern_js = "  ocForm.scriptLinePatterns.push({prefix:'#{prefix_js}', regex:/#{regex_str}/, keys:#{keys_array}, widgets:#{widgets_array}, separators:#{separators_array}, canHide:#{can_hide_array}});\n"
         end
       end
 
@@ -1063,7 +1020,6 @@ HTML
     @js ||= { "init_dw" => "", "exec_dw" => "", "script" => "", "once" => "", "submit" => "", "script_patterns" => "" }
     form = body["form"].merge({OC_SCRIPT_CONTENT => {"widget" => "textarea"}})
     obj = form.merge(header)
-    @guardian_map = build_guardian_map(obj)
     script_content = body["script"].is_a?(Hash) ? body.dig("script", "content") : body["script"]
     submit_content = body["submit"].is_a?(Hash) ? body.dig("submit", "content") : body["submit"]
 

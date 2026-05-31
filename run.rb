@@ -739,48 +739,6 @@ rescue Exception => e
   { "error" => e.message }.to_json
 end
 
-get "/view_script" do
-  conf          = create_conf
-  cluster_name  = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
-  job_id        = params["job_id"].to_s.strip
-
-  @conf          = conf
-  @version       = VERSION
-  @my_ood_url    = request.base_url
-  @script_name   = request.script_name
-  @dir_name      = ""
-  @login_node    = conf.key?("clusters") ? conf["login_node"][cluster_name] : conf["login_node"]
-  @ood_logo_path = URI.join(@my_ood_url, @script_name + "/", "ood.png")
-  @manifests     = create_all_manifests(conf["apps_dir"]).sort_by { |m| [(m.category || "").downcase, m.name.downcase] }
-  @manifests_w_category, @manifests_wo_category = @manifests.partition(&:category)
-  @name          = "Script View"
-  @job_id        = job_id
-  @script_content = nil
-
-  unless job_id.empty?
-    history_db_path = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
-    if history_db_path && File.exist?(history_db_path)
-      db  = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-      row = db.execute("SELECT payload_json FROM jobs WHERE _job_id = ?", [job_id]).first
-      db.close rescue nil
-      if row
-        payload = JSON.parse(row["payload_json"] || "{}")
-        @script_content = payload[OC_SCRIPT_CONTENT]
-      end
-    end
-
-    if @script_content.to_s.strip.empty?
-      scheduler     = conf.key?("clusters") ? create_scheduler(conf)[cluster_name] : create_scheduler(conf)
-      bin           = conf.key?("clusters") ? conf["bin"][cluster_name]             : conf["bin"]
-      bin_overrides = conf.key?("clusters") ? conf["bin_overrides"][cluster_name]   : conf["bin_overrides"]
-      ssh_wrapper   = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]     : conf["ssh_wrapper"]
-      @script_content, _err = scheduler.batch_script(job_id, bin, bin_overrides, ssh_wrapper)
-    end
-  end
-
-  erb :script_view
-end
-
 get "/*" do
   show_website
 end

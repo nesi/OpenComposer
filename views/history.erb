@@ -243,12 +243,10 @@
               <% end %>
             </td>
             <td class="text-wrap text-break history-modal-match-cell <%= 'history-modal-match-active' if job_script_modal_match %>">
-              <% view_script_url = "#{@script_name}/view_script?job_id=#{URI.encode_www_form_component(job[JOB_ID].to_s)}" %>
-              <% view_script_url += "&cluster=#{URI.encode_www_form_component(@cluster_name.to_s)}" if @cluster_name %>
               <% if job["_has_db"] && !job[HEADER_SCRIPT_NAME].to_s.strip.empty? %>
-                <a href="<%= view_script_url %>" target="_blank"><%= output_text(job[HEADER_SCRIPT_NAME], script_name_filter) %></a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>"><%= output_text(job[HEADER_SCRIPT_NAME], script_name_filter) %></a>
               <% else %>
-                <a href="<%= view_script_url %>" target="_blank">Job</a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>">Job</a>
               <% end %>
             </td>
             <td class="text-wrap text-break"><%= output_text(job[JOB_NAME], job_name_filter) %></td>

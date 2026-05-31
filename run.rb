@@ -491,14 +491,17 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
         return erb :error
       end
 
-      # Check if the form key exists
+      # Check if the form key exists. The form body may legitimately be empty
+      # (a header-only app such as the generic Slurm app), so a "form:" with no
+      # widgets is allowed. It is normalized to an empty hash below so the
+      # rendering helpers (which call body["form"].merge(...)) do not crash.
       ["form.yml", "form.yml.erb"].each do |name|
         file = File.join(@apps_dir, @dir_name, name)
         next unless File.exist?(file)
 
         halt 500, "In ./#{file}, \"form:\" must be defined." unless @body.key?("form")
-        halt 500, "In ./#{file}, \"form:\" must have a key." unless @body["form"]
       end
+      @body["form"] ||= {} if @body.is_a?(Hash) && @body.key?("form")
 
       @form_action = get_form_action(@body)
       @script_overwrite_warning_enabled = check_overwrite_warning?(@body["script"])
@@ -687,7 +690,7 @@ get "/job_details" do
 
   job_id = (params["jobId"] || "").strip
   return { "error" => "No job ID specified" }.to_json if job_id.empty?
-  return { "error" => "Invalid job ID" }.to_json unless job_id.match?(/\A[\d_.\[\]]+\z/)
+  return { "error" => "Invalid job ID" }.to_json unless job_id.match?(/\A[\d_.\[\]+]+\z/) # '+' allows Slurm heterogeneous-job component IDs (e.g. 1234+0).
 
   conf         = create_conf
   cluster_name = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
@@ -811,6 +814,7 @@ post "/*" do
       @error_msg = e.message
       return erb :error
     end
+    form["form"] ||= {} if form.is_a?(Hash) # Allow a header-only app with an empty form body.
 
     script_path    = File.join(script_location, script_name)
     script_dir     = File.dirname(script_path)

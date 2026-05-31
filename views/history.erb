@@ -156,8 +156,6 @@
     <%= output_job_id_modal(job, @filter) %>
     <% if job["_has_db"] %>
       <%= output_job_script_modal(job, @filter) %>
-    <% else %>
-      <%= output_job_slurm_script_modal(job) %>
     <% end %>
   <% end %>
 
@@ -243,10 +241,14 @@
               <% end %>
             </td>
             <td class="text-wrap text-break history-modal-match-cell <%= 'history-modal-match-active' if job_script_modal_match %>">
-              <% if job["_has_db"] && !job[HEADER_SCRIPT_NAME].to_s.strip.empty? %>
-                <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>"><%= output_text(job[HEADER_SCRIPT_NAME], script_name_filter) %></a>
+              <% if job["_has_db"] %>
+                <% if job[HEADER_SCRIPT_NAME].to_s.strip.empty? %>
+                  <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>">Job</a>
+                <% else %>
+                  <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>"><%= output_text(job[HEADER_SCRIPT_NAME], script_name_filter) %></a>
+                <% end %>
               <% else %>
-                <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>">Job</a>
+                <a href="#" class="oc-ext-job-link" data-job-id="<%= escape_html(job[JOB_ID].to_s) %>" data-cluster="<%= escape_html(@cluster_name.to_s) %>">Job</a>
               <% end %>
             </td>
             <td class="text-wrap text-break"><%= output_text(job[JOB_NAME], job_name_filter) %></td>

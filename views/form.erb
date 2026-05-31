@@ -356,10 +356,26 @@ window.onload = function() {
 
   var _ocExtKey = new URLSearchParams(window.location.search).get('ocExtLoad');
   if (_ocExtKey) {
-    var _ocExtScript = sessionStorage.getItem(_ocExtKey);
+    var _ocExtRaw = sessionStorage.getItem(_ocExtKey);
     sessionStorage.removeItem(_ocExtKey);
-    if (_ocExtScript !== null && ocForm.scriptArea) {
-      ocForm.scriptArea.value = _ocExtScript;
+    if (_ocExtRaw !== null && ocForm.scriptArea) {
+      var _ocExtPayload = null;
+      try { _ocExtPayload = JSON.parse(_ocExtRaw); } catch (e) { _ocExtPayload = null; }
+      var _ocSetField = function(id, val) {
+        if (val === undefined || val === null || val === '') return;
+        var el = document.getElementById(id);
+        if (el) el.value = val;
+      };
+      if (_ocExtPayload && typeof _ocExtPayload === 'object' && !Array.isArray(_ocExtPayload)) {
+        // Payload from the History page: script content plus header fields.
+        ocForm.scriptArea.value = _ocExtPayload.script || '';
+        _ocSetField('<%= HEADER_SCRIPT_LOCATION %>', _ocExtPayload.scriptLocation);
+        _ocSetField('<%= HEADER_SCRIPT_NAME %>', _ocExtPayload.scriptName);
+        _ocSetField('<%= HEADER_JOB_NAME %>', _ocExtPayload.jobName);
+      } else {
+        // Backward compatibility: payload is the raw script string.
+        ocForm.scriptArea.value = _ocExtRaw;
+      }
       ocForm.parseScriptToWidgets();
       ocForm.execDynamicWidget();
       ocForm.refreshEditorLayout();

@@ -18,6 +18,10 @@ bin_overrides:
   sacct:    "/usr/bin/sacct"
 #sge_root: "/apps/t4/rhel9/uge/latest"
 
+# When loading an external/generic job (one not submitted through Open Composer)
+# from the History page, open this application and load the job's script into it.
+external_reload_app: "Slurm_Generic"
+
 ## History
 history:
   OC_HISTORY_JOB_NAME:

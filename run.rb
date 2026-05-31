@@ -835,7 +835,7 @@ post "/templates" do
   end
 
   skip   = %w[template_name template_description splat captures]
-  values = params.reject { |k, _| skip.include?(k) }
+  values = params.each_with_object({}) { |(k, v), h| h[k.to_s] = v.to_s unless skip.include?(k) }
 
   File.write(File.join(dir, "#{slug}.yml"), {
     "name"        => name,

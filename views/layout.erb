@@ -108,7 +108,7 @@
        transition: none !important;
      }
      .nav-link:hover {
-       color: white !important;
+       color: <%= @conf['navbar_text_color'] %> !important;
      }
       <% if @dir_name == "history" %>
       #_historyTbody td {
@@ -163,7 +163,7 @@
 
   <body style="visibility: hidden;">
     <div id="_form_container" class="container-fluid">
-      <nav class="navbar navbar-expand mx-1 navbar-dark bg-gradient" style="background:<%= @conf['navbar_color'] %>;">
+      <nav class="navbar navbar-expand mx-1 bg-gradient" style="background:<%= @conf['navbar_color'] %>; --bs-navbar-color: <%= @conf['navbar_text_color'] %>; --bs-navbar-hover-color: <%= @conf['navbar_text_color'] %>; --bs-navbar-active-color: <%= @conf['navbar_text_color'] %>; --bs-navbar-brand-color: <%= @conf['navbar_text_color'] %>; --bs-navbar-brand-hover-color: <%= @conf['navbar_text_color'] %>;">
         <div class="container-fluid">
           <div class="collapse navbar-collapse">
             <ul class="navbar-nav">
@@ -259,7 +259,7 @@
       </div>
 
       <footer class="footer py-1 bg-gradient mx-1 <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>;">
-        <div class="row text-white align-items-center">
+        <div class="row align-items-center" style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
           <div class="col text-start"></div> <!-- An empty column to center the middle text -->
           <div class="col text-center"><%= @conf['footer'] %></div>
           <div class="col text-end small mx-3">Open Composer version: <%= @version %></div>

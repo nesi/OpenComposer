@@ -120,9 +120,12 @@ def create_conf
   conf["footer"]                  ||= "&nbsp;"
   conf["thumbnail_width"]         ||= "100"
   conf["navbar_color"]            ||= "#3D3B40"
+  conf["navbar_text_color"]       ||= "#FFFFFF"
   conf["dropdown_color"]          ||= conf["navbar_color"]
   conf["footer_color"]            ||= conf["navbar_color"]
+  conf["footer_text_color"]       ||= "#FFFFFF"
   conf["category_color"]          ||= "#5522BB"
+  conf["category_text_color"]     ||= "#FFFFFF"
   conf["description_color"]       ||= conf["category_color"]
   conf["form_color"]              ||= "#BFCFE7"
   conf["non_script_color"]        ||= "#FFE28A"

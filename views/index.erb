@@ -1,5 +1,5 @@
 <% @manifests_w_category.group_by(&:category).each.with_index do |(category, manifests), index| %>
-  <div class="mt-<%= index == 0 ? 0 : 3 %> mb-4 mx-1 px-3 py-1 fs-5 bg-gradient"
+  <div class="mt-<%= index == 0 ? 0 : 3 %> mb-4 mx-1 px-3 py-1 fs-5 bg-gradient border-bottom"
        style="background:<%= @conf['category_color'] %>; color:<%= @conf['category_text_color'] %>;">
     <%= category %>
   </div>
@@ -11,7 +11,7 @@
 <% end %>
 
 <% if @manifests_wo_category.any? %>
-  <div class="mt-<%= @manifests_w_category.empty? ? 0 : 3 %> mb-4 mx-1 px-3 py-1 fs-5 bg-gradient"
+  <div class="mt-<%= @manifests_w_category.empty? ? 0 : 3 %> mb-4 mx-1 px-3 py-1 fs-5 bg-gradient border-bottom"
        style="background:<%= @conf['category_color'] %>; color:<%= @conf['category_text_color'] %>;">
     Application
   </div>

@@ -34,7 +34,7 @@
 <form id="<%= SUBMIT_FORM %>" action="<%= @current_path %>" method="post" onsubmit="return ocForm.submitEffect('<%= @form_action %>');">
   <div class="row px-3" style="color:<%= @conf['description_text_color'] %>;">
     <!-- Application Info Section -->
-    <div class="col pt-2 bg-gradient" style="background:<%= @conf['description_color'] %>;">
+    <div class="col pt-2 bg-gradient border-bottom" style="background:<%= @conf['description_color'] %>;">
       <h3>
         <a href="<%= @script_name %>/<%= @manifest['dirname'] %>" class="fw-semibold" style="color: inherit; text-decoration: none;">
           <%= @manifest['name'] %>
@@ -46,7 +46,7 @@
     </div>
 
     <!-- Header -->
-    <div class="col pt-2 pb-0 bg-gradient" style="background: <%= @conf['description_color'] %>;">
+    <div class="col pt-2 pb-0 bg-gradient border-bottom" style="background: <%= @conf['description_color'] %>;">
       <%= output_header(@body, @header) %>
     </div>
   </div>

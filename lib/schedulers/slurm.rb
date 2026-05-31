@@ -247,6 +247,37 @@ class Slurm < Scheduler
     return nil, e.message, nil
   end
 
+  # Fetch node info via sinfo -N with fixed-width columns.
+  # Deduplicates by node name (a node appears once per partition in -N output).
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    sinfo   = get_command_path("sinfo", bin, bin_overrides)
+    fmt     = "nodelist:10,StateLong:15,cpusState:20,Memory:15,FreeMem:15,Gres:30,GresUsed:30"
+    command = [ssh_wrapper, sinfo, "-N", "--Format=#{fmt}"].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    return nil, [stdout, stderr].join(" ").strip, command unless status.success?
+
+    lines  = stdout.lines.map { |l| l.chomp }
+    return [], nil, command if lines.size < 2
+
+    widths = [10, 15, 20, 15, 15, 30, 30]
+    seen   = {}
+    nodes  = []
+
+    lines[1..].each do |line|
+      next if line.strip.empty?
+      pos  = 0
+      cols = widths.map { |w| v = line[pos, w].to_s.strip; pos += w; v }
+      node_name = cols[0]
+      next if node_name.empty? || seen.key?(node_name)
+      seen[node_name] = true
+      nodes << cols
+    end
+
+    [nodes, nil, command]
+  rescue => e
+    return nil, e.message, nil
+  end
+
   # Fetch the batch script for a job via sacct --batch-script (-B).
   # Returns [script_content, nil] or [nil, nil] when not available.
   def batch_script(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)

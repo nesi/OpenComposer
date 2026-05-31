@@ -62,6 +62,14 @@ class Scheduler
     [nil, nil]
   end
 
+  # Fetch node information from the scheduler for the Nodes page.
+  # Each element of the returned array is a 7-element array:
+  #   [nodelist, state, cpus_a_i_o_t, memory_mb, free_mem_mb, gres, gres_used]
+  # @return [Array<Array, String, String>] [nodes_array_or_nil, error_or_nil, command_or_nil]
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    [nil, nil, nil]
+  end
+
   private
 
   # Determine the executable path for a given command name.

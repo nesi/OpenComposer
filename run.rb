@@ -398,7 +398,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   @script_name   = request.script_name
   @dir_name      = request.path_info.sub(/^\//, '')
   @cluster_name  = if @conf.key?("clusters")
-                     escape_html(params[@dir_name == "history" ? "cluster" : HEADER_CLUSTER_NAME] || @conf["clusters"].keys.first)
+                     escape_html(params[["history", "nodes"].include?(@dir_name) ? "cluster" : HEADER_CLUSTER_NAME] || @conf["clusters"].keys.first)
                    else
                      nil
                    end
@@ -472,6 +472,15 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @history_search_elapsed_label = format("%.3f", @history_search_elapsed_seconds || 0.0)
 
     return erb :history
+  when "nodes"
+    @name       = "Nodes"
+    scheduler   = create_scheduler(@conf)
+    scheduler_s = @conf.key?("clusters") ? scheduler[@cluster_name] : scheduler
+    bin_s           = @conf.key?("clusters") ? @conf["bin"][@cluster_name]           : @conf["bin"]
+    bin_overrides_s = @conf.key?("clusters") ? @conf["bin_overrides"][@cluster_name] : @conf["bin_overrides"]
+    ssh_wrapper_s   = @conf.key?("clusters") ? @conf["ssh_wrapper"][@cluster_name]   : @conf["ssh_wrapper"]
+    @nodes, @nodes_error, @nodes_command = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s)
+    return erb :nodes
   else # application form
     @table_index     = 1
     generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"

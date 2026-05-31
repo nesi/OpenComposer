@@ -322,7 +322,7 @@ helpers do
       # Convert to JavaScript array
       keys_array       = "['" + exist_keys.join("', '") + "']"
       widgets_array    = "['" + widgets.join("', '") + "']"
-      can_hide_array   = "["  + can_hide.map { |r| r }.join(", ") + "]"
+      can_hide_array   = "["  + can_hide.join(", ") + "]"
       separators_array = "["  + separators.map { |s| s.nil? ? 'null' : "'#{s}'" }.join(", ") + "]"
 
       show_js = "  ocForm.showLine(selectedValues, '#{line}', #{keys_array}, #{widgets_array}, #{can_hide_array}, #{separators_array});\n"
@@ -1024,7 +1024,7 @@ HTML
     submit_content = body["submit"].is_a?(Hash) ? body.dig("submit", "content") : body["submit"]
 
     html = ""
-    form.each_with_index do |(key, value), index|
+    form.each do |key, value|
       next if key == OC_SCRIPT_CONTENT
       indent = add_indent_style(value)
       html  += "<div class=\"mb-3 position-relative\" style=\"#{indent}\">\n"
@@ -1085,7 +1085,7 @@ HTML
     html = ""
     header = header.merge({OC_SCRIPT_CONTENT => {"widget" => "textarea"}})
     obj    = header.merge(body["form"])
-    header.each_with_index do |(key, value), index|
+    header.each do |key, value|
       next if key == OC_SCRIPT_CONTENT
       indent = add_indent_style(value)
       html  += "<div class=\"mb-3 position-relative\" style=\"#{indent}\">\n"

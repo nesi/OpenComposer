@@ -838,36 +838,6 @@ helpers do
     job_record_column_keys - %w[_status]
   end
 
-  # Return configured history fields as [key, label] pairs.
-  def history_config_items(conf)
-    history_items = conf["history"] || HISTORY_KEY_MAP.keys
-
-    entries =
-      if history_items.is_a?(Hash)
-        history_items.to_a
-      else
-        Array(history_items)
-      end
-
-    entries.each_with_object([]) do |item, items|
-      if item.is_a?(Hash)
-        item.each do |key, opt|
-          normalized_key = key.to_s
-          label = (opt.is_a?(Hash) && (opt["label"] || opt[:label])) || HISTORY_KEY_MAP.fetch(normalized_key, normalized_key)
-          items << [normalized_key, label]
-        end
-      elsif item.is_a?(Array) && item.size == 2
-        key, opt = item
-        normalized_key = key.to_s
-        label = (opt.is_a?(Hash) && (opt["label"] || opt[:label])) || HISTORY_KEY_MAP.fetch(normalized_key, normalized_key)
-        items << [normalized_key, label]
-      else
-        normalized_key = item.to_s
-        items << [normalized_key, HISTORY_KEY_MAP.fetch(normalized_key, normalized_key)]
-      end
-    end
-  end
-
   # Return searchable History table columns in display order.
   def history_filter_column_items(conf)
     [
@@ -1142,46 +1112,6 @@ helpers do
       end
     end
 
-    return nil
-  end
-
-  # Return all jobs that match the specified statuses and filter.
-  def get_all_jobs(conf, cluster_name, statuses, filter, filter_column, date_from, date_to, filter_mode, sort = "", order = "")
-    jobs = []
-    db = open_history_db(conf, cluster_name)
-
-    selected_statuses = Array(statuses).map(&:to_s)
-    filter_text = CGI.unescapeHTML(filter.to_s).downcase
-    each_job(db) do |row|
-      next if selected_statuses.empty?
-      next unless selected_statuses.any? { |status| row["_status"] == JOB_STATUS[status] }
-      next unless history_date_range_matches?(row["_submission_time"], date_from, date_to)
-      next unless history_filter_mode_matches?(history_filter_target_text(row, filter_column), filter_text, filter_mode)
-
-      info = { JOB_ID => row["_job_id"] }.merge(job_record_to_legacy_hash(row))
-      jobs << info
-    end
-
-    jobs.sort_by! { |job| history_sort_key(job, sort) }
-    jobs.reverse! if order == "desc"
-
-    return jobs
-  end
-
-  # Return one page of jobs and the matching row count.
-  def get_jobs_page(conf, cluster_name, statuses, filter, filter_column, date_from, date_to, filter_mode, sort, order, limit, offset)
-    db = open_history_db(conf, cluster_name)
-
-    if history_use_sql_fast_path?(filter, sort)
-      total_count = count_history_jobs(db, statuses, date_from, date_to)
-      rows = total_count.zero? ? [] : fetch_history_jobs_page(db, statuses, date_from, date_to, sort, order, limit, offset)
-      jobs = rows.map { |row| { JOB_ID => row["_job_id"] }.merge(job_record_to_legacy_hash(row)) }
-      return [jobs, total_count]
-    end
-
-    all_jobs = get_all_jobs(conf, cluster_name, statuses, filter, filter_column, date_from, date_to, filter_mode, sort, order)
-    jobs = offset >= all_jobs.size ? [] : all_jobs[offset, limit] || []
-    [jobs, all_jobs.size]
   end
 
   # Output a styled status badge for a job based on its current status.

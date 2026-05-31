@@ -466,7 +466,6 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @end_index    = @jobs_size == 0 ? 0 : [@current_page * @rows, @jobs_size].min - 1
     @error_msg    = error_msg
 
-    @history_hash = history_config_items(@conf).to_h
     @filter_column_items = history_filter_column_items(@conf)
     @date_range_items = history_date_range_items
     @history_search_elapsed_label = format("%.3f", @history_search_elapsed_seconds || 0.0)
@@ -479,7 +478,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     bin_s           = @conf.key?("clusters") ? @conf["bin"][@cluster_name]           : @conf["bin"]
     bin_overrides_s = @conf.key?("clusters") ? @conf["bin_overrides"][@cluster_name] : @conf["bin_overrides"]
     ssh_wrapper_s   = @conf.key?("clusters") ? @conf["ssh_wrapper"][@cluster_name]   : @conf["ssh_wrapper"]
-    @nodes, @nodes_error, @nodes_command = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s)
+    @nodes, @nodes_error = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s)
     return erb :nodes
   else # application form
     @table_index     = 1

@@ -58,7 +58,7 @@ helpers do
     return if action != "CancelJob" && action != "DeleteInfo"
 
     <<~HTML
-    <button id="_history#{action}Badge" data-bs-toggle="modal" data-bs-target="#_history#{action}" class="btn btn-sm btn-danger disabled" disabled>
+    <button id="_history#{action}Badge" data-bs-toggle="modal" data-bs-target="#_history#{action}" class="btn btn-sm disabled" style="background-color:#{@conf['history_action_color']};border-color:#{@conf['history_action_color']};color:#fff;" disabled>
       #{(action == "CancelJob") ? "Cancel Job" : "Delete Info"}
       <span id="_history#{action}Count" class="badge bg-secondary">0</span>
     </button>

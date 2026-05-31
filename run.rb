@@ -133,6 +133,7 @@ def create_conf
   conf["non_script_button_color"] ||= "#FFBF00"
   conf["submit_color"]            ||= "#FFCCCC"
   conf["submit_button_color"]     ||= "#FFAAAA"
+  conf["history_action_color"]    ||= "#DC3545"
   conf["highlight_theme"]         ||= "vs"
   conf["directive_color"]         ||= "#D73A49"
   conf["show_home_directory"] = conf.fetch("show_home_directory", true)

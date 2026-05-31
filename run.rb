@@ -409,7 +409,7 @@ def load_templates(conf)
       next unless yaml.is_a?(Hash) && yaml["name"]
       app_path = yaml["app_path"].to_s.strip
       app_path = yaml.dig("values", "appPath").to_s.strip if app_path.empty?
-      app_path = "_generic/slurm" if app_path.empty?
+      app_path = "_generic/Slurm" if app_path.empty?
       {
         "slug"        => File.basename(path, ".yml"),
         "name"        => yaml["name"],
@@ -552,7 +552,6 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       @body["form"] ||= {} if @body.is_a?(Hash) && @body.key?("form")
 
       @form_action = get_form_action(@body)
-      @script_overwrite_warning_enabled = check_overwrite_warning?(@body["script"])
       @submit_overwrite_warning_enabled = check_overwrite_warning?(@body["submit"])
 
       # Since the widget name is used as a variable in Ruby, it should consist of only
@@ -602,7 +601,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
           db = open_history_db(@conf, cluster_name)
         rescue StandardError
           history_db = @conf.key?("clusters") ? @conf["history_db"][cluster_name] : @conf["history_db"]
-          @error_msg = history_db.nil? ? "#{cluster_name} is not invalid." : "#{history_db} is not found."
+          @error_msg = history_db.nil? ? "#{cluster_name} is invalid." : "#{history_db} is not found."
           return erb :error
         end
         record = find_job(db, id)
@@ -744,7 +743,7 @@ end
 post "/history/save_external_script" do
   conf         = create_conf
   cluster_name = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
-  target_app   = conf["external_reload_app"] || "slurm"
+  target_app   = conf["external_reload_app"] || "Slurm"
   cluster_param = cluster_name ? "?#{HEADER_CLUSTER_NAME}=#{URI.encode_www_form_component(cluster_name)}" : ""
   content_type :json
   { url: "#{request.script_name}/_generic/#{target_app}#{cluster_param}" }.to_json

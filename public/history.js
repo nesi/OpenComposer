@@ -249,9 +249,12 @@ ocHistory.loadExtScript = function(btn) {
   var body = modal.querySelector('.modal-body[data-script-job-id]');
   if (!body) return;
 
+  // Wait until loadJobScript has finished (whether the script was available or not).
+  // Without this guard the button click is silently ignored while the spinner is running.
+  if (body.dataset.loaded !== 'true') return;
+
   var pre = body.querySelector('pre');
-  var scriptContent = pre ? pre.textContent : null;
-  if (!scriptContent) return;
+  var scriptContent = pre ? pre.textContent : '';
 
   var cluster  = body.dataset.cluster || '';
   var base     = window.location.pathname.replace(/\/history$/, '');

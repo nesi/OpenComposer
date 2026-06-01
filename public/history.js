@@ -14,7 +14,8 @@ ocHistory.applyFilter = function() {
     document.getElementById('_historyStatusRunning'),
     document.getElementById('_historyStatusCompleted'),
     document.getElementById('_historyStatusCancelled'),
-    document.getElementById('_historyStatusFailed')
+    document.getElementById('_historyStatusFailed'),
+    document.getElementById('_historyStatusUnknown')
   ].filter(Boolean);
   if (!filterInput) return;
 

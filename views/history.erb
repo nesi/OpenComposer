@@ -162,9 +162,13 @@
             <input class="form-check-input" type="checkbox" name="_historyStatusCancelled" id="_historyStatusCancelled" value="cancelled" <%= 'checked' if @statuses&.include?('cancelled') %>>
             <label class="form-check-label" for="_historyStatusCancelled">Cancelled</label>
           </div>
-          <div class="form-check form-check-inline me-1">
+          <div class="form-check form-check-inline">
             <input class="form-check-input" type="checkbox" name="_historyStatusFailed" id="_historyStatusFailed" value="failed" <%= 'checked' if @statuses&.include?('failed') %>>
             <label class="form-check-label" for="_historyStatusFailed">Failed</label>
+          </div>
+          <div class="form-check form-check-inline me-1">
+            <input class="form-check-input" type="checkbox" name="_historyStatusUnknown" id="_historyStatusUnknown" value="unknown" <%= 'checked' if @statuses&.include?('unknown') %>>
+            <label class="form-check-label" for="_historyStatusUnknown">Unknown</label>
           </div>
         </div>
         <% if @conf.key?("clusters") && @conf["clusters"].size > 1 %>

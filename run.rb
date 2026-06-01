@@ -26,7 +26,7 @@ end
 VERSION                ||= "2.1.0"
 SCHEDULERS_DIR_PATH    ||= "./lib/schedulers"
 HISTORY_ROWS           ||= 10
-JOB_STATUS             ||= { "queued" => "QUEUED", "running" => "RUNNING", "completed" => "COMPLETED", "failed" => "FAILED", "cancelled" => "CANCELLED" }
+JOB_STATUS             ||= { "queued" => "QUEUED", "running" => "RUNNING", "completed" => "COMPLETED", "failed" => "FAILED", "cancelled" => "CANCELLED", "unknown" => "UNKNOWN" }
 JOB_ID                 ||= "id"
 JOB_APP_NAME           ||= "appName"
 JOB_DIR_NAME           ||= "appPath"
@@ -801,26 +801,18 @@ get "/job_details" do
     "script_content"  => nil
   }
 
-  # Terminal states: scontrol may still hold the record briefly after a job ends,
-  # but sacct is the authoritative source for any finished job.
-  terminal_states = %w[CANCELLED COMPLETED FAILED BOOT_FAIL DEADLINE NODE_FAIL
-                       OUT_OF_MEMORY PREEMPTED REVOKED TIMEOUT].freeze
+  # Route to scontrol (active) or sacct (terminal) based on the stored DB status.
+  # NULL status means the job has not reached a terminal state yet.
+  terminal_db_statuses = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
+  db_status = nil
+  history_db_path = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
+  if history_db_path && File.exist?(history_db_path.to_s)
+    db_tmp    = open_history_db(conf, cluster_name)
+    db_row    = db_tmp.execute("SELECT _status FROM jobs WHERE _job_id = ? AND _deleted = 0", [job_id]).first
+    db_status = db_row ? db_row["_status"] : nil
+  end
 
-  scontrol_data, scontrol_err, scontrol_cmd = scheduler.scontrol_job(job_id, bin, bin_overrides, ssh_wrapper)
-  scontrol_live = scontrol_data && !scontrol_data.empty? &&
-    terminal_states.none? { |s| scontrol_data["JobState"].to_s.start_with?(s) }
-
-  if scontrol_live
-    result["source"]  = "scontrol"
-    result["command"] = scontrol_cmd
-    result["data"]    = scontrol_data
-    cmd = scontrol_data["Command"]
-    if cmd && cmd != "(null)" && !cmd.strip.empty?
-      result["script_location"] = File.dirname(cmd)
-      result["script_name"]     = File.basename(cmd)
-    end
-    result["script_location"] ||= scontrol_data["WorkDir"]
-  else
+  if terminal_db_statuses.include?(db_status)
     sacct_data, sacct_err, sacct_cmd = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper)
     if sacct_data && !sacct_data.empty?
       result["source"]  = "sacct"
@@ -829,8 +821,33 @@ get "/job_details" do
       workdir = sacct_data["WorkDir"]
       result["script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
     else
-      errors = { "scontrol" => scontrol_err, "sacct" => sacct_err }.compact
-      result["errors"] = errors unless errors.empty?
+      result["errors"] = { "sacct" => sacct_err }.compact
+    end
+  else
+    scontrol_data, scontrol_err, scontrol_cmd = scheduler.scontrol_job(job_id, bin, bin_overrides, ssh_wrapper)
+    if scontrol_data && !scontrol_data.empty?
+      result["source"]  = "scontrol"
+      result["command"] = scontrol_cmd
+      result["data"]    = scontrol_data
+      cmd = scontrol_data["Command"]
+      if cmd && cmd != "(null)" && !cmd.strip.empty?
+        result["script_location"] = File.dirname(cmd)
+        result["script_name"]     = File.basename(cmd)
+      end
+      result["script_location"] ||= scontrol_data["WorkDir"]
+    else
+      # Job may have just become terminal; fall back to sacct.
+      sacct_data, sacct_err, sacct_cmd = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper)
+      if sacct_data && !sacct_data.empty?
+        result["source"]  = "sacct"
+        result["command"] = sacct_cmd
+        result["data"]    = sacct_data
+        workdir = sacct_data["WorkDir"]
+        result["script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
+      else
+        errors = { "scontrol" => scontrol_err, "sacct" => sacct_err }.compact
+        result["errors"] = errors unless errors.empty?
+      end
     end
   end
 
@@ -1210,7 +1227,7 @@ post "/*" do
           "_script_location" => params[HEADER_SCRIPT_LOCATION],
           "_script_name"     => params[HEADER_SCRIPT_NAME],
           "_submission_time" => normalize_time_for_db(params[JOB_SUBMISSION_TIME]),
-          "_status"          => JOB_STATUS["queued"],
+          "_status"          => nil,
           "_script_content"  => store_script ? script_content : nil,
           "_deleted"         => 0
         })

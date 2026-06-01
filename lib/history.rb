@@ -255,7 +255,7 @@ helpers do
   end
 
   def history_valid_statuses
-    %w[running queued completed cancelled failed]
+    %w[running queued completed cancelled failed unknown]
   end
 
   def parse_history_statuses(raw_statuses)
@@ -389,9 +389,18 @@ helpers do
     if selected_statuses.empty?
       clauses << "1 = 0"
     else
-      placeholders = (["?"] * selected_statuses.length).join(", ")
-      clauses << "_status IN (#{placeholders})"
-      params.concat(selected_statuses)
+      # Active jobs (queued/running) are stored with NULL status; include IS NULL when either is selected.
+      active_vals    = [JOB_STATUS["queued"], JOB_STATUS["running"]]
+      include_active = selected_statuses.any? { |s| active_vals.include?(s) }
+      terminal_vals  = selected_statuses.reject { |s| active_vals.include?(s) }
+      conds = []
+      conds << "_status IS NULL" if include_active
+      if terminal_vals.any?
+        placeholders = (["?"] * terminal_vals.length).join(", ")
+        conds << "_status IN (#{placeholders})"
+        params.concat(terminal_vals)
+      end
+      clauses << "(#{conds.join(' OR ')})"
     end
 
     unless date_from.to_s.empty?
@@ -468,7 +477,8 @@ helpers do
           WHEN '#{JOB_STATUS["completed"]}' THEN 2
           WHEN '#{JOB_STATUS["cancelled"]}' THEN 3
           WHEN '#{JOB_STATUS["failed"]}' THEN 4
-          ELSE 99
+          WHEN '#{JOB_STATUS["unknown"]}' THEN 5
+          ELSE -1
         END
       SQL
       "#{status_case} #{direction}, CAST(_job_id AS INTEGER) #{direction}"
@@ -592,7 +602,9 @@ helpers do
                                when JOB_STATUS["completed"] then ["bg-success", "Completed"]
                                when JOB_STATUS["cancelled"] then ["bg-secondary", "Cancelled"]
                                when JOB_STATUS["failed"]    then ["bg-danger", "Failed"]
-                               else                              ["bg-info", "Unknown"]
+                               when JOB_STATUS["unknown"]   then ["bg-secondary", "Unknown"]
+                               when nil                          then ["bg-info text-dark", "Active"]
+                               else                              ["bg-secondary", "Unknown"]
                                end
 
     "<span class=\"badge fs-6 #{badge_class}\">#{status_text}</span>\n"
@@ -783,11 +795,13 @@ helpers do
   # script_location, script_name, script_content) is never overwritten by sacct data.
   def upsert_sacct_jobs(db, sacct_jobs)
     return if sacct_jobs.nil? || sacct_jobs.empty?
+    terminal = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"], JOB_STATUS["unknown"]]
     db.transaction do
       sacct_jobs.each do |job|
         job_id = job["JobID"].to_s.strip
         next unless valid_oc_job_id?(job_id)
         oc_status   = sacct_state_to_oc_status(job["State"].to_s)
+        db_status   = terminal.include?(oc_status) ? oc_status : nil
         job_name    = job["JobName"].to_s.strip; job_name = nil if job_name.empty?
         submit_str  = job["Submit"].to_s.strip
         submit_str  = nil if submit_str.empty? || submit_str == "Unknown" || submit_str == "None"
@@ -797,8 +811,8 @@ helpers do
         end_time    = job["End"].to_s.strip
         end_time    = nil if end_time.empty? || end_time == "Unknown" || end_time == "None"
         params = [
-          job_id, oc_status, job_name, submit_time, start_time, end_time,
-          oc_status,
+          job_id, db_status, job_name, submit_time, start_time, end_time,
+          db_status, db_status,
           job_name, job_name,
           submit_time,
           start_time, start_time,
@@ -808,7 +822,7 @@ helpers do
           INSERT INTO jobs (_job_id, _status, _job_name, _submission_time, _start_time, _end_time, _deleted)
           VALUES (?, ?, ?, ?, ?, ?, 0)
           ON CONFLICT(_job_id) DO UPDATE SET
-            _status          = ?,
+            _status          = CASE WHEN ? IS NOT NULL THEN ? ELSE _status END,
             _job_name        = CASE WHEN ? IS NOT NULL THEN ? ELSE _job_name END,
             _submission_time = CASE WHEN _submission_time IS NULL THEN ? ELSE _submission_time END,
             _start_time      = CASE WHEN ? IS NOT NULL THEN ? ELSE _start_time END,
@@ -899,23 +913,26 @@ helpers do
     }
   end
 
-  # Return the IDs of all non-terminal (queued or running) jobs.
+  # Return the IDs of all non-terminal jobs (NULL status means not yet terminal).
   def get_nonterminal_job_ids(db)
-    terminal = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
+    terminal = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"], JOB_STATUS["unknown"]]
     placeholders = (["?"] * terminal.length).join(", ")
     db.execute(
-      "SELECT _job_id FROM jobs WHERE _deleted = 0 AND _status NOT IN (#{placeholders})",
+      "SELECT _job_id FROM jobs WHERE _deleted = 0 AND (_status IS NULL OR _status NOT IN (#{placeholders}))",
       terminal
     ).map { |row| row["_job_id"] }
   end
 
   # Bulk-update job statuses in the DB from sacct results.
+  # Only writes status when it has reached a terminal state (completed/cancelled/failed/unknown).
   def sync_job_statuses(db, sacct_results)
     return if sacct_results.nil? || sacct_results.empty?
+    terminal = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"], JOB_STATUS["unknown"]]
 
     db.transaction do
       sacct_results.each do |job_id, sacct_job|
         oc_status  = sacct_state_to_oc_status(sacct_job["State"].to_s)
+        db_status  = terminal.include?(oc_status) ? oc_status : nil
         job_name   = sacct_job["JobName"].to_s
         job_name   = nil if job_name.empty?
         start_time = sacct_job["Start"].to_s
@@ -923,9 +940,9 @@ helpers do
         end_time   = sacct_job["End"].to_s
         end_time   = nil if end_time.empty? || end_time == "Unknown" || end_time == "None"
 
-        db.execute(<<~SQL, [oc_status, job_name, job_name, start_time, start_time, end_time, end_time, job_id])
+        db.execute(<<~SQL, [db_status, db_status, job_name, job_name, start_time, start_time, end_time, end_time, job_id])
           UPDATE jobs SET
-            _status     = ?,
+            _status     = CASE WHEN ? IS NOT NULL THEN ? ELSE _status END,
             _job_name   = CASE WHEN ? IS NOT NULL THEN ? ELSE _job_name END,
             _start_time = CASE WHEN ? IS NOT NULL THEN ? ELSE _start_time END,
             _end_time   = CASE WHEN ? IS NOT NULL THEN ? ELSE _end_time END
@@ -968,7 +985,7 @@ helpers do
          "REVOKED", "SPECIAL_EXIT", "TIMEOUT"
       JOB_STATUS["failed"]
     else
-      JOB_STATUS["completed"]
+      JOB_STATUS["unknown"]
     end
   end
 

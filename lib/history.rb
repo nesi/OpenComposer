@@ -748,14 +748,6 @@ helpers do
   end
 
   # Return all unfinished job IDs.
-  def get_unfinished_job_ids(db)
-    db.execute(<<~SQL, [JOB_STATUS["completed"], JOB_STATUS["failed"]]).map { |row| row["_job_id"] }
-      SELECT _job_id
-      FROM jobs
-      WHERE _status IS NULL OR (_status != ? AND _status != ?)
-      ORDER BY _submission_time DESC, _job_id DESC
-    SQL
-  end
 
   # Merge incoming data into existing data while preserving existing values for nil/empty updates.
   def merge_job_data(existing, incoming)
@@ -1069,48 +1061,6 @@ helpers do
         )
       )
     end
-  end
-
-  # Update the status of all jobs that are not completed
-  def update_status(conf, scheduler, bin, bin_overrides, ssh_wrapper, cluster_name)
-    db = open_history_db(conf, cluster_name)
-    queried_ids = get_unfinished_job_ids(db)
-    return nil if queried_ids.empty?
-
-    scheduler     = cluster_name ? scheduler[cluster_name]     : scheduler
-    ssh_wrapper   = cluster_name ? ssh_wrapper[cluster_name]   : ssh_wrapper
-    bin           = cluster_name ? bin[cluster_name]           : bin
-    bin_overrides = cluster_name ? bin_overrides[cluster_name] : bin_overrides
-    ENV['SGE_ROOT'] ||= cluster_name ? conf["sge_root"][cluster_name] : conf["sge_root"]
-
-    status, error_msg = scheduler.squeue_query(queried_ids, bin, bin_overrides, ssh_wrapper)
-    return error_msg if error_msg
-
-    db.transaction do
-      status.each do |id, info|
-        record = find_job(db, id)
-        next unless record
-
-        existing = job_record_to_internal_hash(record)
-        scheduler_data = { "_status" => info[JOB_STATUS_ID] }
-        # Backfill _script_location from squeue WorkDir when missing from the DB record
-        workdir = info["WorkDir"]
-        unless workdir.to_s.strip.empty? || workdir == "None"
-          scheduler_data["WorkDir"] = workdir if existing["_script_location"].to_s.strip.empty?
-        end
-
-        upsert_job(
-          db,
-          build_job_record(
-            existing: existing,
-            submit_data: nil,
-            scheduler_data: scheduler_data
-          )
-        )
-      end
-    end
-
-    nil
   end
 
   # Output a styled status badge for a job based on its current status.

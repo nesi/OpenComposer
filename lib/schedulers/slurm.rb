@@ -298,49 +298,6 @@ class Slurm < Scheduler
     [{}, e.message]
   end
 
-  # Query current status for a list of job IDs via squeue.
-  # Returns [{job_id => info_hash}, nil] on success, or [nil, error_msg] on failure.
-  # Jobs not present in squeue output (finished/cancelled/failed) are absent from the result.
-  def squeue_query(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
-    return [{}, nil] if job_ids.empty?
-
-    squeue  = get_command_path("squeue", bin, bin_overrides)
-    command = [ssh_wrapper, SLURM_ENV, squeue, "-r", "--noheader",
-               "--Format=jobid:50,state:20", "-j", job_ids.join(",")].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
-    return [nil, [stdout, stderr].join(" ")] unless status.success?
-
-    result = {}
-    stdout.lines.each do |line|
-      parts = line.split
-      next if parts.size < 2
-      id    = parts[0]
-      state = parts[1]
-      workdir = nil
-
-      job_status = if state.start_with?("CANCELLED")
-                     JOB_STATUS["cancelled"]
-                   else
-                     case state
-                     when "PENDING", "CONFIGURING", "REQUEUED", "RESIZING", "SUSPENDED"
-                       JOB_STATUS["queued"]
-                     when "RUNNING", "COMPLETING"
-                       JOB_STATUS["running"]
-                     when "COMPLETED"
-                       JOB_STATUS["completed"]
-                     when "BOOT_FAIL", "DEADLINE", "FAILED", "NODE_FAIL", "OUT_OF_MEMORY", "REVOKED", "TIMEOUT"
-                       JOB_STATUS["failed"]
-                     end
-                   end
-
-      result[id] = { JOB_STATUS_ID => job_status }
-    end
-
-    [result, nil]
-  rescue Exception => e
-    [nil, e.message]
-  end
-
   # Fetch node info via sinfo -N with fixed-width columns.
   # Deduplicates by node name (a node appears once per partition in -N output).
   def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)

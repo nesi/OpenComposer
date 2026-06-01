@@ -524,10 +524,22 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       effective_from, effective_to, bin_s, bin_overrides_s, ssh_wrapper_s
     )
 
+    # Fetch estimated start times from squeue --start for any pending jobs.
+    # Use deduplicated base job IDs (strip _N suffix) to avoid flooding squeue
+    # with thousands of individual array task IDs.
+    pending_base_ids = (sacct_raw || [])
+      .select { |j| j["State"].to_s.start_with?("PENDING") }
+      .map    { |j| j["JobID"].to_s.split("_").first }
+      .uniq
+      .reject(&:empty?)
+    squeue_starts, _ = pending_base_ids.empty? ? [{}, nil] : scheduler_s.squeue_start_times(pending_base_ids, bin_s, bin_overrides_s, ssh_wrapper_s)
+    squeue_starts ||= {}
+
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @jobs, @jobs_size = get_combined_jobs_page(
       @conf, @cluster_name, sacct_raw, @statuses, @filter, @filter_column,
-      @filter_mode, effective_from, effective_to, @sort, @order, requested_rows, offset
+      @filter_mode, effective_from, effective_to, @sort, @order, requested_rows, offset,
+      squeue_starts: squeue_starts
     )
     @history_search_elapsed_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - history_search_started_at
     @rows         = [requested_rows, @jobs_size].min

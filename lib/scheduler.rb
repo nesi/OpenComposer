@@ -55,6 +55,13 @@ class Scheduler
     [nil, nil, nil]
   end
 
+  # Fetch estimated start times for pending jobs from squeue --start.
+  # @param job_ids [Array<String>] base job IDs to query (e.g. ["6801262"]).
+  # @return [Array<Hash, String>] [job_id => start_time_string, error_or_nil]
+  def squeue_start_times(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    [{}, nil]
+  end
+
   # Fetch the batch script submitted for a job.
   # Override in subclasses that support this (e.g. Slurm via sacct -B).
   # @return [Array<String, String>] [script_content_or_nil, error_message_or_nil]

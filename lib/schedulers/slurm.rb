@@ -3,6 +3,7 @@ require 'open3'
 require 'date'
 
 class Slurm < Scheduler
+  SLURM_ENV = "SLURM_TIME_FORMAT=standard"
   # Submit a job to the Slurm scheduler using the 'sbatch' command.
   # If the submission is successful, it checks for job details using the 'scontrol' command.
   def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
@@ -81,12 +82,12 @@ class Slurm < Scheduler
 
     # Get the list of all available fields from sacct
     sacct = get_command_path("sacct", bin, bin_overrides)
-    command1 = [ssh_wrapper, sacct, "--helpformat"].compact.join(" ")
+    command1 = [ssh_wrapper, SLURM_ENV, sacct, "--helpformat"].compact.join(" ")
     stdout1, stderr1, status1 = Open3.capture3(command1)
     return nil, [stdout1, stderr1].join(" ") unless status1.success?
 
     # Run sacct with all fields, using --parsable2 for clean pipe-separated output
-    command2 = [ssh_wrapper, sacct, "--format=#{stdout1.split.join(",")} --parsable2 -j", jobs.join(",")].compact.join(" ")
+    command2 = [ssh_wrapper, SLURM_ENV, sacct, "--format=#{stdout1.split.join(",")} --parsable2 -j", jobs.join(",")].compact.join(" ")
     stdout2, stderr2, status2 = Open3.capture3(command2)
     return nil, [stdout2, stderr2].join(" ") unless status2.success?
 
@@ -193,7 +194,7 @@ class Slurm < Scheduler
     fields = priority.select { |f| all_fields.include?(f) } +
              all_fields.reject { |f| priority.include?(f) }
 
-    command = [ssh_wrapper, sacct, "-j", job_id, "-X",
+    command = [ssh_wrapper, SLURM_ENV, sacct, "-j", job_id, "-X",
                "--format=#{fields.join(',')}", "--parsable2"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
@@ -229,7 +230,7 @@ class Slurm < Scheduler
     effective_from = date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : date_from.to_s
     effective_to   = date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")       : date_to.to_s
 
-    command = [ssh_wrapper, sacct, "-X", "--parsable2",
+    command = [ssh_wrapper, SLURM_ENV, sacct, "-X", "--parsable2",
                "--format=#{fields.join(',')}",
                "--starttime=#{effective_from}",
                "--endtime=#{effective_to}T23:59:59"].compact.join(" ")
@@ -255,6 +256,32 @@ class Slurm < Scheduler
     [jobs, nil, command]
   rescue Exception => e
     return nil, e.message, nil
+  end
+
+  # Fetch estimated start times for a list of pending jobs via squeue --start.
+  # Returns a hash of job_id => start_time_string for jobs that have an estimate.
+  # N/A and blank values are excluded so callers can treat missing keys as unknown.
+  def squeue_start_times(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    return [{}, nil] if job_ids.empty?
+
+    squeue  = get_command_path("squeue", bin, bin_overrides)
+    command = [ssh_wrapper, SLURM_ENV, squeue, "--start", "--noheader", "--parsable2",
+               "--Format=jobid,starttime", "-j", job_ids.join(",")].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    return [{}, [stdout, stderr].join(" ")] unless status.success?
+
+    result = {}
+    stdout.lines.each do |line|
+      parts = line.chomp.split("|")
+      next if parts.size < 2
+      job_id     = parts[0].strip
+      start_time = parts[1].strip
+      next if start_time.empty? || start_time.upcase == "N/A"
+      result[job_id] = start_time
+    end
+    [result, nil]
+  rescue Exception => e
+    [{}, e.message]
   end
 
   # Fetch node info via sinfo -N with fixed-width columns.
@@ -292,7 +319,7 @@ class Slurm < Scheduler
   # Returns [script_content, nil] or [nil, nil] when not available.
   def batch_script(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
     sacct = get_command_path("sacct", bin, bin_overrides)
-    command = [ssh_wrapper, sacct, "-j", job_id, "-B"].compact.join(" ")
+    command = [ssh_wrapper, SLURM_ENV, sacct, "-j", job_id, "-B"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     return nil, nil unless status.success?
 

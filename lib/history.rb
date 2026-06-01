@@ -1201,7 +1201,8 @@ helpers do
 
   # Build one row for the combined history table.
   # sacct_job and db_job may each be nil when a job comes from only one source.
-  def build_combined_row(job_id, sacct_job, db_job)
+  # squeue_start is an estimated start time string for pending jobs (nil if unknown).
+  def build_combined_row(job_id, sacct_job, db_job, squeue_start: nil)
     app_name = if db_job && !db_job[JOB_APP_NAME].to_s.strip.empty?
                  db_job[JOB_APP_NAME]
                else
@@ -1211,19 +1212,20 @@ helpers do
     script_loc = db_job&.fetch(HEADER_SCRIPT_LOCATION, nil)
     script_loc = sacct_job&.fetch("WorkDir", nil) if script_loc.to_s.strip.empty?
 
-    start_time = sacct_job&.fetch("Start", nil)
-    start_time = nil if start_time.to_s == "Unknown" || start_time.to_s.empty?
-    start_time ||= db_job&.fetch("Start", nil)
-
-    end_time = sacct_job&.fetch("End", nil)
-    end_time = nil if end_time.to_s == "Unknown" || end_time.to_s.empty?
-    end_time ||= db_job&.fetch("End", nil)
-
     oc_status = if sacct_job
                   sacct_state_to_oc_status(sacct_job["State"].to_s)
                 else
                   db_job&.fetch(JOB_STATUS_ID, nil)
                 end
+
+    start_time = sacct_job&.fetch("Start", nil)
+    start_time = nil if start_time.to_s == "Unknown" || start_time.to_s.empty?
+    start_time ||= db_job&.fetch("Start", nil)
+    start_time ||= squeue_start if oc_status == JOB_STATUS["queued"]
+
+    end_time = sacct_job&.fetch("End", nil)
+    end_time = nil if end_time.to_s == "Unknown" || end_time.to_s.empty?
+    end_time ||= db_job&.fetch("End", nil)
 
     job_name = sacct_job&.fetch("JobName", nil)
     job_name = nil if job_name.to_s.strip.empty?
@@ -1270,7 +1272,7 @@ helpers do
   end
 
   # Return all combined jobs matching filters (no pagination).
-  def get_combined_jobs(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to)
+  def get_combined_jobs(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to, squeue_starts: {})
     sacct_map = {}
     (sacct_jobs || []).each { |j| sacct_map[j["JobID"]] = j }
 
@@ -1322,7 +1324,7 @@ helpers do
                           db_map[job_id]
                         end
 
-      row = build_combined_row(job_id, sacct_map[job_id], resolved_db_job)
+      row = build_combined_row(job_id, sacct_map[job_id], resolved_db_job, squeue_start: squeue_starts[job_id])
 
       next unless selected_statuses.any? { |s| row[JOB_STATUS_ID] == JOB_STATUS[s] }
 
@@ -1346,8 +1348,8 @@ helpers do
   end
 
   # Return one page of combined jobs and the total matching count.
-  def get_combined_jobs_page(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset)
-    all_jobs = get_combined_jobs(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to)
+  def get_combined_jobs_page(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset, squeue_starts: {})
+    all_jobs = get_combined_jobs(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to, squeue_starts: squeue_starts)
     all_jobs.sort_by! { |job| combined_sort_key(job, sort) }
     all_jobs.reverse! if order == "desc"
     page = offset >= all_jobs.size ? [] : all_jobs[offset, limit] || []

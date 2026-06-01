@@ -305,8 +305,8 @@ class Slurm < Scheduler
     return [{}, nil] if job_ids.empty?
 
     squeue  = get_command_path("squeue", bin, bin_overrides)
-    command = [ssh_wrapper, SLURM_ENV, squeue, "--noheader", "--parsable2",
-               "--Format=jobid,state,workdir", "-j", job_ids.join(",")].compact.join(" ")
+    command = [ssh_wrapper, SLURM_ENV, squeue, "--noheader",
+               "-o '%i|%T|%Z'", "-j", job_ids.join(",")].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     return [nil, [stdout, stderr].join(" ")] unless status.success?
 

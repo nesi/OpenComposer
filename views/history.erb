@@ -11,15 +11,23 @@
 <div class="modal" id="_historyCancelAll" aria-hidden="true" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-body">
-        Cancel <strong>all</strong> queued and running jobs?
-      </div>
-      <div class="modal-footer">
-        <form action="<%= history_path_with_query %>" method="post">
-          <input type="hidden" name="action" value="CancelAll">
+      <!-- Phase 1: confirmation -->
+      <div id="_cancelAllPhase1">
+        <div class="modal-body">
+          Cancel <strong>all</strong> queued and running jobs?
+        </div>
+        <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">No</button>
-          <button type="submit" class="btn btn-primary" tabindex="-1">Yes, cancel all</button>
-        </form>
+          <button type="button" class="btn btn-danger" tabindex="-1" onclick="ocHistory.startCancelAll()">Yes, cancel all</button>
+        </div>
+      </div>
+      <!-- Phase 2: progress + abort -->
+      <div id="_cancelAllPhase2" class="d-none">
+        <div class="modal-body" id="_cancelAllProgressArea"></div>
+        <div class="modal-footer">
+          <button type="button" id="_cancelAllAbortBtn" class="btn btn-warning">Abort</button>
+          <button type="button" id="_cancelAllCloseBtn" class="btn btn-secondary d-none" onclick="window.location.reload()">Close</button>
+        </div>
       </div>
     </div>
   </div>

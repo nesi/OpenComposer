@@ -501,6 +501,141 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
   }
 };
 
+// Cancel ALL queued/running jobs one-by-one with an Abort option.
+ocHistory.startCancelAll = function() {
+  var phase1      = document.getElementById('_cancelAllPhase1');
+  var phase2      = document.getElementById('_cancelAllPhase2');
+  var progressArea = document.getElementById('_cancelAllProgressArea');
+  var abortBtn    = document.getElementById('_cancelAllAbortBtn');
+  var closeBtn    = document.getElementById('_cancelAllCloseBtn');
+  if (!phase1 || !phase2 || !progressArea || !abortBtn || !closeBtn) return;
+
+  phase1.classList.add('d-none');
+  phase2.classList.remove('d-none');
+
+  var base    = window.location.pathname.replace(/\/history$/, '');
+  var cluster = new URLSearchParams(window.location.search).get('cluster');
+
+  progressArea.innerHTML = '<p class="text-muted mb-0">Fetching active jobs…</p>';
+  abortBtn.disabled  = false;
+  abortBtn.textContent = 'Abort';
+  abortBtn.classList.remove('d-none');
+  closeBtn.classList.add('d-none');
+
+  var url = base + '/history/active_job_ids';
+  if (cluster) url += '?cluster=' + encodeURIComponent(cluster);
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(jobIds) {
+      if (!jobIds || jobIds.length === 0) {
+        progressArea.innerHTML = '<p class="text-muted mb-0">No queued or running jobs found.</p>';
+        abortBtn.classList.add('d-none');
+        closeBtn.classList.remove('d-none');
+        return;
+      }
+
+      var total   = jobIds.length;
+      var done    = 0;
+      var errors  = [];
+      var aborted = false;
+
+      progressArea.innerHTML =
+        '<div class="mb-2">Cancelling ' + total + ' job' + (total !== 1 ? 's' : '') + '…</div>' +
+        '<div class="progress mb-2" style="height:1.4rem;">' +
+          '<div id="_cancelAllBar" class="progress-bar progress-bar-striped progress-bar-animated bg-danger"' +
+               ' role="progressbar" style="width:0%;min-width:2.5rem;"' +
+               ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0 / ' + total + '</div>' +
+        '</div>' +
+        '<div id="_cancelAllStatus" class="small text-muted"></div>';
+
+      abortBtn.onclick = function() {
+        aborted = true;
+        abortBtn.disabled    = true;
+        abortBtn.textContent = 'Aborting…';
+      };
+
+      (async function() {
+        for (var i = 0; i < jobIds.length; i++) {
+          if (aborted) break;
+
+          var jobId    = jobIds[i];
+          var statusEl = document.getElementById('_cancelAllStatus');
+          if (statusEl) statusEl.textContent = 'Cancelling ' + jobId + '…';
+
+          try {
+            var fd = new URLSearchParams({ jobId: jobId });
+            if (cluster) fd.set('cluster', cluster);
+            var r    = await fetch(base + '/history/cancel_one', { method: 'POST', body: fd });
+            var data = await r.json();
+            if (!data.ok) errors.push(jobId + ': ' + (data.error || 'Unknown error'));
+          } catch (e) {
+            errors.push(jobId + ': ' + e.message);
+          }
+
+          done++;
+          var pct = Math.round((done / total) * 100);
+          var bar = document.getElementById('_cancelAllBar');
+          if (bar) {
+            bar.style.width = pct + '%';
+            bar.textContent = done + ' / ' + total;
+            bar.setAttribute('aria-valuenow', pct);
+          }
+        }
+
+        abortBtn.classList.add('d-none');
+        closeBtn.classList.remove('d-none');
+
+        var bar      = document.getElementById('_cancelAllBar');
+        var statusEl = document.getElementById('_cancelAllStatus');
+
+        if (aborted) {
+          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-warning'); }
+          var remaining = total - done;
+          if (statusEl) {
+            statusEl.innerHTML = '<span class="text-warning fw-semibold">Aborted. ' +
+              done + ' of ' + total + ' job' + (total !== 1 ? 's' : '') + ' cancelled; ' +
+              remaining + ' remaining.</span>' +
+              (errors.length > 0
+                ? '<ul class="mb-0 mt-1">' + errors.map(function(e) { return '<li>' + ocHistory.escapeHtml(e) + '</li>'; }).join('') + '</ul>'
+                : '');
+          }
+        } else if (errors.length === 0) {
+          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-success'); }
+          if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold">All jobs cancelled successfully.</span>';
+          setTimeout(function() { window.location.reload(); }, 1000);
+        } else {
+          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-warning'); }
+          if (statusEl) {
+            statusEl.innerHTML = '<span class="text-danger fw-semibold">Some errors occurred:</span>' +
+              '<ul class="mb-0 mt-1">' + errors.map(function(e) { return '<li>' + ocHistory.escapeHtml(e) + '</li>'; }).join('') + '</ul>';
+          }
+        }
+      })();
+    })
+    .catch(function(e) {
+      progressArea.innerHTML = '<div class="alert alert-warning mb-0">Could not fetch active jobs: ' + ocHistory.escapeHtml(e.message) + '</div>';
+      abortBtn.classList.add('d-none');
+      closeBtn.classList.remove('d-none');
+    });
+};
+
+// Reset the CancelAll modal to phase 1 each time it is closed.
+(function() {
+  var modal = document.getElementById('_historyCancelAll');
+  if (!modal) return;
+  modal.addEventListener('hidden.bs.modal', function() {
+    var phase1   = document.getElementById('_cancelAllPhase1');
+    var phase2   = document.getElementById('_cancelAllPhase2');
+    var abortBtn = document.getElementById('_cancelAllAbortBtn');
+    var closeBtn = document.getElementById('_cancelAllCloseBtn');
+    if (phase1)   phase1.classList.remove('d-none');
+    if (phase2)   phase2.classList.add('d-none');
+    if (abortBtn) { abortBtn.disabled = false; abortBtn.textContent = 'Abort'; abortBtn.classList.remove('d-none'); }
+    if (closeBtn) closeBtn.classList.add('d-none');
+  });
+})();
+
 var _ocCancelForm = document.getElementById('_historyCancelJobForm');
 if (_ocCancelForm) {
   _ocCancelForm.addEventListener('submit', function(e) {

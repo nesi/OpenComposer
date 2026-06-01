@@ -865,6 +865,22 @@ rescue => e
   JSON.generate({ ok: false, error: e.message })
 end
 
+get "/history/active_job_ids" do
+  conf         = create_conf
+  content_type :json
+  cluster_name = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
+  history_db   = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
+  unless history_db && File.exist?(history_db.to_s)
+    next JSON.generate([])
+  end
+  db  = open_history_db(conf, cluster_name)
+  ids = get_nonterminal_job_ids(db)
+  JSON.generate(ids)
+rescue => e
+  content_type :json
+  JSON.generate([])
+end
+
 get "/nodes/data" do
   conf = create_conf
   if conf.key?("clusters")

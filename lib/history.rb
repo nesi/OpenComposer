@@ -1083,7 +1083,7 @@ helpers do
     bin_overrides = cluster_name ? bin_overrides[cluster_name] : bin_overrides
     ENV['SGE_ROOT'] ||= cluster_name ? conf["sge_root"][cluster_name] : conf["sge_root"]
 
-    status, error_msg = scheduler.query(queried_ids, bin, bin_overrides, ssh_wrapper)
+    status, error_msg = scheduler.squeue_query(queried_ids, bin, bin_overrides, ssh_wrapper)
     return error_msg if error_msg
 
     db.transaction do
@@ -1092,14 +1092,12 @@ helpers do
         next unless record
 
         existing = job_record_to_internal_hash(record)
-        scheduler_data = (info || {}).transform_keys(&:to_s)
-        scheduler_data["_status"] = scheduler_data[JOB_STATUS_ID.to_s]
-        # Backfill _script_location from sacct WorkDir when missing from the DB record
-        if existing["_script_location"].to_s.strip.empty?
-          workdir = scheduler_data["WorkDir"]
-          scheduler_data["_script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
+        scheduler_data = { "_status" => info[JOB_STATUS_ID] }
+        # Backfill _script_location from squeue WorkDir when missing from the DB record
+        workdir = info["WorkDir"]
+        unless workdir.to_s.strip.empty? || workdir == "None"
+          scheduler_data["WorkDir"] = workdir if existing["_script_location"].to_s.strip.empty?
         end
-        scheduler_data[JOB_KEYS.to_s] = info.keys
 
         upsert_job(
           db,

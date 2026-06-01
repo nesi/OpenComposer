@@ -1284,13 +1284,45 @@ helpers do
 
     deleted_generic = get_deleted_generic_job_ids(db)
 
+    # Build parent_id → ranges mapping so individual tasks covered by a sacct range
+    # entry (e.g. "6800213_[465-2000]") can be suppressed from the table.
+    array_ranges = {}
+    sacct_map.each_key do |job_id|
+      next unless job_id.to_s =~ /\A(\d+)_\[(\d+)-(\d+)(?::\d+)?\]\z/
+      array_ranges[$1] ||= []
+      array_ranges[$1] << [$2.to_i, $3.to_i]
+    end
+
+    # Build parent_id → db_job so range entries can inherit app/script info from
+    # a sibling individual task that was submitted through OC.
+    parent_db_map = {}
+    db_map.each do |job_id, db_job|
+      next unless job_id.to_s =~ /\A(\d+)_(\d+)\z/
+      parent_db_map[$1] ||= db_job
+    end
+
     all_ids = (sacct_map.keys + db_map.keys).uniq
     selected_statuses = Array(statuses).map(&:to_s)
     filter_text = CGI.unescapeHTML(filter.to_s).downcase
 
     all_ids.filter_map do |job_id|
+      # Suppress individual array tasks whose index falls within a sacct range entry.
+      if job_id.to_s =~ /\A(\d+)_(\d+)\z/
+        parent_id, task_idx = $1, $2.to_i
+        next if array_ranges[parent_id]&.any? { |rs, re| task_idx >= rs && task_idx <= re }
+      end
+
       next if deleted_generic.include?(job_id) && db_map[job_id].nil?
-      row = build_combined_row(job_id, sacct_map[job_id], db_map[job_id])
+
+      # For a range entry with no direct DB record, inherit app/script info from a
+      # sibling task so it shows the correct application name instead of "Generic".
+      resolved_db_job = if db_map[job_id].nil? && job_id.to_s =~ /\A(\d+)_\[/
+                          parent_db_map[$1]
+                        else
+                          db_map[job_id]
+                        end
+
+      row = build_combined_row(job_id, sacct_map[job_id], resolved_db_job)
 
       next unless selected_statuses.any? { |s| row[JOB_STATUS_ID] == JOB_STATUS[s] }
 

@@ -1287,7 +1287,6 @@ helpers do
     filter_text = CGI.unescapeHTML(filter.to_s).downcase
 
     all_ids.filter_map do |job_id|
-      next if job_id.to_s.match?(/\A\d+_\[/)
       next if deleted_generic.include?(job_id) && db_map[job_id].nil?
       row = build_combined_row(job_id, sacct_map[job_id], db_map[job_id])
 

@@ -306,17 +306,17 @@ class Slurm < Scheduler
 
     squeue  = get_command_path("squeue", bin, bin_overrides)
     command = [ssh_wrapper, SLURM_ENV, squeue, "--noheader",
-               "-o '%i|%T|%Z'", "-j", job_ids.join(",")].compact.join(" ")
+               "--Format=jobid:50,state:20", "-j", job_ids.join(",")].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     return [nil, [stdout, stderr].join(" ")] unless status.success?
 
     result = {}
     stdout.lines.each do |line|
-      parts = line.chomp.split("|")
+      parts = line.split
       next if parts.size < 2
-      id      = parts[0].strip
-      state   = parts[1].strip
-      workdir = parts[2]&.strip
+      id    = parts[0]
+      state = parts[1]
+      workdir = nil
 
       job_status = if state.start_with?("CANCELLED")
                      JOB_STATUS["cancelled"]
@@ -333,7 +333,7 @@ class Slurm < Scheduler
                      end
                    end
 
-      result[id] = { JOB_STATUS_ID => job_status, "WorkDir" => workdir }.compact
+      result[id] = { JOB_STATUS_ID => job_status }
     end
 
     [result, nil]

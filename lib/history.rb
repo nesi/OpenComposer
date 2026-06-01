@@ -1110,6 +1110,20 @@ helpers do
           )
         )
       end
+
+      (queried_ids - status.keys).each do |id|
+        record = find_job(db, id)
+        next unless record
+        existing = job_record_to_internal_hash(record)
+        upsert_job(
+          db,
+          build_job_record(
+            existing: existing,
+            submit_data: nil,
+            scheduler_data: { "_status" => JOB_STATUS["cancelled"] }
+          )
+        )
+      end
     end
 
     nil

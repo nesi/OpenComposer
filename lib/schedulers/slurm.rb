@@ -346,6 +346,44 @@ class Slurm < Scheduler
     return nil, e.message
   end
 
+  # Query the current status of specific job IDs via sacct (batched in groups of 100).
+  # Returns [hash_of_job_id_to_row, error_or_nil].
+  def sacct_status_update(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    return {}, nil if job_ids.empty?
+
+    sacct  = get_command_path("sacct", bin, bin_overrides)
+    result = {}
+    last_error = nil
+
+    job_ids.each_slice(100) do |batch|
+      command = [ssh_wrapper, SLURM_ENV, sacct, "-X", "--parsable2",
+                 "--format=JobID,JobName,State,Start,End",
+                 "-j", batch.join(",")].compact.join(" ")
+      stdout, stderr, status = Open3.capture3(command)
+      unless status.success?
+        last_error = [stdout, stderr].join(" ").strip
+        next
+      end
+
+      lines = stdout.lines.map(&:chomp).reject(&:empty?)
+      next if lines.size < 2
+
+      header = lines[0].split('|')
+      lines[1..].each do |line|
+        row = {}
+        line.split('|').each_with_index { |v, i| row[header[i]] = v if header[i] }
+        next if row.empty?
+        jid = row["JobID"].to_s.strip
+        next if jid.empty? || jid.end_with?(".batch", ".extern")
+        result[jid] = row
+      end
+    end
+
+    [result, last_error]
+  rescue Exception => e
+    [{}, e.message]
+  end
+
   private
 
   # Expand a bracket-range job ID into individual task IDs.

@@ -117,6 +117,7 @@ def create_conf
   # Set initial values if not defined
   conf["data_dir"]                ||= ENV["HOME"] + "/composer"
   conf["history"]                 ||= HISTORY_KEY_MAP.keys
+  conf["history_store_script"]    = conf.fetch("history_store_script", true)
   conf["footer"]                  ||= "&nbsp;"
   conf["thumbnail_width"]         ||= "100"
   conf["navbar_color"]            ||= "#3D3B40"
@@ -458,48 +459,52 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @bin           = @conf["bin"]
     @bin_overrides = @conf["bin_overrides"]
     @ssh_wrapper   = @conf["ssh_wrapper"]
-    @statuses     = parse_history_statuses(params["statuses"])
-    @filter       = escape_html(params["filter"])
+    @statuses      = parse_history_statuses(params["statuses"])
+    @filter        = escape_html(params["filter"])
     @filter_column = parse_history_filter_column(params["filter_column"], @conf)
-    @sort         = parse_history_sort(params["sort"], @conf)
-    @order        = parse_history_order(params["order"])
+    @sort          = parse_history_sort(params["sort"], @conf)
+    @order         = parse_history_order(params["order"])
     @date_range, raw_date_from, raw_date_to = parse_history_date_range(params["date_range"], params["date_from"], params["date_to"])
-    @date_from    = escape_html(raw_date_from)
-    @date_to      = escape_html(raw_date_to)
-    @filter_mode  = escape_html(params["filter_mode"] || "and")
-    @detail_open  = escape_html(params["detail_open"] || "false")
+    @date_from     = escape_html(raw_date_from)
+    @date_to       = escape_html(raw_date_to)
+    @filter_mode   = escape_html(params["filter_mode"] || "and")
+    @detail_open   = escape_html(params["detail_open"] || "false")
     requested_rows = [(params["rows"] || HISTORY_ROWS).to_i, 1].max
-    @current_page = (params["p"] || 1).to_i
-    offset = (@current_page - 1) * requested_rows
+    @current_page  = (params["p"] || 1).to_i
+    offset         = (@current_page - 1) * requested_rows
 
-    # Effective dates: default to last 7 days when no range is specified
-    effective_from = raw_date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : raw_date_from.to_s
-    effective_to   = raw_date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")       : raw_date_to.to_s
-    @using_sacct_default_dates = raw_date_from.to_s.empty? && raw_date_to.to_s.empty?
-
-    # Fetch all sacct jobs for the effective date range
     scheduler_s     = @conf.key?("clusters") ? @scheduler[@cluster_name]        : @scheduler
     bin_s           = @conf.key?("clusters") ? @bin[@cluster_name]               : @bin
     bin_overrides_s = @conf.key?("clusters") ? @bin_overrides[@cluster_name]     : @bin_overrides
     ssh_wrapper_s   = @conf.key?("clusters") ? @ssh_wrapper[@cluster_name]       : @ssh_wrapper
-    sacct_raw, @sacct_error, @sacct_command = scheduler_s.sacct_all_jobs(
-      effective_from, effective_to, bin_s, bin_overrides_s, ssh_wrapper_s
-    )
+
+    db = open_history_db(@conf, @cluster_name)
+
+    # Update statuses of non-terminal jobs via a targeted sacct query (fast path).
+    non_terminal_ids = get_nonterminal_job_ids(db)
+    if non_terminal_ids.any?
+      sacct_results, @sacct_error = scheduler_s.sacct_status_update(
+        non_terminal_ids, bin_s, bin_overrides_s, ssh_wrapper_s
+      )
+      sync_job_statuses(db, sacct_results) if sacct_results
+    end
 
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    @jobs, @jobs_size = get_combined_jobs_page(
-      @conf, @cluster_name, sacct_raw, @statuses, @filter, @filter_column,
-      @filter_mode, effective_from, effective_to, @sort, @order, requested_rows, offset
+    @jobs, @jobs_size = fetch_history_jobs_page(
+      db, @statuses, @filter, @filter_column, @filter_mode,
+      raw_date_from.to_s, raw_date_to.to_s,
+      @sort, @order, requested_rows, offset
     )
     @history_search_elapsed_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - history_search_started_at
-    @rows         = [requested_rows, @jobs_size].min
-    @page_size    = (@rows == 0) ? 1 : ((@jobs_size - 1) / @rows) + 1
-    @start_index  = @jobs_size == 0 ? 0 : (@current_page - 1) * @rows
-    @end_index    = @jobs_size == 0 ? 0 : [@current_page * @rows, @jobs_size].min - 1
-    @error_msg    = error_msg
+
+    @rows        = [requested_rows, @jobs_size].min
+    @page_size   = (@rows == 0) ? 1 : ((@jobs_size - 1) / @rows) + 1
+    @start_index = @jobs_size == 0 ? 0 : (@current_page - 1) * @rows
+    @end_index   = @jobs_size == 0 ? 0 : [@current_page * @rows, @jobs_size].min - 1
+    @error_msg   = error_msg
 
     @filter_column_items = history_filter_column_items(@conf)
-    @date_range_items = history_date_range_items
+    @date_range_items    = history_date_range_items
     @history_search_elapsed_label = format("%.3f", @history_search_elapsed_seconds || 0.0)
 
     return erb :history
@@ -606,14 +611,14 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
         if cache.nil?
           if @dir_name == "Slurm"
-            sched_inst  = create_scheduler(@conf)
-            bin_val     = @conf["bin"]
-            bin_ov_val  = @conf["bin_overrides"]
-            ssh_val     = @conf["ssh_wrapper"]
-            sched_s     = @conf.key?("clusters") ? sched_inst[cluster_name] : sched_inst
-            bin_s2      = @conf.key?("clusters") ? bin_val[cluster_name]    : bin_val
-            bin_ov_s2   = @conf.key?("clusters") ? bin_ov_val[cluster_name] : bin_ov_val
-            ssh_s2      = @conf.key?("clusters") ? ssh_val[cluster_name]    : ssh_val
+            sched_inst = create_scheduler(@conf)
+            bin_val    = @conf["bin"]
+            bin_ov_val = @conf["bin_overrides"]
+            ssh_val    = @conf["ssh_wrapper"]
+            sched_s    = @conf.key?("clusters") ? sched_inst[cluster_name] : sched_inst
+            bin_s2     = @conf.key?("clusters") ? bin_val[cluster_name]    : bin_val
+            bin_ov_s2  = @conf.key?("clusters") ? bin_ov_val[cluster_name] : bin_ov_val
+            ssh_s2     = @conf.key?("clusters") ? ssh_val[cluster_name]    : ssh_val
             script_content, _err = sched_s.batch_script(id, bin_s2, bin_ov_s2, ssh_s2)
             if script_content
               @script_content = escape_html(script_content)
@@ -628,7 +633,26 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
         else
           replace_with_cache(@header, cache)
           replace_with_cache(@body["form"], cache)
-          @script_content = escape_html(cache[OC_SCRIPT_CONTENT])
+          if !cache[OC_SCRIPT_CONTENT].to_s.strip.empty?
+            @script_content = escape_html(cache[OC_SCRIPT_CONTENT])
+          elsif @dir_name == "Slurm"
+            # Script content not stored in DB — fetch from sacct -B
+            sched_inst = create_scheduler(@conf)
+            bin_val    = @conf["bin"]
+            bin_ov_val = @conf["bin_overrides"]
+            ssh_val    = @conf["ssh_wrapper"]
+            sched_s    = @conf.key?("clusters") ? sched_inst[cluster_name] : sched_inst
+            bin_s2     = @conf.key?("clusters") ? bin_val[cluster_name]    : bin_val
+            bin_ov_s2  = @conf.key?("clusters") ? bin_ov_val[cluster_name] : bin_ov_val
+            ssh_s2     = @conf.key?("clusters") ? ssh_val[cluster_name]    : ssh_val
+            script_content, _err = sched_s.batch_script(id, bin_s2, bin_ov_s2, ssh_s2)
+            if script_content
+              @script_content = escape_html(script_content)
+              sbatch_cache = parse_sbatch_into_cache(script_content, @body, @OC_APP_NAME, @OC_DIR_NAME)
+              replace_with_cache(@header, sbatch_cache)
+              replace_with_cache(@body["form"], sbatch_cache)
+            end
+          end
           @submit_content = escape_html(cache[SUBMIT_CONTENT])
         end
       elsif !error_msg.nil? || !script_path.nil? # When job submission failed or script_path != nil (because after script file has been saved)
@@ -981,13 +1005,7 @@ post "/*" do
       if history_db
         db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
         db.transaction do
-          job_ids.each do |job_id|
-            if find_job(db, job_id)
-              delete_job(db, job_id)
-            else
-              mark_generic_job_deleted(db, job_id)
-            end
-          end
+          job_ids.each { |job_id| delete_job(db, job_id) }
         end
         output_log("Delete job information", scheduler, cluster: cluster_name, job_ids: job_ids)
       end
@@ -1129,26 +1147,24 @@ post "/*" do
       params[JOB_SUBMISSION_TIME] = Time.now.iso8601
     end
 
-    # Save a job history
+    # Save a job history (only valid job IDs: plain integer or integer_integer)
     FileUtils.mkdir_p(data_dir)
     db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-    submission_time = params[JOB_SUBMISSION_TIME]
-    submit_data = params.to_h.merge(
-      "_app_name" => params[JOB_APP_NAME],
-      "_app_dir_name" => params[JOB_DIR_NAME],
-      "_script_location" => params[HEADER_SCRIPT_LOCATION],
-      "_script_name" => params[HEADER_SCRIPT_NAME],
-      "_submission_time" => submission_time,
-      "_status" => JOB_STATUS["queued"]
-    )
+    store_script = conf.fetch("history_store_script", true)
     db.transaction do
       Array(job_id).each do |id|
-        record = build_job_record(
-          existing: nil,
-          submit_data: submit_data.merge("_job_id" => id.to_s),
-          scheduler_data: nil
-        )
-        upsert_job(db, record)
+        next unless valid_oc_job_id?(id.to_s)
+        upsert_job(db, {
+          "_job_id"          => id.to_s,
+          "_app_name"        => params[JOB_APP_NAME],
+          "_app_dir_name"    => params[JOB_DIR_NAME],
+          "_script_location" => params[HEADER_SCRIPT_LOCATION],
+          "_script_name"     => params[HEADER_SCRIPT_NAME],
+          "_submission_time" => normalize_time_for_db(params[JOB_SUBMISSION_TIME]),
+          "_status"          => JOB_STATUS["queued"],
+          "_script_content"  => store_script ? script_content : nil,
+          "_deleted"         => 0
+        })
       end
     end
 

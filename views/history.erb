@@ -141,11 +141,6 @@
     <strong>sacct error:</strong> <%= escape_html(@sacct_error) %>
   </div>
 <% end %>
-<% if @using_sacct_default_dates %>
-  <div class="small mx-3 mt-1" style="color:<%= @conf['description_text_color'] %>;">
-    Showing last 7 days. Select a date range above to change the query window.
-  </div>
-<% end %>
 
 <% if @jobs.nil? || @jobs.empty? %>
   <div class="mt-3 ms-2">
@@ -154,10 +149,10 @@
 <% else %>
   <% @jobs.each do |job| %>
     <%= output_job_id_modal(job, @filter) %>
-    <% if job["_has_db"] %>
-      <%= output_job_script_modal(job, @filter) %>
-    <% else %>
+    <% if job[JOB_DIR_NAME].to_s.strip.empty? %>
       <%= output_job_slurm_script_modal(job) %>
+    <% else %>
+      <%= output_job_script_modal(job, @filter) %>
     <% end %>
   <% end %>
 
@@ -209,7 +204,7 @@
           <% script_name_filter  = history_highlight_filter(@filter, @filter_column, HEADER_SCRIPT_NAME) %>
           <% job_name_filter     = history_highlight_filter(@filter, @filter_column, JOB_NAME) %>
           <% job_details_modal_match = job_details_modal_matches_filter?(job, job_id_filter) %>
-          <% job_script_modal_match  = job["_has_db"] && job_script_modal_matches_filter?(job, script_name_filter) %>
+          <% job_script_modal_match  = job_script_modal_matches_filter?(job, script_name_filter) %>
           <tr data-status="<%= job[JOB_STATUS_ID] %>">
             <td class="table-primary">
               <input class="form-check-input" type="checkbox" id="ocJobId-<%= job[JOB_ID] %>" value="-1">
@@ -218,7 +213,7 @@
               <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobId<%= job[JOB_ID] %>"><%= output_text(job[JOB_ID], job_id_filter) %></a>
             </td>
             <td class="text-wrap text-break">
-              <% if job["_has_db"] && !job[JOB_DIR_NAME].to_s.strip.empty? %>
+              <% if !job[JOB_DIR_NAME].to_s.strip.empty? %>
                 <a href="<%= File.join(@script_name.to_s, job[JOB_DIR_NAME].to_s) %>"><%= output_text(job[JOB_APP_NAME], app_name_filter) %></a>
                 <% directory_path = File.join(@apps_dir.to_s, job[JOB_DIR_NAME].to_s) %>
                 <% unless cached_related_apps.key?(directory_path) %>
@@ -243,7 +238,7 @@
               <% end %>
             </td>
             <td class="text-wrap text-break history-modal-match-cell <%= 'history-modal-match-active' if job_script_modal_match %>">
-              <% if job["_has_db"] && !job[HEADER_SCRIPT_NAME].to_s.strip.empty? %>
+              <% if !job[HEADER_SCRIPT_NAME].to_s.strip.empty? %>
                 <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>"><%= output_text(job[HEADER_SCRIPT_NAME], script_name_filter) %></a>
               <% else %>
                 <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>">Job</a>

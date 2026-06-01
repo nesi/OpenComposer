@@ -26,6 +26,9 @@ generic_apps_dir: "./generic_apps"
 external_reload_app: "Slurm"
 
 ## History
+# Set to false to never store the batch script in the DB.
+# When false, "Load parameters" always fetches the script live via sacct -B.
+history_store_script: false
 history:
   OC_HISTORY_JOB_NAME:
   OC_HISTORY_START_TIME:

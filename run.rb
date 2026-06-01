@@ -801,9 +801,16 @@ get "/job_details" do
     "script_content"  => nil
   }
 
-  scontrol_data, scontrol_err, scontrol_cmd = scheduler.scontrol_job(job_id, bin, bin_overrides, ssh_wrapper)
+  # Terminal states: scontrol may still hold the record briefly after a job ends,
+  # but sacct is the authoritative source for any finished job.
+  terminal_states = %w[CANCELLED COMPLETED FAILED BOOT_FAIL DEADLINE NODE_FAIL
+                       OUT_OF_MEMORY PREEMPTED REVOKED TIMEOUT].freeze
 
-  if scontrol_data && !scontrol_data.empty?
+  scontrol_data, scontrol_err, scontrol_cmd = scheduler.scontrol_job(job_id, bin, bin_overrides, ssh_wrapper)
+  scontrol_live = scontrol_data && !scontrol_data.empty? &&
+    terminal_states.none? { |s| scontrol_data["JobState"].to_s.start_with?(s) }
+
+  if scontrol_live
     result["source"]  = "scontrol"
     result["command"] = scontrol_cmd
     result["data"]    = scontrol_data

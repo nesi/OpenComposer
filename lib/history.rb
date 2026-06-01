@@ -30,6 +30,11 @@ helpers do
     id = "_history#{action}"
     form_action = history_path_with_query
 
+    abort_buttons = action == "CancelJob" ? \
+      "\n          <button type=\"button\" id=\"#{id}AbortBtn\" class=\"btn btn-warning d-none\">Abort</button>" \
+      "\n          <button type=\"button\" id=\"#{id}CloseBtn\" class=\"btn btn-secondary d-none\" onclick=\"window.location.reload()\">Close</button>" \
+      : ""
+
     <<~HTML
     <div class="modal" id="#{id}" aria-hidden="true" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable">
@@ -37,13 +42,13 @@ helpers do
           <div class="modal-body" id="#{id}Body">
             (Something wrong)
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer" id="#{id}Footer">
             <form action="#{form_action}" method="post" id="#{id}Form">
               <input type="hidden" name="action" value="#{action}">
               <input type="hidden" name="JobIds" id="#{id}Input">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">Cancel</button>
               <button type="submit" class="btn btn-primary" tabindex="-1">OK</button>
-            </form>
+            </form>#{abort_buttons}
           </div>
         </div>
       </div>

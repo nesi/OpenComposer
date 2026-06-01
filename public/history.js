@@ -432,15 +432,24 @@ if (ocHistory.selectAllCheckbox && ocHistory.tbody) {
   });
 }
 
-// Cancel jobs one-by-one, showing a progress bar in the CancelJob modal.
+// Cancel jobs one-by-one, showing a progress bar and Abort button in the CancelJob modal.
 ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
-  var modal  = document.getElementById('_historyCancelJob');
-  var body   = document.getElementById('_historyCancelJobBody');
+  var modal    = document.getElementById('_historyCancelJob');
+  var body     = document.getElementById('_historyCancelJobBody');
+  var form     = document.getElementById('_historyCancelJobForm');
+  var abortBtn = document.getElementById('_historyCancelJobAbortBtn');
+  var closeBtn = document.getElementById('_historyCancelJobCloseBtn');
   if (!modal || !body) return;
 
-  var total  = jobIds.length;
-  var done   = 0;
-  var errors = [];
+  var total   = jobIds.length;
+  var done    = 0;
+  var errors  = [];
+  var aborted = false;
+
+  // Hide form buttons, show Abort.
+  if (form)     form.classList.add('d-none');
+  if (abortBtn) { abortBtn.classList.remove('d-none'); abortBtn.disabled = false; abortBtn.textContent = 'Abort'; }
+  if (closeBtn) closeBtn.classList.add('d-none');
 
   body.innerHTML =
     '<div class="mb-2">Cancelling ' + total + ' job' + (total !== 1 ? 's' : '') + '...</div>' +
@@ -453,12 +462,19 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
     '</div>' +
     '<div id="_ocCancelStatus" class="small text-muted"></div>';
 
-  var footer = modal.querySelector('.modal-footer');
-  if (footer) footer.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+  if (abortBtn) {
+    abortBtn.onclick = function() {
+      aborted = true;
+      abortBtn.disabled    = true;
+      abortBtn.textContent = 'Aborting…';
+    };
+  }
 
   var base = window.location.pathname.replace(/\/history$/, '');
 
   for (var i = 0; i < jobIds.length; i++) {
+    if (aborted) break;
+
     var jobId    = jobIds[i];
     var statusEl = document.getElementById('_ocCancelStatus');
     if (statusEl) statusEl.textContent = 'Cancelling ' + jobId + '…';
@@ -483,9 +499,25 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
     }
   }
 
+  // Hide Abort, show Close.
+  if (abortBtn) abortBtn.classList.add('d-none');
+  if (closeBtn) closeBtn.classList.remove('d-none');
+
   var bar      = document.getElementById('_ocCancelBar');
   var statusEl = document.getElementById('_ocCancelStatus');
-  if (errors.length === 0) {
+
+  if (aborted) {
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-warning'); }
+    var remaining = total - done;
+    if (statusEl) {
+      statusEl.innerHTML = '<span class="text-warning fw-semibold">Aborted. ' +
+        done + ' of ' + total + ' job' + (total !== 1 ? 's' : '') + ' cancelled; ' +
+        remaining + ' remaining.</span>' +
+        (errors.length > 0
+          ? '<ul class="mb-0 mt-1">' + errors.map(function(e) { return '<li>' + ocHistory.escapeHtml(e) + '</li>'; }).join('') + '</ul>'
+          : '');
+    }
+  } else if (errors.length === 0) {
     if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-success'); }
     if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold">All jobs cancelled successfully.</span>';
     setTimeout(function() { window.location.reload(); }, 1000);
@@ -497,9 +529,22 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
         errors.map(function(e) { return '<li>' + ocHistory.escapeHtml(e) + '</li>'; }).join('') +
         '</ul>';
     }
-    if (footer) footer.querySelectorAll('button[data-bs-dismiss]').forEach(function(b) { b.disabled = false; });
   }
 };
+
+// Reset the CancelJob modal to its initial state (form visible, Abort/Close hidden) each time it closes.
+(function() {
+  var modal = document.getElementById('_historyCancelJob');
+  if (!modal) return;
+  modal.addEventListener('hidden.bs.modal', function() {
+    var form     = document.getElementById('_historyCancelJobForm');
+    var abortBtn = document.getElementById('_historyCancelJobAbortBtn');
+    var closeBtn = document.getElementById('_historyCancelJobCloseBtn');
+    if (form)     form.classList.remove('d-none');
+    if (abortBtn) { abortBtn.classList.add('d-none'); abortBtn.disabled = false; abortBtn.textContent = 'Abort'; }
+    if (closeBtn) closeBtn.classList.add('d-none');
+  });
+})();
 
 // Cancel ALL queued/running jobs one-by-one with an Abort option.
 ocHistory.startCancelAll = function() {

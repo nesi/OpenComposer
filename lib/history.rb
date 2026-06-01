@@ -1112,6 +1112,7 @@ helpers do
       end
     end
 
+    nil
   end
 
   # Output a styled status badge for a job based on its current status.

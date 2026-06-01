@@ -1,10 +1,5 @@
 var ocHistory = ocHistory || {};
 
-ocHistory.showLoading = function() {
-  var el = document.getElementById('_historyLoadingBar');
-  if (el) el.style.display = 'block';
-};
-
 // Apply filter based on the input value and update URL query parameters.
 ocHistory.applyFilter = function() {
   const filterInput = document.getElementById('_filterInput');
@@ -69,7 +64,6 @@ ocHistory.applyFilter = function() {
     urlParams.set('detail_open', 'true');
   }
 
-  ocHistory.showLoading();
   window.location.href = `${window.location.pathname}?${urlParams.toString()}`;
 };
 
@@ -213,7 +207,6 @@ ocHistory.redirectWithRows = function() {
 
   params.delete('p');
   params.set('rows', selectedValue);
-  ocHistory.showLoading();
   window.location.href = url.toString();
 };
 
@@ -230,18 +223,10 @@ document.querySelectorAll('input[name="_historyCluster"]').forEach(radio => {
       url.searchParams.set('detail_open', 'true');
     }
 
-    ocHistory.showLoading();
     window.location.href = url.toString();
   });
 });
 
-// Show the loading bar on sort-link and pagination-link clicks.
-document.addEventListener('click', function(e) {
-  var link = e.target.closest('.history-sort-link, nav .page-item:not(.active):not(.disabled) .page-link');
-  if (link && link.getAttribute('href') && link.getAttribute('href') !== '#') {
-    ocHistory.showLoading();
-  }
-});
 
 // When the browser restores this page from bfcache (user pressed Back), re-enable
 // any Load-parameters buttons that were disabled before navigation.
@@ -253,6 +238,57 @@ window.addEventListener('pageshow', function(event) {
     });
   }
 });
+
+// Load the script from a "Job Script (Slurm - Generic)" modal into the target
+// app via sessionStorage, prefilling the script editor and all three header
+// fields (Script location, Script name, Job name) from the metadata stashed by
+// loadJobScript.
+ocHistory.loadExtScript = function(btn) {
+  var modal = btn.closest('.modal');
+  if (!modal) return;
+  var body = modal.querySelector('.modal-body[data-script-job-id]');
+  if (!body) return;
+
+  // Wait until loadJobScript has finished (whether the script was available or not).
+  // Without this guard the button click is silently ignored while the spinner is running.
+  if (body.dataset.loaded !== 'true') return;
+
+  var pre = body.querySelector('pre');
+  var scriptContent = pre ? pre.textContent : '';
+
+  var cluster  = body.dataset.cluster || '';
+  var base     = window.location.pathname.replace(/\/history$/, '');
+  var formData = new URLSearchParams({ cluster: cluster });
+
+  btn.disabled    = true;
+  btn.textContent = 'Loading…';
+
+  fetch(base + '/history/save_external_script', { method: 'POST', body: formData })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.url) {
+        var payload = {
+          script:         scriptContent,
+          scriptLocation: body.dataset.extScriptLocation || '',
+          scriptName:     body.dataset.extScriptName     || '',
+          jobName:        body.dataset.extJobName        || ''
+        };
+        var key = '_oc_ext_' + Date.now();
+        sessionStorage.setItem(key, JSON.stringify(payload));
+        var sep = data.url.indexOf('?') >= 0 ? '&' : '?';
+        window.location.href = data.url + sep + 'ocExtLoad=' + encodeURIComponent(key);
+      } else {
+        alert('Error: ' + (data.error || 'Unknown error'));
+        btn.disabled    = false;
+        btn.textContent = 'Load parameters';
+      }
+    })
+    .catch(function(e) {
+      alert('Error: ' + e.message);
+      btn.disabled    = false;
+      btn.textContent = 'Load parameters';
+    });
+};
 
 // Escape HTML special characters for safe DOM insertion.
 ocHistory.escapeHtml = function(text) {
@@ -322,6 +358,8 @@ ocHistory.loadJobDetails = function(modalEl) {
 };
 
 // Fetch batch script via sacct -B and populate the Job Script modal.
+// Also stashes script_location, script_name, and JobName as data-attributes on
+// the modal body so that loadExtScript can prefill the form header fields.
 ocHistory.loadJobScript = function(modalEl) {
   const body = modalEl.querySelector('.modal-body[data-script-job-id]');
   if (!body || body.dataset.loaded === 'true') return;
@@ -336,6 +374,7 @@ ocHistory.loadJobScript = function(modalEl) {
     .then(r => r.json())
     .then(data => {
       body.dataset.loaded = 'true';
+      // Stash metadata for loadExtScript to use when "Load parameters" is clicked.
       if (data.script_location) body.dataset.extScriptLocation = data.script_location;
       if (data.script_name)     body.dataset.extScriptName     = data.script_name;
       if (data.data && data.data.JobName) body.dataset.extJobName = data.data.JobName;
@@ -351,291 +390,125 @@ ocHistory.loadJobScript = function(modalEl) {
     });
 };
 
-// Load the script from a modal into the target app via sessionStorage.
-ocHistory.loadExtScript = function(btn) {
-  var modal = btn.closest('.modal');
-  if (!modal) return;
-  var body = modal.querySelector('.modal-body[data-script-job-id]');
-  if (!body) return;
+// Attach lazy-load listeners to Job Details modals.
+document.querySelectorAll('[id^="_historyJobId"]').forEach(function(el) {
+  el.addEventListener('show.bs.modal', function() {
+    ocHistory.loadJobDetails(this);
+  });
+});
 
-  if (body.dataset.loaded !== 'true') return;
+// Attach lazy-load listeners to Job Script modals (when script content is missing from DB).
+document.querySelectorAll('[id^="_historyJobScript"]').forEach(function(el) {
+  el.addEventListener('show.bs.modal', function() {
+    ocHistory.loadJobScript(this);
+  });
+});
 
-  var pre = body.querySelector('pre');
-  var scriptContent = pre ? pre.textContent : '';
+// Handle "Select All" checkbox functionality.
+ocHistory.selectAllCheckbox = document.getElementById('_historySelectAll');
+ocHistory.tbody = document.getElementById('_historyTbody');
 
-  var cluster  = body.dataset.cluster || '';
-  var base     = window.location.pathname.replace(/\/history$/, '');
-  var formData = new URLSearchParams({ cluster: cluster });
+if (ocHistory.selectAllCheckbox && ocHistory.tbody) {
+  const rows = Array.from(ocHistory.tbody.getElementsByTagName('tr'));
 
-  btn.disabled    = true;
-  btn.textContent = 'Loading…';
-
-  fetch(base + '/history/save_external_script', { method: 'POST', body: formData })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.url) {
-        var payload = {
-          script:         scriptContent,
-          scriptLocation: body.dataset.extScriptLocation || '',
-          scriptName:     body.dataset.extScriptName     || '',
-          jobName:        body.dataset.extJobName        || ''
-        };
-        var key = '_oc_ext_' + Date.now();
-        sessionStorage.setItem(key, JSON.stringify(payload));
-        var sep = data.url.indexOf('?') >= 0 ? '&' : '?';
-        window.location.href = data.url + sep + 'ocExtLoad=' + encodeURIComponent(key);
-      } else {
-        alert('Error: ' + (data.error || 'Unknown error'));
-        btn.disabled    = false;
-        btn.textContent = 'Load parameters';
-      }
-    })
-    .catch(function(e) {
-      alert('Error: ' + e.message);
-      btn.disabled    = false;
-      btn.textContent = 'Load parameters';
+  // Event listener for the "Select All" checkbox.
+  ocHistory.selectAllCheckbox.addEventListener('change', function() {
+    const isChecked = this.checked;
+    rows.forEach(row => {
+      const checkbox = row.querySelector('td input[type="checkbox"]');
+      if (checkbox) checkbox.checked = isChecked;
     });
-};
+    ocHistory.updateBatch(rows);
+  });
 
-// Context for the shared batch script modal (_historyExtBatchScript).
-ocHistory._extScript = { jobId: '', workDir: '', scriptName: '', cluster: '', content: null, loadUrl: null };
-
-// Populate and show the shared batch script modal for a job.
-ocHistory.loadBatchScript = function(jobId, url, workDir, scriptName, cluster, loadUrl) {
-  ocHistory._extScript = { jobId: jobId, workDir: workDir || '', scriptName: scriptName || '', cluster: cluster || '', content: null, loadUrl: loadUrl || null };
-
-  var titleEl = document.getElementById('_historyExtBatchScriptJobId');
-  var bodyEl  = document.getElementById('_historyExtBatchScriptBody');
-  var copyBtn = document.getElementById('_historyExtBatchScriptCopy');
-  var loadBtn = document.getElementById('_historyExtBatchScriptLoad');
-  if (titleEl) titleEl.textContent = jobId;
-  if (bodyEl)  bodyEl.textContent  = 'Loading…';
-  if (copyBtn) copyBtn.disabled = true;
-  if (loadBtn) loadBtn.disabled = true;
-
-  fetch(url)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!bodyEl) return;
-      if (data.error) {
-        bodyEl.textContent = 'Error: ' + data.error;
-      } else if (data.script === null || data.script === undefined) {
-        bodyEl.textContent = 'No script available.';
-        if (loadUrl && loadBtn) loadBtn.disabled = false;
-      } else {
-        bodyEl.textContent = data.script;
-        ocHistory._extScript.content = data.script;
-        if (copyBtn) copyBtn.disabled = false;
-        if (loadBtn) loadBtn.disabled = false;
-      }
-    })
-    .catch(function(e) {
-      if (bodyEl) bodyEl.textContent = 'Error: ' + e.message;
-    });
-};
-
-ocHistory.copyBatchScript = function() {
-  var bodyEl  = document.getElementById('_historyExtBatchScriptBody');
-  var copyBtn = document.getElementById('_historyExtBatchScriptCopy');
-  if (!bodyEl || !navigator.clipboard) return;
-  navigator.clipboard.writeText(bodyEl.textContent).then(function() {
-    if (copyBtn) {
-      var orig = copyBtn.textContent;
-      copyBtn.textContent = 'Copied!';
-      setTimeout(function() { copyBtn.textContent = orig; }, 1500);
+  // Event listener for individual row checkboxes.
+  rows.forEach(row => {
+    const checkbox = row.querySelector('td input[type="checkbox"]');
+    if (checkbox) {
+      checkbox.addEventListener('change', function() {
+        ocHistory.updateBatch(rows);
+      });
     }
   });
-};
+}
 
-// Called after the async table HTML is injected into _historyTableContainer.
-// Attaches modal listeners and checkbox logic that depend on the table DOM.
-ocHistory.initTable = function() {
-  document.querySelectorAll('[id^="_historyJobId"]').forEach(function(el) {
-    el.addEventListener('show.bs.modal', function() {
-      ocHistory.loadJobDetails(this);
-    });
-  });
+// Cancel jobs one-by-one, showing a progress bar in the CancelJob modal.
+ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
+  var modal  = document.getElementById('_historyCancelJob');
+  var body   = document.getElementById('_historyCancelJobBody');
+  if (!modal || !body) return;
 
-  document.querySelectorAll('[id^="_historyJobScript"]').forEach(function(el) {
-    el.addEventListener('show.bs.modal', function() {
-      ocHistory.loadJobScript(this);
-    });
-  });
+  var total  = jobIds.length;
+  var done   = 0;
+  var errors = [];
 
-  var selectAll = document.getElementById('_historySelectAll');
-  var tbody     = document.getElementById('_historyTbody');
-  if (selectAll && tbody) {
-    var rows = Array.from(tbody.getElementsByTagName('tr'));
+  body.innerHTML =
+    '<div class="mb-2">Cancelling ' + total + ' job' + (total !== 1 ? 's' : '') + '...</div>' +
+    '<div class="progress mb-2" style="height:1.4rem;">' +
+      '<div id="_ocCancelBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"' +
+           ' role="progressbar" style="width:0%;min-width:2.5rem;"' +
+           ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">' +
+        '0 / ' + total +
+      '</div>' +
+    '</div>' +
+    '<div id="_ocCancelStatus" class="small text-muted"></div>';
 
-    selectAll.addEventListener('change', function() {
-      var isChecked = this.checked;
-      rows.forEach(function(row) {
-        var checkbox = row.querySelector('td input[type="checkbox"]');
-        if (checkbox) checkbox.checked = isChecked;
-      });
-      ocHistory.updateBatch(rows);
-    });
+  var footer = modal.querySelector('.modal-footer');
+  if (footer) footer.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
 
-    rows.forEach(function(row) {
-      var checkbox = row.querySelector('td input[type="checkbox"]');
-      if (checkbox) {
-        checkbox.addEventListener('change', function() {
-          ocHistory.updateBatch(rows);
-        });
-      }
-    });
+  var base = window.location.pathname.replace(/\/history$/, '');
+
+  for (var i = 0; i < jobIds.length; i++) {
+    var jobId    = jobIds[i];
+    var statusEl = document.getElementById('_ocCancelStatus');
+    if (statusEl) statusEl.textContent = 'Cancelling ' + jobId + '…';
+
+    try {
+      var fd = new URLSearchParams({ jobId: jobId });
+      if (cluster) fd.set('cluster', cluster);
+      var r    = await fetch(base + '/history/cancel_one', { method: 'POST', body: fd });
+      var data = await r.json();
+      if (!data.ok) errors.push(jobId + ': ' + (data.error || 'Unknown error'));
+    } catch (e) {
+      errors.push(jobId + ': ' + e.message);
+    }
+
+    done++;
+    var pct = Math.round((done / total) * 100);
+    var bar = document.getElementById('_ocCancelBar');
+    if (bar) {
+      bar.style.width = pct + '%';
+      bar.textContent = done + ' / ' + total;
+      bar.setAttribute('aria-valuenow', pct);
+    }
+  }
+
+  var bar      = document.getElementById('_ocCancelBar');
+  var statusEl = document.getElementById('_ocCancelStatus');
+  if (errors.length === 0) {
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-success'); }
+    if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold">All jobs cancelled successfully.</span>';
+    setTimeout(function() { window.location.reload(); }, 1000);
+  } else {
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-warning'); }
+    if (statusEl) {
+      statusEl.innerHTML = '<span class="text-danger fw-semibold">Errors occurred:</span>' +
+        '<ul class="mb-0 mt-1">' +
+        errors.map(function(e) { return '<li>' + ocHistory.escapeHtml(e) + '</li>'; }).join('') +
+        '</ul>';
+    }
+    if (footer) footer.querySelectorAll('button[data-bs-dismiss]').forEach(function(b) { b.disabled = false; });
   }
 };
 
-// Delete job info via fetch so the modal lifecycle stays clean.
-(function() {
-  var deleteModal = document.getElementById('_historyDeleteInfo');
-  if (!deleteModal) return;
-
-  var deleteForm = document.getElementById('_historyDeleteInfoForm');
-  if (!deleteForm) return;
-
-  deleteForm.addEventListener('submit', function(e) {
+var _ocCancelForm = document.getElementById('_historyCancelJobForm');
+if (_ocCancelForm) {
+  _ocCancelForm.addEventListener('submit', function(e) {
     e.preventDefault();
-
-    var jobIdsEl = document.getElementById('_historyDeleteInfoInput');
-    var jobIds   = jobIdsEl ? jobIdsEl.value : '';
-    if (!jobIds.trim()) return;
-
-    var bsModal = bootstrap.Modal.getInstance(deleteModal);
-    if (bsModal) bsModal.hide();
-
-    var scriptName = deleteModal.getAttribute('data-script-name') || '';
-    var cluster    = deleteModal.getAttribute('data-cluster') || '';
-    var deleteUrl  = scriptName + '/history/delete_jobs' + (cluster ? '?cluster=' + encodeURIComponent(cluster) : '');
-
-    var formData = new FormData();
-    formData.append('job_ids', jobIds);
-
-    fetch(deleteUrl, { method: 'POST', body: formData })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.error) alert('Delete failed: ' + data.error);
-        window.location.reload();
-      })
-      .catch(function(err) {
-        alert('Delete failed: ' + err.message);
-        window.location.reload();
-      });
+    var input  = document.getElementById('_historyCancelJobInput');
+    var jobIds = (input && input.value) ? input.value.split(',').filter(Boolean) : [];
+    if (!jobIds.length) return;
+    var cluster = new URLSearchParams(window.location.search).get('cluster');
+    ocHistory.cancelJobsOneByOne(jobIds, cluster);
   });
-})();
-
-// Cancel jobs one at a time: POST /history/cancel_one_job for each job ID,
-// update the progress bar after each response.
-(function() {
-  var confirmModal  = document.getElementById('_historyCancelJob');
-  var progressModal = document.getElementById('_historyCancelProgress');
-  if (!confirmModal || !progressModal) return;
-
-  var cancelForm = document.getElementById('_historyCancelJobForm');
-  if (!cancelForm) return;
-
-  progressModal.addEventListener('hidden.bs.modal', function() {
-    window.location.reload();
-  });
-
-  cancelForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    var cancelUrl = confirmModal.getAttribute('data-cancel-url');
-    var jobIdsEl  = document.getElementById('_historyCancelJobInput');
-    var rawIds    = jobIdsEl ? jobIdsEl.value : '';
-    if (!cancelUrl || !rawIds.trim()) return;
-
-    var jobIds = rawIds.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-    if (jobIds.length === 0) return;
-
-    // Expand bracket-range array jobs: 6801262_[1-1000] → 6801262_1, 6801262_2, ...
-    // Also supports step notation: 6801262_[1-1000:3] → 6801262_1, 6801262_4, ...
-    function expandJobId(id) {
-      var m = id.match(/^(\d+)_\[(\d+)-(\d+)(?::(\d+))?\]$/);
-      if (!m) return [id];
-      var prefix = m[1], start = parseInt(m[2], 10), end = parseInt(m[3], 10);
-      var step   = m[4] ? parseInt(m[4], 10) : 1;
-      var ids = [];
-      for (var n = start; n <= end; n += step) ids.push(prefix + '_' + n);
-      return ids;
-    }
-    jobIds = [].concat.apply([], jobIds.map(expandJobId));
-
-    var bsConfirm = bootstrap.Modal.getInstance(confirmModal);
-    if (bsConfirm) bsConfirm.hide();
-    var bsProgress = new bootstrap.Modal(progressModal);
-    bsProgress.show();
-
-    var jobEl    = document.getElementById('_historyCancelProgressJob');
-    var bar      = document.getElementById('_historyCancelProgressBar');
-    var countEl  = document.getElementById('_historyCancelProgressCount');
-    var stopBtn  = document.getElementById('_historyCancelStop');
-    var closeBtn = document.getElementById('_historyCancelClose');
-
-    var stopped   = false;
-    var cancelled = 0;
-    var errors    = [];
-
-    if (stopBtn) {
-      stopBtn.disabled = false;
-      stopBtn.classList.remove('d-none');
-      stopBtn.onclick = function() { stopped = true; };
-    }
-    if (closeBtn) closeBtn.classList.add('d-none');
-
-    function updateBar(done) {
-      var pct = Math.round((done / jobIds.length) * 100);
-      if (bar) {
-        bar.style.width = pct + '%';
-        bar.setAttribute('aria-valuenow', pct);
-        bar.textContent = pct + '%';
-      }
-    }
-
-    function finish() {
-      updateBar(jobIds.length);
-      if (bar) {
-        bar.classList.remove('progress-bar-animated', 'bg-warning');
-        bar.classList.add(errors.length > 0 ? 'bg-warning' : 'bg-success');
-      }
-      if (jobEl) {
-        jobEl.textContent = stopped
-          ? 'Stopped.'
-          : (errors.length > 0 ? 'Done — ' + errors.length + ' job(s) could not be cancelled' : 'Done');
-      }
-      if (countEl) countEl.textContent = cancelled + ' / ' + jobIds.length + ' cancelled';
-      if (stopBtn)  stopBtn.classList.add('d-none');
-      if (closeBtn) closeBtn.classList.remove('d-none');
-    }
-
-    function cancelNext(i) {
-      if (i >= jobIds.length || stopped) {
-        finish();
-        return;
-      }
-
-      var jobId = jobIds[i];
-      if (jobEl) jobEl.textContent = 'Cancelling: ' + jobId;
-      if (countEl) countEl.textContent = i + ' / ' + jobIds.length + ' done';
-      updateBar(i);
-
-      var formData = new FormData();
-      formData.append('job_id', jobId);
-
-      fetch(cancelUrl, { method: 'POST', body: formData })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data.success) { cancelled++; } else { errors.push(jobId); }
-          cancelNext(i + 1);
-        })
-        .catch(function() {
-          errors.push(jobId);
-          cancelNext(i + 1);
-        });
-    }
-
-    cancelNext(0);
-  });
-})();
+}

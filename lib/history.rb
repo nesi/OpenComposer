@@ -32,20 +32,8 @@ helpers do
     id = "_history#{action}"
     form_action = history_path_with_query
 
-    script_attr  = " data-script-name=\"#{escape_html(@script_name.to_s)}\""
-    cluster_attr = @cluster_name ? " data-cluster=\"#{escape_html(@cluster_name.to_s)}\"" : ""
-
-    extra_attrs = if action == "CancelJob"
-      cancel_url = @cluster_name \
-        ? "#{@script_name}/history/cancel_one_job?cluster=#{URI.encode_www_form_component(@cluster_name.to_s)}" \
-        : "#{@script_name}/history/cancel_one_job"
-      "#{script_attr}#{cluster_attr} data-cancel-url=\"#{escape_html(cancel_url)}\""
-    else
-      "#{script_attr}#{cluster_attr}"
-    end
-
     <<~HTML
-    <div class="modal" id="#{id}" aria-hidden="true" tabindex="-1"#{extra_attrs}>
+    <div class="modal" id="#{id}" aria-hidden="true" tabindex="-1">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-body" id="#{id}Body">
@@ -70,7 +58,7 @@ helpers do
     return if action != "CancelJob" && action != "DeleteInfo"
 
     <<~HTML
-    <button id="_history#{action}Badge" data-bs-toggle="modal" data-bs-target="#_history#{action}" class="btn btn-sm btn-primary disabled" disabled>
+    <button id="_history#{action}Badge" data-bs-toggle="modal" data-bs-target="#_history#{action}" class="btn btn-sm disabled" style="background-color:#{@conf['history_action_color']};border-color:#{@conf['history_action_color']};color:#fff;" disabled>
       #{(action == "CancelJob") ? "Cancel Job" : "Delete Info"}
       <span id="_history#{action}Count" class="badge bg-secondary">0</span>
     </button>
@@ -1124,7 +1112,6 @@ helpers do
       end
     end
 
-    nil
   end
 
   # Output a styled status badge for a job based on its current status.
@@ -1213,8 +1200,7 @@ helpers do
 
   # Build one row for the combined history table.
   # sacct_job and db_job may each be nil when a job comes from only one source.
-  # squeue_start is an estimated start time string for pending jobs (nil if unknown).
-  def build_combined_row(job_id, sacct_job, db_job, squeue_start: nil)
+  def build_combined_row(job_id, sacct_job, db_job)
     app_name = if db_job && !db_job[JOB_APP_NAME].to_s.strip.empty?
                  db_job[JOB_APP_NAME]
                else
@@ -1224,20 +1210,19 @@ helpers do
     script_loc = db_job&.fetch(HEADER_SCRIPT_LOCATION, nil)
     script_loc = sacct_job&.fetch("WorkDir", nil) if script_loc.to_s.strip.empty?
 
+    start_time = sacct_job&.fetch("Start", nil)
+    start_time = nil if start_time.to_s == "Unknown" || start_time.to_s.empty?
+    start_time ||= db_job&.fetch("Start", nil)
+
+    end_time = sacct_job&.fetch("End", nil)
+    end_time = nil if end_time.to_s == "Unknown" || end_time.to_s.empty?
+    end_time ||= db_job&.fetch("End", nil)
+
     oc_status = if sacct_job
                   sacct_state_to_oc_status(sacct_job["State"].to_s)
                 else
                   db_job&.fetch(JOB_STATUS_ID, nil)
                 end
-
-    start_time = sacct_job&.fetch("Start", nil)
-    start_time = nil if start_time.to_s == "Unknown" || start_time.to_s.empty?
-    start_time ||= db_job&.fetch("Start", nil)
-    start_time ||= squeue_start if oc_status == JOB_STATUS["queued"]
-
-    end_time = sacct_job&.fetch("End", nil)
-    end_time = nil if end_time.to_s == "Unknown" || end_time.to_s.empty?
-    end_time ||= db_job&.fetch("End", nil)
 
     job_name = sacct_job&.fetch("JobName", nil)
     job_name = nil if job_name.to_s.strip.empty?
@@ -1284,24 +1269,9 @@ helpers do
   end
 
   # Return all combined jobs matching filters (no pagination).
-  def get_combined_jobs(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to, squeue_starts: {})
+  def get_combined_jobs(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to)
     sacct_map = {}
     (sacct_jobs || []).each { |j| sacct_map[j["JobID"]] = j }
-
-    # Expand bracket-range entries (e.g. 6801262_[1546-2000:3]) into individual task IDs.
-    # Individual sacct entries always win; range-expanded entries fill in the gaps.
-    expanded_sacct = {}
-    sacct_map.each do |job_id, info|
-      m = job_id.to_s.match(/\A(\d+)_\[(\d+)-(\d+)(?::(\d+))?\]\z/)
-      if m
-        prefix, start, fin = m[1], m[2].to_i, m[3].to_i
-        step = m[4] ? m[4].to_i : 1
-        start.step(fin, step) { |i| expanded_sacct["#{prefix}_#{i}"] ||= info }
-      else
-        expanded_sacct[job_id] = info
-      end
-    end
-    sacct_map = expanded_sacct
 
     db = open_history_db(conf, cluster_name)
     db_map = {}
@@ -1313,30 +1283,13 @@ helpers do
 
     deleted_generic = get_deleted_generic_job_ids(db)
 
-    # Build parent_id → db_job so sacct-only tasks can inherit app/script info from
-    # a sibling task that was submitted through OC.
-    parent_db_map = {}
-    db_map.each do |job_id, db_job|
-      next unless job_id.to_s =~ /\A(\d+)_(\d+)\z/
-      parent_db_map[$1] ||= db_job
-    end
-
     all_ids = (sacct_map.keys + db_map.keys).uniq
     selected_statuses = Array(statuses).map(&:to_s)
     filter_text = CGI.unescapeHTML(filter.to_s).downcase
 
     all_ids.filter_map do |job_id|
       next if deleted_generic.include?(job_id) && db_map[job_id].nil?
-
-      # For tasks with no direct DB record, inherit app/script info from a sibling.
-      resolved_db_job = if db_map[job_id].nil?
-                          parent_id = job_id.to_s =~ /\A(\d+)_/ ? $1 : nil
-                          parent_id ? parent_db_map[parent_id] : nil
-                        else
-                          db_map[job_id]
-                        end
-
-      row = build_combined_row(job_id, sacct_map[job_id], resolved_db_job, squeue_start: squeue_starts[job_id])
+      row = build_combined_row(job_id, sacct_map[job_id], db_map[job_id])
 
       next unless selected_statuses.any? { |s| row[JOB_STATUS_ID] == JOB_STATUS[s] }
 
@@ -1360,8 +1313,8 @@ helpers do
   end
 
   # Return one page of combined jobs and the total matching count.
-  def get_combined_jobs_page(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset, squeue_starts: {})
-    all_jobs = get_combined_jobs(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to, squeue_starts: squeue_starts)
+  def get_combined_jobs_page(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset)
+    all_jobs = get_combined_jobs(conf, cluster_name, sacct_jobs, statuses, filter, filter_column, filter_mode, date_from, date_to)
     all_jobs.sort_by! { |job| combined_sort_key(job, sort) }
     all_jobs.reverse! if order == "desc"
     page = offset >= all_jobs.size ? [] : all_jobs[offset, limit] || []

@@ -772,6 +772,47 @@ helpers do
     db.get_first_row("SELECT * FROM jobs WHERE _job_id = ?", [job_id])
   end
 
+  # Sync sacct job data into the DB.
+  # New jobs are inserted with sacct data only (no OC metadata).
+  # Existing jobs get status/name/times updated; OC metadata (app_name, app_dir_name,
+  # script_location, script_name, script_content) is never overwritten by sacct data.
+  def upsert_sacct_jobs(db, sacct_jobs)
+    return if sacct_jobs.nil? || sacct_jobs.empty?
+    db.transaction do
+      sacct_jobs.each do |job|
+        job_id = job["JobID"].to_s.strip
+        next unless valid_oc_job_id?(job_id)
+        oc_status   = sacct_state_to_oc_status(job["State"].to_s)
+        job_name    = job["JobName"].to_s.strip; job_name = nil if job_name.empty?
+        submit_str  = job["Submit"].to_s.strip
+        submit_str  = nil if submit_str.empty? || submit_str == "Unknown" || submit_str == "None"
+        submit_time = normalize_time_for_db(submit_str)
+        start_time  = job["Start"].to_s.strip
+        start_time  = nil if start_time.empty? || start_time == "Unknown" || start_time == "None"
+        end_time    = job["End"].to_s.strip
+        end_time    = nil if end_time.empty? || end_time == "Unknown" || end_time == "None"
+        params = [
+          job_id, oc_status, job_name, submit_time, start_time, end_time,
+          oc_status,
+          job_name, job_name,
+          submit_time,
+          start_time, start_time,
+          end_time, end_time
+        ]
+        db.execute(<<~SQL, params)
+          INSERT INTO jobs (_job_id, _status, _job_name, _submission_time, _start_time, _end_time, _deleted)
+          VALUES (?, ?, ?, ?, ?, ?, 0)
+          ON CONFLICT(_job_id) DO UPDATE SET
+            _status          = ?,
+            _job_name        = CASE WHEN ? IS NOT NULL THEN ? ELSE _job_name END,
+            _submission_time = CASE WHEN _submission_time IS NULL THEN ? ELSE _submission_time END,
+            _start_time      = CASE WHEN ? IS NOT NULL THEN ? ELSE _start_time END,
+            _end_time        = CASE WHEN ? IS NOT NULL THEN ? ELSE _end_time END
+        SQL
+      end
+    end
+  end
+
   # Insert or overwrite a job record.
   def upsert_job(db, record)
     params = [

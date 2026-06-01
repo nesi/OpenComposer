@@ -480,13 +480,21 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
     db = open_history_db(@conf, @cluster_name)
 
-    # Update statuses of non-terminal jobs via a targeted sacct query (fast path).
-    non_terminal_ids = get_nonterminal_job_ids(db)
+    # Sync all sacct jobs for the selected date range into the DB.
+    # This discovers jobs not submitted through OpenComposer and updates statuses.
+    # Defaults to last 7 days when the date filter is "all" (no date constraint).
+    sacct_from = raw_date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : raw_date_from.to_s
+    sacct_to   = raw_date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")        : raw_date_to.to_s
+    all_sacct_jobs, @sacct_error, _cmd = scheduler_s.sacct_all_jobs(sacct_from, sacct_to, bin_s, bin_overrides_s, ssh_wrapper_s)
+    upsert_sacct_jobs(db, all_sacct_jobs) if all_sacct_jobs
+
+    # Also update non-terminal DB jobs that fall outside the scanned date range.
+    scanned_ids      = (all_sacct_jobs || []).map { |j| j["JobID"].to_s }.to_set
+    non_terminal_ids = get_nonterminal_job_ids(db).reject { |id| scanned_ids.include?(id) }
     if non_terminal_ids.any?
-      sacct_results, @sacct_error = scheduler_s.sacct_status_update(
-        non_terminal_ids, bin_s, bin_overrides_s, ssh_wrapper_s
-      )
-      sync_job_statuses(db, sacct_results) if sacct_results
+      sacct_results2, err2 = scheduler_s.sacct_status_update(non_terminal_ids, bin_s, bin_overrides_s, ssh_wrapper_s)
+      sync_job_statuses(db, sacct_results2) if sacct_results2
+      @sacct_error ||= err2
     end
 
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)

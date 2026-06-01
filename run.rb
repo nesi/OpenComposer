@@ -996,7 +996,7 @@ post "/*" do
   ENV['SGE_ROOT'] ||= conf.key?("clusters") ? conf["sge_root"][cluster_name] : conf["sge_root"]
 
   if request.path_info == "/history"
-    job_ids   = params["JobIds"].split(",")
+    job_ids   = params["JobIds"].to_s.split(",").reject(&:empty?)
     error_msg = nil
 
     case params["action"]
@@ -1016,6 +1016,24 @@ post "/*" do
           job_ids.each { |job_id| delete_job(db, job_id) }
         end
         output_log("Delete job information", scheduler, cluster: cluster_name, job_ids: job_ids)
+      end
+    when "CancelAll"
+      if history_db
+        db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
+        cancel_ids = get_nonterminal_job_ids(db)
+        unless cancel_ids.empty?
+          error_msg = scheduler.cancel(cancel_ids, bin, bin_overrides, ssh_wrapper)
+          if error_msg.nil?
+            db.transaction { mark_jobs_as_canceled(db, cancel_ids) }
+          end
+          output_log("Cancel all jobs", scheduler, cluster: cluster_name, job_ids: cancel_ids)
+        end
+      end
+    when "DeleteAll"
+      if history_db
+        db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
+        db.transaction { delete_all_jobs(db) }
+        output_log("Delete all job history", scheduler, cluster: cluster_name)
       end
     end
 

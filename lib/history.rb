@@ -849,6 +849,18 @@ helpers do
     SQL
   end
 
+  # Mark every non-deleted job as deleted, clearing all data.
+  def delete_all_jobs(db)
+    db.execute(<<~SQL)
+      UPDATE jobs SET
+        _app_name=NULL, _app_dir_name=NULL, _script_location=NULL,
+        _script_name=NULL, _submission_time=NULL, _status=NULL,
+        _job_name=NULL, _start_time=NULL, _end_time=NULL,
+        _script_content=NULL, _deleted=1
+      WHERE _deleted=0
+    SQL
+  end
+
   # Mark a job as deleted, clearing all data except the job ID.
   def delete_job(db, job_id)
     db.execute(<<~SQL, [job_id])

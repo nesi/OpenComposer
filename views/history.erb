@@ -8,12 +8,52 @@
 <%= output_action_modal("CancelJob") %>
 <%= output_action_modal("DeleteInfo") %>
 
+<div class="modal" id="_historyCancelAll" aria-hidden="true" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        Cancel <strong>all</strong> queued and running jobs?
+      </div>
+      <div class="modal-footer">
+        <form action="<%= history_path_with_query %>" method="post">
+          <input type="hidden" name="action" value="CancelAll">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">No</button>
+          <button type="submit" class="btn btn-primary" tabindex="-1">Yes, cancel all</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="_historyDeleteAll" aria-hidden="true" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        Delete <strong>all</strong> job history? This cannot be undone.
+      </div>
+      <div class="modal-footer">
+        <form action="<%= history_path_with_query %>" method="post">
+          <input type="hidden" name="action" value="DeleteAll">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">No</button>
+          <button type="submit" class="btn btn-primary" tabindex="-1">Yes, delete all</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row px-3">
   <div class="bg-gradient" style="background:<%= @conf['description_color'] %>; color:<%= @conf['description_text_color'] %>;">
     <div class="d-flex justify-content-between align-items-end mb-2">
       <div>
         <%= output_action_badge("CancelJob") %>
         <%= output_action_badge("DeleteInfo") %>
+        <button class="btn btn-sm" style="background-color:<%= @conf['history_action_color'] %>;border-color:<%= @conf['history_action_color'] %>;color:#fff;" data-bs-toggle="modal" data-bs-target="#_historyCancelAll">
+          Cancel All Jobs
+        </button>
+        <button class="btn btn-sm" style="background-color:<%= @conf['history_action_color'] %>;border-color:<%= @conf['history_action_color'] %>;color:#fff;" data-bs-toggle="modal" data-bs-target="#_historyDeleteAll">
+          Delete All History
+        </button>
         <button class="btn btn-sm btn-secondary" onclick="window.location.reload()">
           <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>

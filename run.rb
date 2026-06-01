@@ -454,6 +454,10 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     return erb :index
   when "history"
     @name          = "History"
+    @scheduler     = create_scheduler(@conf)
+    @bin           = @conf["bin"]
+    @bin_overrides = @conf["bin_overrides"]
+    @ssh_wrapper   = @conf["ssh_wrapper"]
     @statuses     = parse_history_statuses(params["statuses"])
     @filter       = escape_html(params["filter"])
     @filter_column = parse_history_filter_column(params["filter_column"], @conf)

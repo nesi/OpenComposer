@@ -277,6 +277,16 @@ class Slurm < Scheduler
       job_id     = parts[0].strip
       start_time = parts[1].strip
       next if start_time.empty? || start_time.upcase == "N/A"
+      # Normalize to ISO 8601 if squeue didn't honour SLURM_TIME_FORMAT=standard
+      # (e.g. NeSI squeue returns "Jun 01 15:15" by default)
+      unless start_time =~ /\A\d{4}-\d{2}-\d{2}T/
+        begin
+          time_str = start_time =~ /\d{4}/ ? start_time : "#{Date.today.year} #{start_time}"
+          start_time = DateTime.parse(time_str.gsub(/\s+/, ' ')).strftime("%Y-%m-%dT%H:%M:%S")
+        rescue ArgumentError, TypeError, Date::Error
+          # keep as-is if we cannot parse the string
+        end
+      end
       result[job_id] = start_time
     end
     [result, nil]

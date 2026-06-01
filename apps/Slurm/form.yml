@@ -160,6 +160,7 @@ form:
     label: [ Array Job (start index), Array Job (last index), Array Job (jump) ]
     size: 3
     indent: 1
+    value: [null, null, 1]
     min:  [0, 0, 1]
     help: Each job executed from an array job is assigned a task ID, which can be referenced in the shell script via the environment variable SLURM_ARRAY_TASK_ID.
 
@@ -190,7 +191,7 @@ script: |
   #SBATCH --gpus-per-node=#{gpu_genoa}:#{number_of_gpus_genoa}
   #SBATCH --gpus-per-node=#{gpu_milan}:#{number_of_gpus_milan}
   #SBATCH --time=#{time_days_hours_minutes_1}-#{zeropadding(time_days_hours_minutes_2,2)}:#{zeropadding(time_days_hours_minutes_3,2)}:#{zeropadding(time_days_hours_minutes_4,2)}
-  #SBATCH --array=#{array_1}-#{array_2}%#{array_3}
+  #SBATCH --array=#{array_1}-#{array_2}:#{array_3}
   #SBATCH --qos=#{testing}
   #SBATCH --profile=#{profiling}
   #SBATCH --acctg-freq=#{profiling_time}

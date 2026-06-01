@@ -250,8 +250,18 @@
               <% end %>
             </td>
             <td class="text-wrap text-break"><%= output_text(job[JOB_NAME], job_name_filter) %></td>
-            <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["Start"].to_s) %></td>
-            <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["End"].to_s) %></td>
+            <% is_queued = job[JOB_STATUS_ID] == JOB_STATUS["queued"] %>
+            <td class="text-wrap text-break d-none d-lg-table-cell">
+              <% start_str = job["Start"].to_s %>
+              <% if is_queued && start_str.empty? %>
+                <span class="text-muted">N/A</span>
+              <% elsif is_queued %>
+                <%= escape_html(start_str) %> <span class="text-muted small">(est)</span>
+              <% else %>
+                <%= escape_html(start_str) %>
+              <% end %>
+            </td>
+            <td class="text-wrap text-break d-none d-lg-table-cell"><%= is_queued ? "" : escape_html(job["End"].to_s) %></td>
             <td class="text-wrap text-break"><%= output_status(job[JOB_STATUS_ID]) %></td>
           </tr>
         <% end %>

@@ -380,147 +380,134 @@ helpers do
     end
   end
 
-  # Build SQL WHERE clauses for the history query, including status, date, and text search.
-  def history_sql_where(statuses, date_from, date_to, filter = nil, filter_column = "all", filter_mode = "and")
-    clauses = ["_deleted = 0"]
-    params  = []
-
+  # Filter a list of job hashes by status.
+  def filter_history_jobs_by_status(jobs, statuses)
     selected_statuses = Array(statuses).map(&:to_s).filter_map { |s| JOB_STATUS[s] }
-    if selected_statuses.empty?
-      clauses << "1 = 0"
-    else
-      active_vals    = [JOB_STATUS["queued"], JOB_STATUS["running"]]
-      include_active = selected_statuses.any? { |s| active_vals.include?(s) }
-      terminal_vals  = selected_statuses.reject { |s| active_vals.include?(s) }
-      conds = []
-      if include_active
-        active_phs = (["?"] * active_vals.length).join(", ")
-        conds << "(_status IS NULL OR _status IN (#{active_phs}))"
-        params.concat(active_vals)
+    return [] if selected_statuses.empty?
+
+    active_vals    = [JOB_STATUS["queued"], JOB_STATUS["running"]]
+    include_active = selected_statuses.any? { |s| active_vals.include?(s) }
+    terminal_vals  = selected_statuses.reject { |s| active_vals.include?(s) }
+
+    jobs.select do |job|
+      oc_status = job[JOB_STATUS_ID]
+      if include_active && (oc_status.nil? || active_vals.include?(oc_status))
+        true
+      elsif terminal_vals.include?(oc_status)
+        true
+      else
+        false
       end
-      if terminal_vals.any?
-        placeholders = (["?"] * terminal_vals.length).join(", ")
-        conds << "_status IN (#{placeholders})"
-        params.concat(terminal_vals)
-      end
-      clauses << "(#{conds.join(' OR ')})"
     end
+  end
 
-    unless date_from.to_s.empty?
-      clauses << "_submission_time >= ?"
-      params  << date_from.to_s
+  # Filter a list of job hashes by submission date range.
+  def filter_history_jobs_by_date(jobs, date_from, date_to)
+    return jobs if date_from.to_s.empty? && date_to.to_s.empty?
+
+    jobs.select do |job|
+      submit = job[JOB_SUBMISSION_TIME].to_s
+      next false if submit.empty?
+
+      submit_date = submit[0, 10] # "YYYY-MM-DD" prefix
+      after  = date_from.to_s.empty? || submit_date >= date_from.to_s
+      before = date_to.to_s.empty?   || submit_date <= date_to.to_s
+      after && before
     end
+  rescue ArgumentError, Date::Error
+    jobs
+  end
 
-    unless date_to.to_s.empty?
-      next_day = (Date.parse(date_to.to_s) + 1).strftime("%Y-%m-%d")
-      clauses << "_submission_time < ?"
-      params  << next_day
-    end
-
+  # Filter a list of job hashes by free-text search.
+  def filter_history_jobs_by_text(jobs, filter, filter_column, filter_mode)
     terms = history_filter_terms(filter)
-    unless terms.empty?
-      search_cols = case filter_column
-                    when JOB_APP_NAME          then %w[_app_name]
-                    when HEADER_SCRIPT_LOCATION then %w[_script_location]
-                    when HEADER_SCRIPT_NAME     then %w[_script_name _script_content]
-                    when JOB_NAME              then %w[_job_name]
-                    when JOB_ID               then %w[_job_id _job_name _app_name]
-                    else                           %w[_job_id _app_name _script_location _script_name _job_name]
+    return jobs if terms.empty?
+
+    jobs.select do |job|
+      search_vals = case filter_column
+                    when JOB_APP_NAME           then [job[JOB_APP_NAME]]
+                    when HEADER_SCRIPT_LOCATION then [job[HEADER_SCRIPT_LOCATION]]
+                    when HEADER_SCRIPT_NAME     then [job[HEADER_SCRIPT_NAME], job[OC_SCRIPT_CONTENT]]
+                    when JOB_NAME               then [job[JOB_NAME]]
+                    when JOB_ID                 then [job[JOB_ID], job[JOB_NAME], job[JOB_APP_NAME]]
+                    else                             [job[JOB_ID], job[JOB_APP_NAME], job[HEADER_SCRIPT_LOCATION], job[HEADER_SCRIPT_NAME], job[JOB_NAME]]
                     end
+      combined = search_vals.compact.join(" ").downcase
 
       if filter_mode == "or"
-        all_conds = terms.flat_map do |term|
-          search_cols.map do |col|
-            params << "%#{term.downcase}%"
-            "LOWER(COALESCE(#{col},'')) LIKE ?"
-          end
-        end
-        clauses << "(#{all_conds.join(' OR ')})"
+        terms.any? { |term| combined.include?(term.downcase) }
       else
-        terms.each do |term|
-          col_conds = search_cols.map do |col|
-            params << "%#{term.downcase}%"
-            "LOWER(COALESCE(#{col},'')) LIKE ?"
-          end
-          clauses << "(#{col_conds.join(' OR ')})"
-        end
+        terms.all? { |term| combined.include?(term.downcase) }
       end
     end
-
-    [clauses, params]
-  rescue ArgumentError, Date::Error
-    [clauses, params]
   end
 
-  # Build SQL ORDER BY for the given sort column.
-  def history_sql_order(sort, order)
-    direction = order == "asc" ? "ASC" : "DESC"
+  # Sort a list of job hashes by the given sort key and order.
+  def sort_history_jobs(jobs, sort, order)
+    sorted = case sort
+             when JOB_ID
+               jobs.sort_by { |j| history_job_id_sort_key(j[JOB_ID]) }
+             when JOB_APP_NAME
+               jobs.sort_by { |j| [j[JOB_APP_NAME].to_s.downcase, history_job_id_sort_key(j[JOB_ID])] }
+             when HEADER_SCRIPT_LOCATION
+               jobs.sort_by { |j| [j[HEADER_SCRIPT_LOCATION].to_s.downcase, history_job_id_sort_key(j[JOB_ID])] }
+             when HEADER_SCRIPT_NAME
+               jobs.sort_by { |j| [j[HEADER_SCRIPT_NAME].to_s.downcase, history_job_id_sort_key(j[JOB_ID])] }
+             when JOB_NAME
+               jobs.sort_by { |j| [j[JOB_NAME].to_s.downcase, history_job_id_sort_key(j[JOB_ID])] }
+             when "Start"
+               jobs.sort_by { |j| [j["Start"].to_s, history_job_id_sort_key(j[JOB_ID])] }
+             when "End"
+               jobs.sort_by { |j| [j["End"].to_s, history_job_id_sort_key(j[JOB_ID])] }
+             when JOB_STATUS_ID
+               status_order = {
+                 JOB_STATUS["queued"]    => 0,
+                 JOB_STATUS["running"]   => 1,
+                 JOB_STATUS["completed"] => 2,
+                 JOB_STATUS["cancelled"] => 3,
+                 JOB_STATUS["failed"]    => 4,
+                 JOB_STATUS["unknown"]   => 5
+               }
+               jobs.sort_by { |j| [status_order.fetch(j[JOB_STATUS_ID], -1), history_job_id_sort_key(j[JOB_ID])] }
+             else
+               jobs.sort_by { |j| history_job_id_sort_key(j[JOB_ID]) }
+             end
+    order == "asc" ? sorted : sorted.reverse
+  end
 
-    case sort
-    when JOB_ID
-      <<~SQL.gsub(/\s+/, " ").strip
-        CAST(_job_id AS INTEGER) #{direction},
-        CASE
-          WHEN instr(_job_id,'_[') > 0 THEN CAST(substr(_job_id,instr(_job_id,'_[')+2) AS INTEGER)
-          WHEN instr(_job_id,'_') > 0  THEN CAST(substr(_job_id,instr(_job_id,'_')+1) AS INTEGER)
-          ELSE -1
-        END #{direction},
-        _job_id #{direction}
-      SQL
-    when JOB_APP_NAME          then "_app_name #{direction}, CAST(_job_id AS INTEGER) #{direction}"
-    when HEADER_SCRIPT_LOCATION then "_script_location #{direction}, CAST(_job_id AS INTEGER) #{direction}"
-    when HEADER_SCRIPT_NAME    then "_script_name #{direction}, CAST(_job_id AS INTEGER) #{direction}"
-    when JOB_NAME              then "_job_name #{direction}, CAST(_job_id AS INTEGER) #{direction}"
-    when "Start"               then "_start_time #{direction}, CAST(_job_id AS INTEGER) #{direction}"
-    when "End"                 then "_end_time #{direction}, CAST(_job_id AS INTEGER) #{direction}"
-    when JOB_STATUS_ID
-      status_case = <<~SQL.gsub(/\s+/, " ").strip
-        CASE _status
-          WHEN '#{JOB_STATUS["queued"]}' THEN 0
-          WHEN '#{JOB_STATUS["running"]}' THEN 1
-          WHEN '#{JOB_STATUS["completed"]}' THEN 2
-          WHEN '#{JOB_STATUS["cancelled"]}' THEN 3
-          WHEN '#{JOB_STATUS["failed"]}' THEN 4
-          WHEN '#{JOB_STATUS["unknown"]}' THEN 5
-          ELSE -1
-        END
-      SQL
-      "#{status_case} #{direction}, CAST(_job_id AS INTEGER) #{direction}"
-    else
-      "CAST(_job_id AS INTEGER) #{direction}, _job_id #{direction}"
+  # Merge sacct data and DB1 metadata into one page of job hashes.
+  # All filtering, sorting, and pagination is done in Ruby.
+  def build_merged_history_jobs(sacct_map, db1_map, deleted_ids, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset)
+    all_ids = (sacct_map.keys + db1_map.keys).uniq
+
+    jobs = all_ids.filter_map do |jid|
+      next if deleted_ids.include?(jid)
+      sacct_row = sacct_map[jid]
+      db1_row   = db1_map[jid]
+      oc_status = sacct_row ? sacct_state_to_oc_status(sacct_row["State"].to_s) : JOB_STATUS["unknown"]
+      submit_time = db1_row&.[]("_submission_time") || normalize_time_for_db(sacct_row&.[]("Submit"))
+      {
+        JOB_ID                 => jid,
+        JOB_APP_NAME           => db1_row&.[]("_app_name"),
+        JOB_DIR_NAME           => db1_row&.[]("_app_dir_name"),
+        HEADER_SCRIPT_LOCATION => db1_row&.[]("_script_location"),
+        HEADER_SCRIPT_NAME     => db1_row&.[]("_script_name"),
+        JOB_SUBMISSION_TIME    => submit_time,
+        JOB_STATUS_ID          => oc_status,
+        JOB_NAME               => sacct_row&.[]("JobName"),
+        OC_SCRIPT_CONTENT      => db1_row&.[]("_script_content"),
+        "Start"                => normalize_time_for_db(sacct_row&.[]("Start")),
+        "End"                  => normalize_time_for_db(sacct_row&.[]("End")),
+        "_has_db"              => db1_row ? 1 : 0
+      }
     end
-  end
 
-  # Return one page of history rows and the total matching count.
-  # All filtering, sorting, and pagination is done in SQL for speed.
-  def fetch_history_jobs_page(db, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset)
-    where_clauses, where_params = history_sql_where(statuses, date_from, date_to, filter, filter_column, filter_mode)
-    where_sql = "WHERE #{where_clauses.join(' AND ')}"
-    order_sql = history_sql_order(sort, order)
-
-    select_sql = <<~SQL
-      SELECT
-        _job_id           AS "#{JOB_ID}",
-        _app_name         AS "#{JOB_APP_NAME}",
-        _app_dir_name     AS "#{JOB_DIR_NAME}",
-        _script_location  AS "#{HEADER_SCRIPT_LOCATION}",
-        _script_name      AS "#{HEADER_SCRIPT_NAME}",
-        _submission_time  AS "#{JOB_SUBMISSION_TIME}",
-        _status           AS "#{JOB_STATUS_ID}",
-        _job_name         AS "#{JOB_NAME}",
-        _start_time       AS "Start",
-        _end_time         AS "End",
-        _script_content   AS "#{OC_SCRIPT_CONTENT}",
-        1                 AS "_has_db"
-      FROM jobs
-      #{where_sql}
-      ORDER BY #{order_sql}
-      LIMIT ? OFFSET ?
-    SQL
-
-    total = db.get_first_value("SELECT COUNT(*) FROM jobs #{where_sql}", where_params).to_i
-    rows  = db.execute(select_sql, where_params + [limit, offset])
-    [rows, total]
+    jobs = filter_history_jobs_by_status(jobs, statuses)
+    jobs = filter_history_jobs_by_date(jobs, date_from, date_to)
+    jobs = filter_history_jobs_by_text(jobs, filter, filter_column, filter_mode)
+    jobs = sort_history_jobs(jobs, sort, order)
+    total = jobs.length
+    [jobs[offset, limit] || [], total]
   end
 
   def history_filter_mode_matches?(search_text, filter_text, filter_mode)
@@ -669,31 +656,33 @@ helpers do
     db
   end
 
-  # Create the jobs table (new schema) and run any pending migrations.
+  # Create the jobs table (V3 slim schema) and run any pending migrations.
+  # On a brand-new DB this creates the 7-column V3 table directly.
+  # On an existing V1/V2 DB it runs the appropriate migrations.
   def setup_history_db(db)
-    db.execute_batch(<<~SQL)
-      CREATE TABLE IF NOT EXISTS jobs (
-        _job_id          TEXT PRIMARY KEY,
-        _app_name        TEXT,
-        _app_dir_name    TEXT,
-        _script_location TEXT,
-        _script_name     TEXT,
-        _submission_time TEXT,
-        _status          TEXT,
-        _job_name        TEXT,
-        _start_time      TEXT,
-        _end_time        TEXT,
-        _script_content  TEXT,
-        _deleted         INTEGER NOT NULL DEFAULT 0
-      );
-    SQL
+    existing_cols = db.table_info("jobs").map { |c| c["name"] }
 
-    migrate_history_db_to_v2(db)
+    if existing_cols.empty?
+      # New database — create V3 schema directly, no migrations needed.
+      db.execute_batch(<<~SQL)
+        CREATE TABLE IF NOT EXISTS jobs (
+          _job_id          TEXT PRIMARY KEY,
+          _app_name        TEXT,
+          _app_dir_name    TEXT,
+          _script_location TEXT,
+          _script_name     TEXT,
+          _submission_time TEXT,
+          _script_content  TEXT
+        );
+      SQL
+    else
+      # Existing database — run pending migrations in order.
+      migrate_history_db_to_v2(db)
+      migrate_history_db_to_v3(db)
+    end
 
     db.execute_batch(<<~SQL)
-      CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(_status);
       CREATE INDEX IF NOT EXISTS idx_jobs_submission_time ON jobs(_submission_time);
-      CREATE INDEX IF NOT EXISTS idx_jobs_deleted ON jobs(_deleted);
     SQL
   end
 
@@ -761,6 +750,113 @@ helpers do
     end
   end
 
+  # Migrate from the V2 schema (which has _status, _job_name, _start_time, _end_time, _deleted)
+  # to the V3 slim schema (7 columns only). Runs once per DB; subsequent calls are no-ops.
+  # V3 detection: absence of "_status" column in jobs table.
+  def migrate_history_db_to_v3(db)
+    cols = db.table_info("jobs").map { |c| c["name"] }
+    return unless cols.include?("_status") || cols.include?("_deleted")
+
+    db.transaction do
+      # Step 1: copy deleted job IDs to deleted_db (handled by caller via open_deleted_db).
+      # We store them in a temporary table within the same DB so the caller can pick them up.
+      db.execute_batch(<<~SQL)
+        CREATE TABLE IF NOT EXISTS _v3_deleted_export (
+          _job_id TEXT PRIMARY KEY,
+          _deleted_at TEXT
+        );
+      SQL
+
+      if cols.include?("_deleted")
+        db.execute("SELECT _job_id FROM jobs WHERE _deleted = 1").each do |row|
+          db.execute(
+            "INSERT OR IGNORE INTO _v3_deleted_export (_job_id, _deleted_at) VALUES (?, ?)",
+            [row["_job_id"], Time.now.iso8601]
+          )
+        end
+      end
+
+      # Step 2: recreate jobs table with only 7 columns.
+      db.execute_batch(<<~SQL)
+        CREATE TABLE jobs_v3 (
+          _job_id          TEXT PRIMARY KEY,
+          _app_name        TEXT,
+          _app_dir_name    TEXT,
+          _script_location TEXT,
+          _script_name     TEXT,
+          _submission_time TEXT,
+          _script_content  TEXT
+        );
+      SQL
+
+      db.execute("SELECT * FROM jobs WHERE _deleted = 0 OR _deleted IS NULL").each do |row|
+        next if row["_job_id"].to_s.match?(/\A\d+_\[/) # drop old [range] rows — no OC metadata
+        db.execute(
+          "INSERT OR IGNORE INTO jobs_v3 (_job_id, _app_name, _app_dir_name, _script_location, _script_name, _submission_time, _script_content) VALUES (?,?,?,?,?,?,?)",
+          [row["_job_id"], row["_app_name"], row["_app_dir_name"],
+           row["_script_location"], row["_script_name"],
+           row["_submission_time"], row["_script_content"]]
+        )
+      end
+
+      db.execute("DROP TABLE jobs")
+      db.execute("ALTER TABLE jobs_v3 RENAME TO jobs")
+    end
+  end
+
+  # Return the path for the deleted-jobs DB corresponding to a history DB path.
+  def get_deleted_db_path(conf, cluster_name)
+    base = get_history_db(conf, cluster_name)
+    base.sub(/\.sqlite3\z/, "_deleted.sqlite3")
+  end
+
+  # Create the deleted_jobs table in the given DB connection.
+  def setup_deleted_db(db)
+    db.execute_batch(<<~SQL)
+      CREATE TABLE IF NOT EXISTS deleted_jobs (
+        _job_id     TEXT PRIMARY KEY,
+        _deleted_at TEXT
+      );
+    SQL
+  end
+
+  # Open (or create) the deleted-jobs DB, applying any pending V3 migration exports.
+  def open_deleted_db(conf, cluster_name)
+    deleted_path = get_deleted_db_path(conf, cluster_name)
+    FileUtils.mkdir_p(File.dirname(deleted_path))
+    db = SQLite3::Database.new(deleted_path)
+    db.results_as_hash = true
+    setup_deleted_db(db)
+
+    # If the main history DB has a _v3_deleted_export table (written during V3 migration),
+    # drain it into the deleted DB now and drop it from the main DB.
+    main_path = get_history_db(conf, cluster_name)
+    if File.exist?(main_path.to_s)
+      main_db = SQLite3::Database.new(main_path)
+      main_db.results_as_hash = true
+      begin
+        rows = main_db.execute("SELECT _job_id, _deleted_at FROM _v3_deleted_export")
+        unless rows.empty?
+          db.transaction do
+            rows.each do |row|
+              db.execute(
+                "INSERT OR IGNORE INTO deleted_jobs (_job_id, _deleted_at) VALUES (?, ?)",
+                [row["_job_id"], row["_deleted_at"]]
+              )
+            end
+          end
+          main_db.execute("DROP TABLE _v3_deleted_export")
+        end
+      rescue SQLite3::Exception
+        # _v3_deleted_export doesn't exist — that's fine, migration already done
+      ensure
+        main_db.close
+      end
+    end
+
+    db
+  end
+
   # Rename legacy (non-prefixed) column names to the _-prefixed convention.
   def migrate_history_db_internal_columns(db)
     columns = db.table_info("jobs").map { |c| c["name"] }
@@ -791,55 +887,7 @@ helpers do
     db.get_first_row("SELECT * FROM jobs WHERE _job_id = ?", [job_id])
   end
 
-  # Sync sacct job data into the DB.
-  # New jobs are inserted with sacct data only (no OC metadata).
-  # Existing jobs get status/name/times updated; OC metadata (app_name, app_dir_name,
-  # script_location, script_name, script_content) is never overwritten by sacct data.
-  def upsert_sacct_jobs(db, sacct_jobs)
-    return if sacct_jobs.nil? || sacct_jobs.empty?
-    db.transaction do
-      sacct_jobs.each do |job|
-        job_id = job["JobID"].to_s.strip
-        next unless valid_oc_job_id?(job_id)
-        oc_status   = sacct_state_to_oc_status(job["State"].to_s)
-        job_name    = job["JobName"].to_s.strip; job_name = nil if job_name.empty?
-        submit_str  = job["Submit"].to_s.strip
-        submit_str  = nil if submit_str.empty? || submit_str == "Unknown" || submit_str == "None"
-        submit_time = normalize_time_for_db(submit_str)
-        start_time  = job["Start"].to_s.strip
-        start_time  = nil if start_time.empty? || start_time == "Unknown" || start_time == "None"
-        end_time    = job["End"].to_s.strip
-        end_time    = nil if end_time.empty? || end_time == "Unknown" || end_time == "None"
-        params = [
-          job_id, oc_status, job_name, submit_time, start_time, end_time,
-          oc_status,
-          job_name, job_name,
-          submit_time,
-          start_time, start_time,
-          end_time, end_time
-        ]
-        db.execute(<<~SQL, params)
-          INSERT INTO jobs (_job_id, _status, _job_name, _submission_time, _start_time, _end_time, _deleted)
-          VALUES (?, ?, ?, ?, ?, ?, 0)
-          ON CONFLICT(_job_id) DO UPDATE SET
-            _status          = ?,
-            _job_name        = CASE WHEN ? IS NOT NULL THEN ? ELSE _job_name END,
-            _submission_time = CASE WHEN _submission_time IS NULL THEN ? ELSE _submission_time END,
-            _start_time      = CASE WHEN ? IS NOT NULL THEN ? ELSE _start_time END,
-            _end_time        = CASE WHEN ? IS NOT NULL THEN ? ELSE _end_time END
-        SQL
-        if (m = job_id.match(/\A(\d+)_\[/))
-          parent_id = m[1]
-          db.execute(
-            "DELETE FROM jobs WHERE _job_id LIKE ? AND _job_id != ? AND _deleted = 0",
-            ["#{parent_id}_[%", job_id]
-          )
-        end
-      end
-    end
-  end
-
-  # Insert or overwrite a job record.
+  # Insert or overwrite a job record (7-column V3 schema).
   def upsert_job(db, record)
     params = [
       record["_job_id"],
@@ -848,127 +896,70 @@ helpers do
       record["_script_location"],
       record["_script_name"],
       record["_submission_time"],
-      record["_status"],
-      record["_job_name"],
-      record["_start_time"],
-      record["_end_time"],
-      record["_script_content"],
-      record.fetch("_deleted", 0).to_i
+      record["_script_content"]
     ]
     db.execute(<<~SQL, params)
       INSERT INTO jobs (_job_id, _app_name, _app_dir_name, _script_location, _script_name,
-                        _submission_time, _status, _job_name, _start_time, _end_time,
-                        _script_content, _deleted)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                        _submission_time, _script_content)
+      VALUES (?,?,?,?,?,?,?)
       ON CONFLICT(_job_id) DO UPDATE SET
         _app_name        = excluded._app_name,
         _app_dir_name    = excluded._app_dir_name,
         _script_location = excluded._script_location,
         _script_name     = excluded._script_name,
         _submission_time = excluded._submission_time,
-        _status          = excluded._status,
-        _job_name        = excluded._job_name,
-        _start_time      = excluded._start_time,
-        _end_time        = excluded._end_time,
-        _script_content  = excluded._script_content,
-        _deleted         = excluded._deleted
+        _script_content  = excluded._script_content
     SQL
   end
 
-  # Mark every non-deleted job as deleted, clearing all data.
-  def delete_all_jobs(db)
-    db.execute(<<~SQL)
-      UPDATE jobs SET
-        _app_name=NULL, _app_dir_name=NULL, _script_location=NULL,
-        _script_name=NULL, _submission_time=NULL, _status=NULL,
-        _job_name=NULL, _start_time=NULL, _end_time=NULL,
-        _script_content=NULL, _deleted=1
-      WHERE _deleted=0
-    SQL
+  # Delete all given job IDs from DB1 and record them in DB2.
+  def delete_all_jobs(db, deleted_db, job_ids)
+    return if job_ids.nil? || job_ids.empty?
+
+    now = Time.now.iso8601
+    deleted_db.transaction do
+      job_ids.each do |job_id|
+        deleted_db.execute(
+          "INSERT OR IGNORE INTO deleted_jobs (_job_id, _deleted_at) VALUES (?, ?)",
+          [job_id, now]
+        )
+      end
+    end
+    db.transaction do
+      job_ids.each do |job_id|
+        db.execute("DELETE FROM jobs WHERE _job_id = ?", [job_id])
+      end
+    end
   end
 
-  # Mark a job as deleted, clearing all data except the job ID.
-  def delete_job(db, job_id)
-    db.execute(<<~SQL, [job_id])
-      UPDATE jobs SET
-        _app_name = NULL, _app_dir_name = NULL, _script_location = NULL,
-        _script_name = NULL, _submission_time = NULL, _status = NULL,
-        _job_name = NULL, _start_time = NULL, _end_time = NULL,
-        _script_content = NULL, _deleted = 1
-      WHERE _job_id = ?
-    SQL
+  # Delete a single job from DB1 and record it in DB2.
+  def delete_job(db, deleted_db, job_id)
+    now = Time.now.iso8601
+    deleted_db.execute(
+      "INSERT OR IGNORE INTO deleted_jobs (_job_id, _deleted_at) VALUES (?, ?)",
+      [job_id, now]
+    )
+    db.execute("DELETE FROM jobs WHERE _job_id = ?", [job_id])
   end
 
   # Convert a DB row to a hash keyed by the legacy/public constants.
-  # Returns nil for deleted records.
   def job_record_to_legacy_hash(record)
     return nil unless record
-    return nil if record["_deleted"].to_i == 1
 
     {
-      JOB_ID              => record["_job_id"],
-      JOB_APP_NAME        => record["_app_name"],
-      JOB_DIR_NAME        => record["_app_dir_name"],
+      JOB_ID                 => record["_job_id"],
+      JOB_APP_NAME           => record["_app_name"],
+      JOB_DIR_NAME           => record["_app_dir_name"],
       HEADER_SCRIPT_LOCATION => record["_script_location"],
-      HEADER_SCRIPT_NAME  => record["_script_name"],
-      JOB_SUBMISSION_TIME => record["_submission_time"],
-      JOB_STATUS_ID       => record["_status"],
-      JOB_NAME            => record["_job_name"],
-      OC_SCRIPT_CONTENT   => record["_script_content"],
-      "Start"             => record["_start_time"],
-      "End"               => record["_end_time"]
+      HEADER_SCRIPT_NAME     => record["_script_name"],
+      JOB_SUBMISSION_TIME    => record["_submission_time"],
+      OC_SCRIPT_CONTENT      => record["_script_content"]
     }
-  end
-
-  # Return the IDs of all non-terminal jobs (QUEUED, RUNNING, or NULL for just-submitted).
-  def get_nonterminal_job_ids(db)
-    active = [JOB_STATUS["queued"], JOB_STATUS["running"]]
-    placeholders = (["?"] * active.length).join(", ")
-    db.execute(
-      "SELECT _job_id FROM jobs WHERE _deleted = 0 AND (_status IS NULL OR _status IN (#{placeholders}))",
-      active
-    ).map { |row| row["_job_id"] }
-  end
-
-  # Bulk-update job statuses in the DB from sacct results.
-  def sync_job_statuses(db, sacct_results)
-    return if sacct_results.nil? || sacct_results.empty?
-
-    db.transaction do
-      sacct_results.each do |job_id, sacct_job|
-        oc_status  = sacct_state_to_oc_status(sacct_job["State"].to_s)
-        job_name   = sacct_job["JobName"].to_s
-        job_name   = nil if job_name.empty?
-        start_time = sacct_job["Start"].to_s
-        start_time = nil if start_time.empty? || start_time == "Unknown" || start_time == "None"
-        end_time   = sacct_job["End"].to_s
-        end_time   = nil if end_time.empty? || end_time == "Unknown" || end_time == "None"
-
-        db.execute(<<~SQL, [oc_status, job_name, job_name, start_time, start_time, end_time, end_time, job_id])
-          UPDATE jobs SET
-            _status     = ?,
-            _job_name   = CASE WHEN ? IS NOT NULL THEN ? ELSE _job_name END,
-            _start_time = CASE WHEN ? IS NOT NULL THEN ? ELSE _start_time END,
-            _end_time   = CASE WHEN ? IS NOT NULL THEN ? ELSE _end_time END
-          WHERE _job_id = ? AND _deleted = 0
-        SQL
-      end
-    end
   end
 
   # Return true if a job ID has a valid format for recording: plain integer, integer_integer, or integer_[range].
   def valid_oc_job_id?(job_id)
     job_id.to_s.match?(/\A\d+\z/) || job_id.to_s.match?(/\A\d+_\d+\z/) || job_id.to_s.match?(/\A\d+_\[/)
-  end
-
-  # Set the status of jobs to cancelled in the DB.
-  def mark_jobs_as_canceled(db, job_ids)
-    Array(job_ids).each do |job_id|
-      db.execute(
-        "UPDATE jobs SET _status = ? WHERE _job_id = ? AND _deleted = 0",
-        [JOB_STATUS["cancelled"], job_id]
-      )
-    end
   end
 
   # Map a sacct State string to an OpenComposer status constant.
@@ -1035,7 +1026,7 @@ helpers do
     db.close
   end
 
-  # Convert a legacy PStore record into a new-schema job record.
+  # Convert a legacy PStore record into a new-schema job record (7 columns).
   def convert_pstore_record_to_sqlite(job_id, data)
     legacy = (data || {}).transform_keys(&:to_s)
 
@@ -1046,9 +1037,7 @@ helpers do
       "_script_location" => legacy[HEADER_SCRIPT_LOCATION.to_s],
       "_script_name"     => legacy[HEADER_SCRIPT_NAME.to_s],
       "_submission_time" => normalize_time_for_db(legacy[JOB_SUBMISSION_TIME.to_s]),
-      "_status"          => legacy[JOB_STATUS_ID.to_s],
-      "_script_content"  => legacy[OC_SCRIPT_CONTENT.to_s],
-      "_deleted"         => 0
+      "_script_content"  => legacy[OC_SCRIPT_CONTENT.to_s]
     }
   end
 end

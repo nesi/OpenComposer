@@ -433,6 +433,28 @@ if (ocHistory.selectAllCheckbox && ocHistory.tbody) {
   });
 }
 
+// Expand a single job ID: "6832503_[1000-2000]" → ["6832503_1000", ..., "6832503_2000"].
+// Plain IDs are returned as-is in a one-element array.
+function ocExpandJobId(jobId) {
+  var m = jobId.match(/^(\d+)_\[(\d+)-(\d+)(?::(\d+))?\]$/);
+  if (!m) return [jobId];
+  var parent = m[1], first = parseInt(m[2], 10), last = parseInt(m[3], 10);
+  var step = m[4] ? Math.max(parseInt(m[4], 10), 1) : 1;
+  var ids = [];
+  for (var i = first; i <= last; i += step) ids.push(parent + '_' + i);
+  return ids;
+}
+
+// Expand an array of job IDs, flattening any bracket-range entries.
+function ocExpandJobIds(ids) {
+  var out = [];
+  for (var i = 0; i < ids.length; i++) {
+    var exp = ocExpandJobId(ids[i]);
+    for (var j = 0; j < exp.length; j++) out.push(exp[j]);
+  }
+  return out;
+}
+
 // Cancel jobs one-by-one, showing a progress bar and Abort button in the CancelJob modal.
 ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
   var modal    = document.getElementById('_historyCancelJob');
@@ -442,6 +464,7 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
   var closeBtn = document.getElementById('_historyCancelJobCloseBtn');
   if (!modal || !body) return;
 
+  jobIds = ocExpandJobIds(jobIds);
   var total   = jobIds.length;
   var done    = 0;
   var errors  = [];
@@ -574,6 +597,7 @@ ocHistory.startCancelAll = function() {
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(jobIds) {
+      jobIds = ocExpandJobIds(jobIds || []);
       if (!jobIds || jobIds.length === 0) {
         progressArea.innerHTML = '<p class="text-muted mb-0">No queued or running jobs found.</p>';
         abortBtn.classList.add('d-none');

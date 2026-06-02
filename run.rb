@@ -1,5 +1,6 @@
 require "sinatra"
 require "date"
+require "set"
 require "sinatra/reloader" if ENV.fetch("RACK_ENV", "production") == "development"
 require "yaml"
 require "erb"
@@ -478,28 +479,35 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     bin_overrides_s = @conf.key?("clusters") ? @bin_overrides[@cluster_name]     : @bin_overrides
     ssh_wrapper_s   = @conf.key?("clusters") ? @ssh_wrapper[@cluster_name]       : @ssh_wrapper
 
-    db = open_history_db(@conf, @cluster_name)
+    db         = open_history_db(@conf, @cluster_name)
+    deleted_db = open_deleted_db(@conf, @cluster_name)
+    deleted_ids = Set.new(deleted_db.execute("SELECT _job_id FROM deleted_jobs").map { |r| r["_job_id"] })
 
-    # Sync all sacct jobs for the selected date range into the DB.
-    # This discovers jobs not submitted through OpenComposer and updates statuses.
-    # Defaults to last 7 days when the date filter is "all" (no date constraint).
     sacct_from = raw_date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : raw_date_from.to_s
     sacct_to   = raw_date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")        : raw_date_to.to_s
     all_sacct_jobs, @sacct_error, _cmd = scheduler_s.sacct_all_jobs(sacct_from, sacct_to, bin_s, bin_overrides_s, ssh_wrapper_s)
-    upsert_sacct_jobs(db, all_sacct_jobs) if all_sacct_jobs
 
-    # Also update non-terminal DB jobs that fall outside the scanned date range.
-    scanned_ids      = (all_sacct_jobs || []).map { |j| j["JobID"].to_s }.to_set
-    non_terminal_ids = get_nonterminal_job_ids(db).reject { |id| scanned_ids.include?(id) }
-    if non_terminal_ids.any?
-      sacct_results2, err2 = scheduler_s.sacct_status_update(non_terminal_ids, bin_s, bin_overrides_s, ssh_wrapper_s)
-      sync_job_statuses(db, sacct_results2) if sacct_results2
+    sacct_map = {}
+    (all_sacct_jobs || []).each do |j|
+      jid = j["JobID"].to_s.strip
+      next unless valid_oc_job_id?(jid)
+      sacct_map[jid] = j
+    end
+
+    db1_map = db.execute("SELECT * FROM jobs").each_with_object({}) { |r, h| h[r["_job_id"]] = r }
+
+    # For DB1 jobs not covered by the sacct scan, fetch their status individually
+    unscanned_ids = db1_map.keys.reject { |id| sacct_map.key?(id) || deleted_ids.include?(id) }
+    if unscanned_ids.any?
+      sacct_results2, err2 = scheduler_s.sacct_status_update(unscanned_ids, bin_s, bin_overrides_s, ssh_wrapper_s)
+      (sacct_results2 || {}).each { |jid, row| sacct_map[jid] ||= row }
       @sacct_error ||= err2
     end
 
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    @jobs, @jobs_size = fetch_history_jobs_page(
-      db, @statuses, @filter, @filter_column, @filter_mode,
+    @jobs, @jobs_size = build_merged_history_jobs(
+      sacct_map, db1_map, deleted_ids,
+      @statuses, @filter, @filter_column, @filter_mode,
       raw_date_from.to_s, raw_date_to.to_s,
       @sort, @order, requested_rows, offset
     )
@@ -801,29 +809,20 @@ get "/job_details" do
     "script_content"  => nil
   }
 
-  # Route to scontrol (active) or sacct (terminal) based on the stored DB status.
-  # NULL status means the job has not reached a terminal state yet.
-  terminal_db_statuses = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
-  db_status = nil
-  history_db_path = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
-  if history_db_path && File.exist?(history_db_path.to_s)
-    db_tmp    = open_history_db(conf, cluster_name)
-    db_row    = db_tmp.execute("SELECT _status FROM jobs WHERE _job_id = ? AND _deleted = 0", [job_id]).first
-    db_status = db_row ? db_row["_status"] : nil
-  end
+  # Route to sacct first to determine if job is terminal; if not, use scontrol.
+  terminal = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
+  sacct_data, sacct_err, sacct_cmd = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper)
+  oc_status = sacct_data && !sacct_data.empty? ? sacct_state_to_oc_status(sacct_data["State"].to_s) : nil
 
-  if terminal_db_statuses.include?(db_status)
-    sacct_data, sacct_err, sacct_cmd = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper)
-    if sacct_data && !sacct_data.empty?
-      result["source"]  = "sacct"
-      result["command"] = sacct_cmd
-      result["data"]    = sacct_data
-      workdir = sacct_data["WorkDir"]
-      result["script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
-    else
-      result["errors"] = { "sacct" => sacct_err }.compact
-    end
+  if sacct_data && !sacct_data.empty? && terminal.include?(oc_status)
+    # Terminal job confirmed by sacct — use sacct data
+    result["source"]  = "sacct"
+    result["command"] = sacct_cmd
+    result["data"]    = sacct_data
+    workdir = sacct_data["WorkDir"]
+    result["script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
   else
+    # Active or unknown — try scontrol first, then sacct
     scontrol_data, scontrol_err, scontrol_cmd = scheduler.scontrol_job(job_id, bin, bin_overrides, ssh_wrapper)
     if scontrol_data && !scontrol_data.empty?
       result["source"]  = "scontrol"
@@ -835,19 +834,15 @@ get "/job_details" do
         result["script_name"]     = File.basename(cmd)
       end
       result["script_location"] ||= scontrol_data["WorkDir"]
+    elsif sacct_data && !sacct_data.empty?
+      result["source"]  = "sacct"
+      result["command"] = sacct_cmd
+      result["data"]    = sacct_data
+      workdir = sacct_data["WorkDir"]
+      result["script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
     else
-      # Job may have just become terminal; fall back to sacct.
-      sacct_data, sacct_err, sacct_cmd = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper)
-      if sacct_data && !sacct_data.empty?
-        result["source"]  = "sacct"
-        result["command"] = sacct_cmd
-        result["data"]    = sacct_data
-        workdir = sacct_data["WorkDir"]
-        result["script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
-      else
-        errors = { "scontrol" => scontrol_err, "sacct" => sacct_err }.compact
-        result["errors"] = errors unless errors.empty?
-      end
+      errors = { "scontrol" => scontrol_err, "sacct" => sacct_err }.compact
+      result["errors"] = errors unless errors.empty?
     end
   end
 
@@ -871,14 +866,9 @@ post "/history/cancel_one" do
   bin           = conf.key?("clusters") ? conf["bin"][cluster_name]           : conf["bin"]
   bin_overrides = conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
   ssh_wrapper   = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]   : conf["ssh_wrapper"]
-  history_db    = conf.key?("clusters") ? conf["history_db"][cluster_name]    : conf["history_db"]
 
   error_msg = scheduler.cancel([job_id], bin, bin_overrides, ssh_wrapper)
   if error_msg.nil?
-    if history_db && File.exist?(history_db.to_s)
-      db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-      db.transaction { mark_jobs_as_canceled(db, [job_id]) }
-    end
     output_log("Cancel job", scheduler, cluster: cluster_name, job_ids: [job_id])
     JSON.generate({ ok: true })
   else
@@ -892,13 +882,28 @@ end
 get "/history/active_job_ids" do
   conf         = create_conf
   content_type :json
-  cluster_name = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
-  history_db   = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
-  unless history_db && File.exist?(history_db.to_s)
-    next JSON.generate([])
+  cluster_name  = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
+  scheduler     = conf.key?("clusters") ? create_scheduler(conf)[cluster_name] : create_scheduler(conf)
+  bin           = conf.key?("clusters") ? conf["bin"][cluster_name]           : conf["bin"]
+  bin_overrides = conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
+  ssh_wrapper   = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]   : conf["ssh_wrapper"]
+
+  deleted_db  = open_deleted_db(conf, cluster_name)
+  deleted_ids = Set.new(deleted_db.execute("SELECT _job_id FROM deleted_jobs").map { |r| r["_job_id"] })
+
+  from = (Date.today - 29).strftime("%Y-%m-%d")
+  to   = Date.today.strftime("%Y-%m-%d")
+  all_jobs, _err, _cmd = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
+
+  active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
+  ids = (all_jobs || []).filter_map do |j|
+    jid = j["JobID"].to_s.strip
+    next unless valid_oc_job_id?(jid)
+    next if deleted_ids.include?(jid)
+    oc_status = sacct_state_to_oc_status(j["State"].to_s)
+    jid if active_statuses.include?(oc_status)
   end
-  db  = open_history_db(conf, cluster_name)
-  ids = get_nonterminal_job_ids(db)
+
   JSON.generate(ids)
 rescue => e
   content_type :json
@@ -1042,37 +1047,34 @@ post "/*" do
     case params["action"]
     when "CancelJob"
       error_msg = scheduler.cancel(job_ids, bin, bin_overrides, ssh_wrapper)
-      if error_msg.nil? && File.exist?(history_db)
-        db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        db.transaction do
-          mark_jobs_as_canceled(db, job_ids)
-        end
-      end
       output_log("Cancel job", scheduler, cluster: cluster_name, job_ids: job_ids)
     when "DeleteInfo"
       if history_db
-        db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        db.transaction do
-          job_ids.each { |job_id| delete_job(db, job_id) }
-        end
+        db         = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
+        deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil)
+        job_ids.each { |job_id| delete_job(db, deleted_db, job_id) }
         output_log("Delete job information", scheduler, cluster: cluster_name, job_ids: job_ids)
       end
     when "CancelAll"
-      if history_db
-        db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        cancel_ids = get_nonterminal_job_ids(db)
-        unless cancel_ids.empty?
-          error_msg = scheduler.cancel(cancel_ids, bin, bin_overrides, ssh_wrapper)
-          if error_msg.nil?
-            db.transaction { mark_jobs_as_canceled(db, cancel_ids) }
-          end
-          output_log("Cancel all jobs", scheduler, cluster: cluster_name, job_ids: cancel_ids)
-        end
+      from = (Date.today - 29).strftime("%Y-%m-%d")
+      to   = Date.today.strftime("%Y-%m-%d")
+      all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
+      active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
+      cancel_ids = (all_sacct || []).filter_map do |j|
+        jid = j["JobID"].to_s.strip
+        next unless valid_oc_job_id?(jid)
+        jid if active_statuses.include?(sacct_state_to_oc_status(j["State"].to_s))
+      end
+      unless cancel_ids.empty?
+        error_msg = scheduler.cancel(cancel_ids, bin, bin_overrides, ssh_wrapper)
+        output_log("Cancel all jobs", scheduler, cluster: cluster_name, job_ids: cancel_ids)
       end
     when "DeleteAll"
       if history_db
-        db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        db.transaction { delete_all_jobs(db) }
+        db         = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
+        deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil)
+        visible_ids = db.execute("SELECT _job_id FROM jobs").map { |r| r["_job_id"] }
+        delete_all_jobs(db, deleted_db, visible_ids)
         output_log("Delete all job history", scheduler, cluster: cluster_name)
       end
     end
@@ -1227,9 +1229,7 @@ post "/*" do
           "_script_location" => params[HEADER_SCRIPT_LOCATION],
           "_script_name"     => params[HEADER_SCRIPT_NAME],
           "_submission_time" => normalize_time_for_db(params[JOB_SUBMISSION_TIME]),
-          "_status"          => JOB_STATUS["queued"],
-          "_script_content"  => store_script ? script_content : nil,
-          "_deleted"         => 0
+          "_script_content"  => store_script ? script_content : nil
         })
       end
     end

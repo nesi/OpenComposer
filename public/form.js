@@ -111,6 +111,46 @@ ocForm.debouncedParseScript = (function() {
   };
 })();
 
+// Targeted in-place replacement for module_load widgets.
+// Finds every line matching "module load <MODULE_NAME>[/version]" and replaces it with
+// the newly-selected value. Never calls patchScript, so surrounding content is untouched.
+ocForm.patchModuleLoadLine = function(area, key) {
+  var sel = document.getElementById(key);
+  if (!sel) return;
+  var modName = (sel.getAttribute('data-module-avail') || '').trim();
+  var newVal  = sel.value;
+  if (!modName || !newVal) return;
+
+  var escaped = modName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Match optional indent + "module load" + optional whitespace + modName + optional /version
+  var re = new RegExp('^(\\s*)module\\s+load(?:\\s+' + escaped + '(?:\\/\\S*)?)? *$');
+
+  function patchArea(textarea, afterPatch) {
+    if (!textarea) return;
+    var lines = textarea.value.split('\n');
+    var changed = false;
+    for (var i = 0; i < lines.length; i++) {
+      if (re.test(lines[i])) {
+        var indent = (lines[i].match(/^(\s*)/) || ['',''])[1];
+        lines[i] = indent + 'module load ' + newVal;
+        changed = true;
+      }
+    }
+    if (changed) {
+      textarea.value = lines.join('\n');
+      ocForm.updateHeight(textarea);
+      if (afterPatch) afterPatch();
+    }
+  }
+
+  if (area === 'script' || area === 'both') {
+    patchArea(ocForm.scriptArea, function() { ocForm.syncScriptHighlight(); });
+  }
+  if (area === 'submit' || area === 'both') {
+    patchArea(ocForm.submitArea, null);
+  }
+};
+
 // Patch only the template-driven lines in the script, preserving manually added lines.
 // Newly revealed lines are inserted in template order before any trailing user-added lines.
 ocForm.patchScript = function() {

@@ -413,8 +413,7 @@ helpers do
            end
 
     if type
-      html += "onfocus=\"ocForm.storePreviousValue('#{key}')\" "
-      html += "onchange=\"ocForm.confirmOverwrite('#{type}', '#{key}', function(){ocForm.updateArea('#{type}', '#{key}');})\""
+      html += "onchange=\"ocForm.patchModuleLoadLine('#{type}', '#{key}')\""
       html += " style=\"background-color: #{@conf["submit_color"]};\"" if type == 'submit'
     else
       html += "onchange=\"ocForm.execDynamicWidget('#{key}')\" "

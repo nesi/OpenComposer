@@ -1227,7 +1227,7 @@ post "/*" do
           "_script_location" => params[HEADER_SCRIPT_LOCATION],
           "_script_name"     => params[HEADER_SCRIPT_NAME],
           "_submission_time" => normalize_time_for_db(params[JOB_SUBMISSION_TIME]),
-          "_status"          => nil,
+          "_status"          => JOB_STATUS["queued"],
           "_script_content"  => store_script ? script_content : nil,
           "_deleted"         => 0
         })

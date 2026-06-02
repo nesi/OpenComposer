@@ -1040,7 +1040,7 @@ post "/*" do
 
     case params["action"]
     when "CancelJob"
-      error_msg = scheduler.cancel(job_ids, bin, bin_overrides, ssh_wrapper)
+      error_msg = scheduler.cancel(job_ids.reverse, bin, bin_overrides, ssh_wrapper)
       output_log("Cancel job", scheduler, cluster: cluster_name, job_ids: job_ids)
     when "DeleteInfo"
       if history_db
@@ -1048,6 +1048,7 @@ post "/*" do
         deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil)
         job_ids.each { |job_id| delete_job(db, deleted_db, job_id) }
         output_log("Delete job information", scheduler, cluster: cluster_name, job_ids: job_ids)
+        redirect request.url
       end
     when "CancelAll"
       from = (Date.today - 29).strftime("%Y-%m-%d")
@@ -1060,7 +1061,7 @@ post "/*" do
         jid if active_statuses.include?(sacct_state_to_oc_status(j["State"].to_s))
       end
       unless cancel_ids.empty?
-        error_msg = scheduler.cancel(cancel_ids, bin, bin_overrides, ssh_wrapper)
+        error_msg = scheduler.cancel(cancel_ids.reverse, bin, bin_overrides, ssh_wrapper)
         output_log("Cancel all jobs", scheduler, cluster: cluster_name, job_ids: cancel_ids)
       end
     when "DeleteAll"

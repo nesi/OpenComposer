@@ -532,13 +532,24 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   when "templates/new"
     @name = "New Template"
     generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"
-    configured_schedulers = @conf["scheduler"].is_a?(Hash) ? @conf["scheduler"].values.uniq : [@conf["scheduler"].to_s]
-    applicable_generic_dirs = configured_schedulers.map { |s| SCHEDULER_TO_GENERIC_APP[s] }.compact.uniq
-    @generic_manifests = Dir.glob(File.join(generic_apps_dir, "*/manifest.yml")).filter_map do |path|
-      m = create_manifest(File.dirname(path))
-      next unless m && applicable_generic_dirs.include?(m.dirname)
-      m
+    configured_schedulers = if @conf["scheduler"].is_a?(Hash)
+                               @conf["scheduler"].values.uniq.map(&:to_s)
+                             else
+                               [@conf["scheduler"].to_s]
+                             end
+    # Case-insensitive lookup so "Slurm", "SLURM", "slurm" all match
+    applicable_generic_dirs = configured_schedulers
+                                .map { |s| SCHEDULER_TO_GENERIC_APP[s.downcase] }
+                                .compact.uniq
+    all_generic = Dir.glob(File.join(generic_apps_dir, "*/manifest.yml")).filter_map do |path|
+      create_manifest(File.dirname(path))
     end.sort_by { |m| m.name.downcase }
+    # Filter to the configured scheduler; if the lookup produced nothing, show all
+    @generic_manifests = if applicable_generic_dirs.any?
+                           all_generic.select { |m| applicable_generic_dirs.include?(m.dirname) }
+                         else
+                           all_generic
+                         end
     return erb :new_template
   else # application form
     @table_index     = 1

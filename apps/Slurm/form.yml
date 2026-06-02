@@ -63,10 +63,10 @@ form:
     size:     1
     options:
       - [ "None", "", ]
-      - [ "H100",  "h100", show-number_of_gpus_any, set-value-partition: genoa]
-      - [ "A100 (40GB)",  "a100", show-number_of_gpus_any, set-value-partition: genoa ]
-      - [ "A100 (80GB)",  "a100", show-number_of_gpus_any, set-value-partition: milan ]
-      - [ "L4",  "l4", show-number_of_gpus_any, set-value-partition: genoa ]
+      - [ "H100",  "h100", show-number_of_gpus_any, set-value-partition: genoa, set-value-gpu_genoa: H100]
+      - [ "A100 (40GB)",  "a100", show-number_of_gpus_any, set-value-partition: genoa, set-value-gpu_genoa: A100 (40GB)]
+      - [ "A100 (80GB)",  "a100", show-number_of_gpus_any, set-value-partition: milan, set-value-gpu_milan: A100 (80GB)]
+      - [ "L4",  "l4", show-number_of_gpus_any, set-value-partition: genoa, set-value-gpu_genoa: L4]
     help: Selecting a GPU here will change the partition
 
   number_of_gpus_any:

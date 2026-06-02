@@ -176,13 +176,15 @@ ocForm.patchScript = function() {
   }
 
   // Split user-added lines into "between templates" (keep anchor position) and "tail".
+  // Blank lines are skipped here: they appear in newLines already (from the template),
+  // so collecting them again in midUser would double them on every patchScript call.
   const midUser = new Map([[-1, []]]);
   const tailLines = [];
   for (let i = 0; i < currentLines.length; i++) {
     if (!lineClass[i].template) {
       if (i > lastTplPos) {
         tailLines.push(currentLines[i]);
-      } else {
+      } else if (currentLines[i].trim() !== '') {
         const a = lineClass[i].anchor;
         if (!midUser.has(a)) midUser.set(a, []);
         midUser.get(a).push(currentLines[i]);

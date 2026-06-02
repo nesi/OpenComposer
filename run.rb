@@ -1,5 +1,6 @@
 require "sinatra"
 require "date"
+require "uri"
 require "set"
 require "sinatra/reloader" if ENV.fetch("RACK_ENV", "production") == "development"
 require "yaml"
@@ -509,7 +510,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @page_size   = (@rows == 0) ? 1 : ((@jobs_size - 1) / @rows) + 1
     @start_index = @jobs_size == 0 ? 0 : (@current_page - 1) * @rows
     @end_index   = @jobs_size == 0 ? 0 : [@current_page * @rows, @jobs_size].min - 1
-    @error_msg   = error_msg
+    @error_msg   = error_msg || escape_html(params["error_msg"])
 
     @filter_column_items = history_filter_column_items(@conf)
     @date_range_items    = history_date_range_items
@@ -1075,7 +1076,9 @@ post "/*" do
         end
         if active_count > 0
           noun = active_count == 1 ? "job is" : "jobs are"
-          error_msg = "#{active_count} #{noun} still Running or Queued. Cancel them all first, then delete all history."
+          msg  = "#{active_count} #{noun} still Running or Queued. Cancel them all first, then delete all history."
+          sep  = request.query_string.empty? ? "?" : "&"
+          redirect request.url + sep + "error_msg=" + URI.encode_www_form_component(msg)
         else
           sacct_ids = (all_sacct || []).filter_map do |j|
             jid = j["JobID"].to_s.strip
@@ -1083,6 +1086,7 @@ post "/*" do
           end
           delete_all_jobs(db, deleted_db, sacct_ids)
           output_log("Delete all job history", scheduler, cluster: cluster_name)
+          redirect request.url
         end
       end
     end

@@ -827,6 +827,13 @@ helpers do
             _start_time      = CASE WHEN ? IS NOT NULL THEN ? ELSE _start_time END,
             _end_time        = CASE WHEN ? IS NOT NULL THEN ? ELSE _end_time END
         SQL
+        if (m = job_id.match(/\A(\d+)_\[/))
+          parent_id = m[1]
+          db.execute(
+            "DELETE FROM jobs WHERE _job_id LIKE ? AND _job_id != ? AND _deleted = 0",
+            ["#{parent_id}_[%", job_id]
+          )
+        end
       end
     end
   end
@@ -948,9 +955,9 @@ helpers do
     end
   end
 
-  # Return true if a job ID has a valid format for recording: plain integer or integer_integer.
+  # Return true if a job ID has a valid format for recording: plain integer, integer_integer, or integer_[range].
   def valid_oc_job_id?(job_id)
-    job_id.to_s.match?(/\A\d+\z/) || job_id.to_s.match?(/\A\d+_\d+\z/)
+    job_id.to_s.match?(/\A\d+\z/) || job_id.to_s.match?(/\A\d+_\d+\z/) || job_id.to_s.match?(/\A\d+_\[/)
   end
 
   # Set the status of jobs to cancelled in the DB.

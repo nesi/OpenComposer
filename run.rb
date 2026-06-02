@@ -2,6 +2,7 @@ require "sinatra"
 require "date"
 require "uri"
 require "open3"
+require "shellwords"
 require "set"
 require "sinatra/reloader" if ENV.fetch("RACK_ENV", "production") == "development"
 require "yaml"
@@ -766,6 +767,40 @@ def output_log(action, scheduler, **details)
   puts [base, extra].reject(&:empty?).join(" : ")
 end
 
+# Return available modules matching a name, for the module_load widget.
+get "/_module_avail" do
+  content_type :json
+  mod = params[:module].to_s.strip
+  return [].to_json if mod.empty? || mod.match?(/[;&|`$\n\r]/)
+
+  conf        = create_conf
+  cluster     = params[:cluster].to_s.strip
+  ssh_wrapper = if conf.key?("clusters")
+                  conf["ssh_wrapper"][cluster] || conf["ssh_wrapper"].values.compact.first
+                else
+                  conf["ssh_wrapper"]
+                end
+
+  safe_mod = Shellwords.escape(mod)
+  cmd = if ssh_wrapper.to_s.empty?
+          "bash -lc 'module -t avail #{safe_mod} 2>&1'"
+        else
+          "#{ssh_wrapper} 'module -t avail #{safe_mod} 2>&1'"
+        end
+
+  stdout, _stderr, _status = Open3.capture3(cmd)
+
+  modules = stdout.lines.filter_map do |line|
+    line = line.strip.gsub(/\(.*?\)/, "").strip
+    next if line.empty? || line.start_with?("/") || line =~ /\A[-=:\s]+\z/
+    line
+  end.uniq.sort
+
+  modules.to_json
+rescue Exception
+  [].to_json
+end
+
 # Send a generic application icon.
 get "/_generic_icon/:folder/:icon" do
   conf = create_conf
@@ -1192,7 +1227,7 @@ post "/*" do
 
         if ["number"].include?(widget)
           set_check_value(key, value.to_f == value.to_i ? value.to_i : value.to_f)
-        elsif ["text", "email", "path"].include?(widget)
+        elsif ["text", "email", "path", "module_load"].include?(widget)
           set_check_value(key, value)
         elsif ["select", "radio"].include?(widget)
           option = form["form"][key]["options"].find { |x| x[0].to_s == value }

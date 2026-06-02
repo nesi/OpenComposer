@@ -15,6 +15,11 @@ form:
     min:   [ 1, 1, 1]
     step:  [ 1, 1, 1]
 
+  lammps_module:
+    widget: module_load
+    module: "LAMMPS"
+    label: LAMMPS Module
+
   gpu_genoa:
     widget:   select
     label:    Type of GPU
@@ -96,4 +101,6 @@ script: |
   #SBATCH --gpus-per-node=#{gpu_milan}:#{number_of_gpus_milan}
   #SBATCH --mail-type=#{mail_option}
 
-  
+  module purge
+  module load #{lammps_module}
+

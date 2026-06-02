@@ -58,6 +58,7 @@ ocForm.parseScriptToWidgets = function() {
         if (el && !el.disabled) el.value = value;
         break;
       }
+      case 'module_load':
       case 'select': {
         var el = document.getElementById(key);
         if (el && !el.disabled) {
@@ -754,6 +755,7 @@ ocForm.getValue = function(key, widget) {
     e = document.getElementById(key);
     if(e && !e.disabled) return e.value;
     break;
+  case 'module_load':
   case 'select':
     const sKey = ocForm.splitKeyAndNumber(key);
     e = document.getElementById(sKey.baseKey);
@@ -980,6 +982,7 @@ ocForm.showLine = function(selectedValues, line, keys, widgets, canHide, separat
       case "number":
       case "text":
       case "email":
+      case "module_load":
       case "select":
       case "radio":
       case "path":
@@ -1056,6 +1059,7 @@ ocForm.enableWidget = function(key, num, widget, size) {
         document.getElementById(key + "_" + i).disabled = false;
       }
       break;
+    case 'module_load':
     case 'select':
     case 'multi_select':
     case 'path':
@@ -1111,6 +1115,7 @@ ocForm.disableWidget = function(key, num, widget, value, size) {
         document.getElementById(key + "_" + i).disabled = true;
       }
       break;
+    case 'module_load':
     case 'select':
     case 'multi_select':
     case 'path':
@@ -1342,6 +1347,7 @@ ocForm.setValue = function(key, num, widget, attr, value, fromId) {
       }
       break;
     }
+    case 'module_load':
     case 'select':
       if (key !== fromId) {
         const selectBox = document.getElementById(key);

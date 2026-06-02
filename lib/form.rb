@@ -399,6 +399,71 @@ helpers do
     html + "</select>\n" + output_help(key, value)
   end
 
+  # Output a module_load widget: a <select> asynchronously populated via /_module_avail.
+  def output_module_load_html(key, value, script_content, submit_content, app_name, dir_name)
+    mod  = value['module'].to_s
+    html = output_label_with_span_tag(key, value)
+    html += "<select tabindex=\"#{@table_index}\" id=\"#{key}\" name=\"#{key}\" class=\"form-select\" "
+
+    script_flag = references_key_or_has_flag?(key, nil, script_content, app_name, dir_name)
+    submit_flag = references_key_or_has_flag?(key, nil, submit_content, app_name, dir_name)
+    type = if script_flag && submit_flag then 'both'
+           elsif script_flag             then 'script'
+           elsif submit_flag             then 'submit'
+           end
+
+    if type
+      html += "onfocus=\"ocForm.storePreviousValue('#{key}')\" "
+      html += "onchange=\"ocForm.confirmOverwrite('#{type}', '#{key}', function(){ocForm.updateArea('#{type}', '#{key}');})\""
+      html += " style=\"background-color: #{@conf["submit_color"]};\"" if type == 'submit'
+    else
+      html += "onchange=\"ocForm.execDynamicWidget('#{key}')\" "
+      html += "style=\"background-color: #{@conf["non_script_color"]};\""
+    end
+    html += " data-module-avail=\"#{ERB::Util.h(mod)}\">\n"
+    html += "<option value=\"\" data-value=\"\">Loading\xe2\x80\xa6</option>\n"
+    html += "</select>\n"
+    @table_index += 1
+    html + output_help(key, value)
+  end
+
+  # JavaScript to asynchronously populate a module_load select via /_module_avail.
+  def output_module_load_js(key, value)
+    mod  = value['module'].to_s
+    defv = value['value'].to_s
+    sn   = @script_name.to_s
+    <<~JS
+      (function() {
+        var sel = document.getElementById(#{key.to_json});
+        if (!sel) return;
+        var urlParams = new URLSearchParams(window.location.search);
+        var cluster = urlParams.get('_cluster_name') || '';
+        fetch(#{sn.to_json} + '/_module_avail?module=' + encodeURIComponent(#{mod.to_json}) + '&cluster=' + encodeURIComponent(cluster))
+          .then(function(r) { return r.json(); })
+          .then(function(modules) {
+            sel.innerHTML = '';
+            if (!modules.length) {
+              var opt = document.createElement('option');
+              opt.value = ''; opt.dataset.value = ''; opt.textContent = 'No modules found';
+              sel.appendChild(opt); return;
+            }
+            var defaultVal = #{defv.to_json};
+            modules.forEach(function(m) {
+              var opt = document.createElement('option');
+              opt.value = m; opt.dataset.value = m; opt.textContent = m;
+              if (defaultVal && m === defaultVal) opt.selected = true;
+              sel.appendChild(opt);
+            });
+            if (sel.selectedIndex === -1) sel.selectedIndex = 0;
+            sel.dispatchEvent(new Event('change'));
+          })
+          .catch(function() {
+            sel.innerHTML = '<option value="" data-value="">Error loading modules</option>';
+          });
+      })();
+    JS
+  end
+
   # Output a multi-select widget.
   def output_multi_select_html(key, value, script_content, submit_content, app_name, dir_name)
     return "" if value['options'].nil?
@@ -1050,6 +1115,9 @@ HTML
         html += output_checkbox_html(key, value, script_content, submit_content, app_name, dir_name)
       when 'path'
         html += output_path_html(key, value, script_content, submit_content, app_name, dir_name)
+      when 'module_load'
+        @js["once"] += output_module_load_js(key, value)
+        html += output_module_load_html(key, value, script_content, submit_content, app_name, dir_name)
       end
 
       html += "</div>\n"

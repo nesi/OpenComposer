@@ -1073,8 +1073,17 @@ post "/*" do
       if history_db
         db         = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
         deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        visible_ids = db.execute("SELECT _job_id FROM jobs").map { |r| r["_job_id"] }
-        delete_all_jobs(db, deleted_db, visible_ids)
+        # Collect all visible job IDs: DB1 OC jobs + sacct external jobs (last 30 days)
+        db1_ids = db.execute("SELECT _job_id FROM jobs").map { |r| r["_job_id"] }
+        from = (Date.today - 29).strftime("%Y-%m-%d")
+        to   = Date.today.strftime("%Y-%m-%d")
+        all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
+        sacct_ids = (all_sacct || []).filter_map do |j|
+          jid = j["JobID"].to_s.strip
+          valid_oc_job_id?(jid) ? jid : nil
+        end
+        all_ids = (db1_ids + sacct_ids).uniq
+        delete_all_jobs(db, deleted_db, all_ids)
         output_log("Delete all job history", scheduler, cluster: cluster_name)
       end
     end

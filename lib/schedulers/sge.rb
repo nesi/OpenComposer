@@ -43,6 +43,95 @@ class Sge < Scheduler
     return e.message
   end
 
+  def valid_job_id?(id)
+    id.to_s.match?(/\A\d+\z/) || id.to_s.match?(/\A\d+\.\d+\z/)
+  end
+
+  def state_to_oc_status(state)
+    case state.to_s
+    when "r", "t", "Rr"                     then JOB_STATUS["running"]
+    when "qw", "h", "d", "s", "S", "T", "Rq" then JOB_STATUS["queued"]
+    when "E"                                 then JOB_STATUS["failed"]
+    when "completed"                         then JOB_STATUS["completed"]
+    when "failed_exit"                       then JOB_STATUS["failed"]
+    else                                          JOB_STATUS["unknown"]
+    end
+  end
+
+  # Fetch all jobs from qstat (active) and qacct (historical) in the sacct_all_jobs format.
+  # SGE has no date-range filtering — all available history is returned.
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    qstat    = get_command_path("qstat", bin, bin_overrides)
+    command1 = [ssh_wrapper, qstat].compact.join(" ")
+    stdout1, stderr1, status1 = Open3.capture3(command1)
+    return nil, [stdout1, stderr1].join(" ").strip, command1 unless status1.success?
+
+    jobs = {}
+
+    unless stdout1.empty?
+      stdout1.lines[2..].each do |line|
+        cols = line.gsub(/\s+/, ' ').strip.split(' ')
+        next if cols.size < 5
+
+        base_id    = cols[0]
+        state      = cols[4]
+        name       = cols[2]
+        submit     = "#{cols[5]} #{cols[6]}"
+        is_running = (state == "r" || state == "t")
+
+        # Running array tasks have an individual task ID in the last column
+        if is_running && cols.size >= 10 && cols.last.match?(/\A\d+\z/)
+          job_id    = "#{base_id}.#{cols.last}"
+          partition = cols[7] || ""
+        else
+          job_id    = base_id
+          partition = is_running ? (cols[7] || "") : ""
+        end
+
+        jobs[job_id] ||= {
+          "JobID"     => job_id,
+          "JobName"   => name,
+          "State"     => state,
+          "Partition" => partition,
+          "Submit"    => submit
+        }
+      end
+    end
+
+    # Append completed jobs from qacct (no day limit — fetch all history)
+    qacct    = get_command_path("qacct", bin, bin_overrides)
+    command2 = [ssh_wrapper, qacct, "-j"].compact.join(" ")
+    stdout2, _stderr2, status2 = Open3.capture3(command2)
+
+    if status2.success?
+      stdout2.split(/={10,}/).each do |block|
+        parsed = {}
+        block.lines.each do |line|
+          key, value = line.strip.split(' ', 2)
+          next unless key && value
+          parsed[key] = value.strip
+        end
+        base_id = parsed["jobnumber"]
+        next unless base_id
+        task_id = parsed["taskid"]
+        job_id  = (task_id && task_id != "undefined") ? "#{base_id}.#{task_id}" : base_id
+        next if jobs.key?(job_id)
+        raw_state = (parsed["exit_status"] && parsed["exit_status"] != "0") ? "failed_exit" : "completed"
+        jobs[job_id] = {
+          "JobID"     => job_id,
+          "JobName"   => parsed["jobname"] || "",
+          "State"     => raw_state,
+          "Partition" => parsed["qname"] || "",
+          "Submit"    => parsed["qsub_time"] || ""
+        }
+      end
+    end
+
+    [jobs.values, nil, command1]
+  rescue Exception => e
+    return nil, e.message, nil
+  end
+
   # Return Job Name, Job Partition, Job Status ID.
   def get_job_info(columns)
     job_name = columns[2]

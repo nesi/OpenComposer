@@ -227,6 +227,31 @@ class Slurm < Scheduler
   # Uses a fixed safe set of fields (no free-text fields that could contain pipe characters).
   # Defaults to the last 7 days when no dates are supplied.
   # Returns [jobs_array, nil, command] or [nil, error_message, command].
+  def valid_job_id?(id)
+    id.to_s.match?(/\A\d+\z/) || id.to_s.match?(/\A\d+_\d+\z/) || id.to_s.match?(/\A\d+_\[/)
+  end
+
+  def state_to_oc_status(state)
+    s = state.to_s
+    return JOB_STATUS["cancelled"] if s.start_with?("CANCELLED")
+
+    case s
+    when "COMPLETED"
+      JOB_STATUS["completed"]
+    when "CONFIGURING", "REQUEUED", "RESIZING", "PENDING", "PREEMPTED", "SUSPENDED"
+      JOB_STATUS["queued"]
+    when "COMPLETING", "RUNNING"
+      JOB_STATUS["running"]
+    when "STOPPED"
+      JOB_STATUS["cancelled"]
+    when "BOOT_FAIL", "DEADLINE", "FAILED", "NODE_FAIL", "OUT_OF_MEMORY",
+         "REVOKED", "SPECIAL_EXIT", "TIMEOUT"
+      JOB_STATUS["failed"]
+    else
+      JOB_STATUS["unknown"]
+    end
+  end
+
   def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
     sacct = get_command_path("sacct", bin, bin_overrides)
 

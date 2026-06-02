@@ -91,6 +91,65 @@ class Pbspro < Scheduler
     end
   end
 
+  def valid_job_id?(id)
+    id.to_s.match?(/\A\d+\z/) || id.to_s.match?(/\A\d+\[\d+\]\z/)
+  end
+
+  def state_to_oc_status(state)
+    case state.to_s
+    when "B", "R"                           then JOB_STATUS["running"]
+    when "H", "M", "Q", "S", "T", "U", "W" then JOB_STATUS["queued"]
+    when "E", "X", "F"                      then JOB_STATUS["completed"]
+    when "F_FAILED"                         then JOB_STATUS["failed"]
+    else                                         JOB_STATUS["unknown"]
+    end
+  end
+
+  # Fetch all jobs from qstat and return them in the sacct_all_jobs format.
+  # PBS has no date-range filtering, so all available jobs are returned.
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    qstat   = get_command_path("qstat", bin, bin_overrides)
+    command = [ssh_wrapper, qstat, "-f -t -x"].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    return nil, [stdout, stderr].join(" ").strip, command unless status.success?
+
+    jobs    = []
+    cur_id  = nil
+    cur_job = {}
+
+    stdout.each_line do |line|
+      case line
+      when /Job Id:\s*(\d+)(\[\d+\])?\..+$/
+        jobs << cur_job.merge("JobID" => cur_id) if cur_id
+        cur_id  = "#{$1}#{$2 || ""}"
+        cur_job = {}
+      when /^\s*([^=\s]+)\s*=\s*(.+)$/
+        key, value = $1.strip, $2.strip
+        case key
+        when "Job_Name"   then cur_job["JobName"]   = value
+        when "queue"      then cur_job["Partition"]  = value
+        when "job_state"  then cur_job["State"]      = value
+        when "ctime"      then cur_job["Submit"]     = value
+        when "start_time" then cur_job["Start"]      = value
+        when "comp_time"  then cur_job["End"]        = value
+        when "Exit_status" then cur_job["ExitCode"]  = value
+        end
+      end
+    end
+    jobs << cur_job.merge("JobID" => cur_id) if cur_id
+
+    # Mark jobs with non-zero exit status as failed
+    jobs.each do |j|
+      if j["State"] == "F" && j["ExitCode"] && j["ExitCode"] != "0"
+        j["State"] = "F_FAILED"
+      end
+    end
+
+    [jobs.reject { |j| j["JobID"].nil? }, nil, command]
+  rescue Exception => e
+    return nil, e.message, nil
+  end
+
   # Query the status of one or more jobs in PBS using 'qstat'.
   # It retrieves job details such as submission time, partition, and status.
   def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)

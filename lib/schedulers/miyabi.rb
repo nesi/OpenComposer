@@ -5,6 +5,55 @@ require 'open3'
 require './lib/schedulers/pbspro'
 
 class Miyabi < Pbspro
+  # Miyabi uses qstat -H --hday for history instead of the generic PBS -x flag.
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    qstat    = get_command_path("qstat", bin, bin_overrides)
+    command1 = [ssh_wrapper, qstat, "-f -t"].compact.join(" ")
+    stdout1, stderr1, status1 = Open3.capture3(command1)
+    return nil, [stdout1, stderr1].join(" ").strip, command1 unless status1.success?
+
+    command2 = [ssh_wrapper, qstat, "-f -t -H --hday 7"].compact.join(" ")
+    stdout2, stderr2, status2 = Open3.capture3(command2)
+    return nil, [stdout2, stderr2].join(" ").strip, command2 unless status2.success?
+
+    jobs    = []
+    cur_id  = nil
+    cur_job = {}
+
+    [stdout1, stdout2].each do |stdout|
+      stdout.each_line do |line|
+        case line
+        when /Job Id:\s*(\d+)(\[\d+\])?\..+$/
+          jobs << cur_job.merge("JobID" => cur_id) if cur_id
+          cur_id  = "#{$1}#{$2 || ""}"
+          cur_job = {}
+        when /^\s*([^=\s]+)\s*=\s*(.+)$/
+          key, value = $1.strip, $2.strip
+          case key
+          when "Job_Name"    then cur_job["JobName"]  = value
+          when "queue"       then cur_job["Partition"] = value
+          when "job_state"   then cur_job["State"]     = value
+          when "ctime"       then cur_job["Submit"]    = value
+          when "start_time"  then cur_job["Start"]     = value
+          when "comp_time"   then cur_job["End"]       = value
+          when "Exit_status" then cur_job["ExitCode"]  = value
+          end
+        end
+      end
+    end
+    jobs << cur_job.merge("JobID" => cur_id) if cur_id
+
+    jobs.each do |j|
+      j["State"] = "F_FAILED" if j["State"] == "F" && j["ExitCode"] && j["ExitCode"] != "0"
+    end
+
+    seen = {}
+    unique_jobs = jobs.reject { |j| j["JobID"].nil? || seen.key?(j["JobID"]).tap { seen[j["JobID"]] = true } }
+    [unique_jobs, nil, command1]
+  rescue Exception => e
+    return nil, e.message, nil
+  end
+
   def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
     # http://nusc.nsu.ru/wiki/lib/exe/fetch.php/doc/pbs/pbsprorefguide13.0.pdf
     # B : Job arrays only: job array is begun

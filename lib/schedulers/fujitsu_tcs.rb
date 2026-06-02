@@ -53,6 +53,55 @@ class Fujitsu_tcs < Scheduler
     return e.message
   end
 
+  def valid_job_id?(id)
+    id.to_s.match?(/\A\d+\z/) || id.to_s.match?(/\A\d+\[\d+\]\z/)
+  end
+
+  def state_to_oc_status(state)
+    case state.to_s
+    when "RNP", "RUN", "RNE", "RNO"             then JOB_STATUS["running"]
+    when "ACC", "QUE", "RNA", "SPP", "SPD",
+         "RSM", "HLD"                            then JOB_STATUS["queued"]
+    when "EXT"                                   then JOB_STATUS["completed"]
+    when "CCL"                                   then JOB_STATUS["cancelled"]
+    when "RJT", "ERR"                            then JOB_STATUS["failed"]
+    else                                              JOB_STATUS["unknown"]
+    end
+  end
+
+  # Fetch all jobs from pjstat (active + historical) in the sacct_all_jobs format.
+  # Historical window is the maximum pjstat supports: 365 days.
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    pjstat   = get_command_path("pjstat", bin, bin_overrides)
+    choose   = "--choose=jid,jnam,rscg,st,adt"
+    command1 = [ssh_wrapper, pjstat, "-s -E --data", choose].compact.join(" ")
+    stdout1, stderr1, status1 = Open3.capture3(command1)
+    return nil, [stdout1, stderr1].join(" ").strip, command1 unless status1.success?
+
+    command2 = command1 + " -H day=365"
+    stdout2, stderr2, status2 = Open3.capture3(command2)
+    return nil, [stdout2, stderr2].join(" ").strip, command2 unless status2.success?
+
+    jobs = {}
+    [stdout1, stdout2].each do |stdout|
+      CSV.new(stdout, headers: true).to_a.map(&:fields).each do |f|
+        job_id = f[1]
+        next if job_id.nil? || jobs.key?(job_id)
+        jobs[job_id] = {
+          "JobID"     => job_id,
+          "JobName"   => f[2],
+          "Partition" => f[3],
+          "State"     => f[4],
+          "Submit"    => f[5]
+        }
+      end
+    end
+
+    [jobs.values, nil, command1]
+  rescue Exception => e
+    return nil, e.message, nil
+  end
+
   # Query the status of one or more jobs in the Fujitsu TCS system using 'pjstat'.
   # It retrieves job details and combines information for both active and completed jobs.
   def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)

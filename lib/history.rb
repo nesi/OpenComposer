@@ -477,7 +477,7 @@ helpers do
 
   # Merge sacct data and DB1 metadata into one page of job hashes.
   # All filtering, sorting, and pagination is done in Ruby.
-  def build_merged_history_jobs(sacct_map, db1_map, deleted_ids, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset)
+  def build_merged_history_jobs(sacct_map, db1_map, deleted_ids, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset, scheduler = nil)
     # sacct is the sole source of which jobs exist. DB1 only enriches (app name, script, etc.).
     all_ids = sacct_map.keys
 
@@ -485,7 +485,7 @@ helpers do
       next if deleted_ids.include?(jid)
       sacct_row = sacct_map[jid]
       db1_row   = db1_map[jid]
-      oc_status = sacct_state_to_oc_status(sacct_row["State"].to_s)
+      oc_status = sacct_state_to_oc_status(sacct_row["State"].to_s, scheduler)
       submit_time = db1_row&.[]("_submission_time") || normalize_time_for_db(sacct_row&.[]("Submit"))
       {
         JOB_ID                 => jid,
@@ -947,13 +947,18 @@ helpers do
     }
   end
 
-  # Return true if a job ID has a valid format for recording: plain integer, integer_integer, or integer_[range].
-  def valid_oc_job_id?(job_id)
+  # Return true if a job ID has a valid format for this scheduler.
+  # Dispatches to the scheduler's own valid_job_id? method when available.
+  def valid_oc_job_id?(job_id, scheduler = nil)
+    return scheduler.valid_job_id?(job_id) if scheduler.respond_to?(:valid_job_id?)
     job_id.to_s.match?(/\A\d+\z/) || job_id.to_s.match?(/\A\d+_\d+\z/) || job_id.to_s.match?(/\A\d+_\[/)
   end
 
-  # Map a sacct State string to an OpenComposer status constant.
-  def sacct_state_to_oc_status(state)
+  # Map a raw scheduler state string to an OpenComposer status constant.
+  # Dispatches to the scheduler's own state_to_oc_status method when available.
+  def sacct_state_to_oc_status(state, scheduler = nil)
+    return scheduler.state_to_oc_status(state) if scheduler.respond_to?(:state_to_oc_status)
+
     s = state.to_s
     return JOB_STATUS["cancelled"] if s.start_with?("CANCELLED")
 

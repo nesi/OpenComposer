@@ -77,6 +77,18 @@ class Scheduler
     [nil, nil, nil]
   end
 
+  # Return true if the given string is a valid job ID for this scheduler.
+  # Override in subclasses to match each scheduler's ID format.
+  def valid_job_id?(id)
+    id.to_s.match?(/\A\d+\z/)
+  end
+
+  # Map a raw scheduler state string to an OpenComposer status constant.
+  # Override in subclasses with scheduler-specific state strings.
+  def state_to_oc_status(state)
+    JOB_STATUS["unknown"]
+  end
+
   private
 
   # Determine the executable path for a given command name.

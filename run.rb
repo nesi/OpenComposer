@@ -492,7 +492,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     sacct_map = {}
     (all_sacct_jobs || []).each do |j|
       jid = j["JobID"].to_s.strip
-      next unless valid_oc_job_id?(jid)
+      next unless valid_oc_job_id?(jid, scheduler_s)
       sacct_map[jid] = j
     end
 
@@ -503,7 +503,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       sacct_map, db1_map, deleted_ids,
       @statuses, @filter, @filter_column, @filter_mode,
       raw_date_from.to_s, raw_date_to.to_s,
-      @sort, @order, requested_rows, offset
+      @sort, @order, requested_rows, offset, scheduler_s
     )
     @history_search_elapsed_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - history_search_started_at
 
@@ -807,7 +807,7 @@ get "/job_details" do
   # Route to sacct first to determine if job is terminal; if not, use scontrol.
   terminal = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
   sacct_data, sacct_err, sacct_cmd = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper)
-  oc_status = sacct_data && !sacct_data.empty? ? sacct_state_to_oc_status(sacct_data["State"].to_s) : nil
+  oc_status = sacct_data && !sacct_data.empty? ? sacct_state_to_oc_status(sacct_data["State"].to_s, scheduler) : nil
 
   if sacct_data && !sacct_data.empty? && terminal.include?(oc_status)
     # Terminal job confirmed by sacct — use sacct data
@@ -893,9 +893,9 @@ get "/history/active_job_ids" do
   active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
   ids = (all_jobs || []).filter_map do |j|
     jid = j["JobID"].to_s.strip
-    next unless valid_oc_job_id?(jid)
+    next unless valid_oc_job_id?(jid, scheduler)
     next if deleted_ids.include?(jid)
-    oc_status = sacct_state_to_oc_status(j["State"].to_s)
+    oc_status = sacct_state_to_oc_status(j["State"].to_s, scheduler)
     jid if active_statuses.include?(oc_status)
   end
 
@@ -1058,8 +1058,8 @@ post "/*" do
       active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
       cancel_ids = (all_sacct || []).filter_map do |j|
         jid = j["JobID"].to_s.strip
-        next unless valid_oc_job_id?(jid)
-        jid if active_statuses.include?(sacct_state_to_oc_status(j["State"].to_s))
+        next unless valid_oc_job_id?(jid, scheduler)
+        jid if active_statuses.include?(sacct_state_to_oc_status(j["State"].to_s, scheduler))
       end
       unless cancel_ids.empty?
         error_msg = scheduler.cancel(cancel_ids.reverse, bin, bin_overrides, ssh_wrapper)
@@ -1075,7 +1075,7 @@ post "/*" do
         active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
         active_count = (all_sacct || []).count do |j|
           jid = j["JobID"].to_s.strip
-          valid_oc_job_id?(jid) && active_statuses.include?(sacct_state_to_oc_status(j["State"].to_s))
+          valid_oc_job_id?(jid, scheduler) && active_statuses.include?(sacct_state_to_oc_status(j["State"].to_s, scheduler))
         end
         if active_count > 0
           noun = active_count == 1 ? "job is" : "jobs are"
@@ -1085,7 +1085,7 @@ post "/*" do
         else
           sacct_ids = (all_sacct || []).filter_map do |j|
             jid = j["JobID"].to_s.strip
-            valid_oc_job_id?(jid) ? jid : nil
+            valid_oc_job_id?(jid, scheduler) ? jid : nil
           end
           delete_all_jobs(db, deleted_db, sacct_ids)
           output_log("Delete all job history", scheduler, cluster: cluster_name)
@@ -1230,13 +1230,13 @@ post "/*" do
       params[JOB_SUBMISSION_TIME] = Time.now.iso8601
     end
 
-    # Save a job history (only valid job IDs: plain integer or integer_integer)
+    # Save a job history (only valid job IDs per the active scheduler's format)
     FileUtils.mkdir_p(data_dir)
     db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
     store_script = conf.fetch("history_store_script", true)
     db.transaction do
       Array(job_id).each do |id|
-        next unless valid_oc_job_id?(id.to_s)
+        next unless valid_oc_job_id?(id.to_s, scheduler)
         upsert_job(db, {
           "_job_id"          => id.to_s,
           "_app_name"        => params[JOB_APP_NAME],

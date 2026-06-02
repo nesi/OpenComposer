@@ -496,14 +496,6 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
     db1_map = db.execute("SELECT * FROM jobs").each_with_object({}) { |r, h| h[r["_job_id"]] = r }
 
-    # For DB1 jobs not covered by the sacct scan, fetch their status individually
-    unscanned_ids = db1_map.keys.reject { |id| sacct_map.key?(id) || deleted_ids.include?(id) }
-    if unscanned_ids.any?
-      sacct_results2, err2 = scheduler_s.sacct_status_update(unscanned_ids, bin_s, bin_overrides_s, ssh_wrapper_s)
-      (sacct_results2 || {}).each { |jid, row| sacct_map[jid] ||= row }
-      @sacct_error ||= err2
-    end
-
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @jobs, @jobs_size = build_merged_history_jobs(
       sacct_map, db1_map, deleted_ids,

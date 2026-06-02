@@ -14,7 +14,7 @@ end
 def get_icon_path(dirname, icon)
   is_bi_or_fa_icon = false # Bootstrap icon or Font Awesome icon
   icon_path = if icon.nil?
-                URI.join(url, "no_image_square.jpg")
+                URI.join(url, "app_default.svg")
               elsif valid_url?(icon)
                 icon
               else
@@ -27,7 +27,7 @@ def get_icon_path(dirname, icon)
                   is_bi_or_fa_icon = true
                   nil
                 else
-                  URI.join(url, "no_image_square.jpg")
+                  URI.join(url, "app_default.svg")
                 end
               end
 
@@ -132,7 +132,7 @@ HTML
     is_bi_or_fa_icon = false
     icon_s = icon.to_s
     icon_path = if icon_s.empty?
-                  URI.join(url, "no_image_square.jpg")
+                  URI.join(url, "app_default.svg")
                 elsif valid_url?(icon_s)
                   icon_s
                 elsif icon_s.start_with?("bi-", "fa-")
@@ -140,7 +140,7 @@ HTML
                   nil
                 else
                   local = File.join(Dir.pwd, generic_apps_dir, dirname, icon_s)
-                  File.exist?(local) ? File.join(@script_name, "_generic_icon", dirname, icon_s) : URI.join(url, "no_image_square.jpg")
+                  File.exist?(local) ? File.join(@script_name, "_generic_icon", dirname, icon_s) : URI.join(url, "app_default.svg")
                 end
 
     width = @conf['thumbnail_width']

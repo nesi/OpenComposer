@@ -143,28 +143,24 @@ ocForm.patchScript = function() {
     if (ni >= 0) { patNewLineIdx[pi] = ni; usedNLIdx.add(ni); }
   }
 
-  // Classify each current script line as template-matched or user-added.
+  // Classify each current script line as template-matched (record pattern pi) or not (null).
   const currentLines = ocForm.scriptArea.value.split('\n');
   const consumed = new Set();
-  let lastAnchor = -1;
-  const lineClass = currentLines.map(function(line) {
+  const tempMarks = currentLines.map(function(line) {
     for (let pi = 0; pi < sortedPatterns.length; pi++) {
       const pfx = sortedPatterns[pi].prefix;
       if (pfx && line.startsWith(pfx) && !consumed.has(pi)) {
         consumed.add(pi);
-        lastAnchor = pi;
-        return { template: true, pi: pi };
+        return pi;
       }
     }
-    return { template: false, anchor: lastAnchor };
+    return null;
   });
 
-  // Locate the last template line so we can distinguish "between-template" user lines
-  // from "trailing" user lines. Trailing lines always go after all template output so
-  // that newly-revealed template lines appear inside the #SBATCH block, not after user code.
+  // Locate the last template line so we can detect "trailing" user lines.
   let lastTplPos = -1;
-  for (let i = lineClass.length - 1; i >= 0; i--) {
-    if (lineClass[i].template) { lastTplPos = i; break; }
+  for (let i = tempMarks.length - 1; i >= 0; i--) {
+    if (tempMarks[i] !== null) { lastTplPos = i; break; }
   }
 
   // If no template lines exist in the current script, fall back to full replacement.
@@ -175,19 +171,29 @@ ocForm.patchScript = function() {
     return;
   }
 
-  // Split user-added lines into "between templates" (keep anchor position) and "tail".
-  // Blank lines are skipped here: they appear in newLines already (from the template),
-  // so collecting them again in midUser would double them on every patchScript call.
-  const midUser = new Map([[-1, []]]);
+  // For each position build a "next template pi" by scanning backwards.
+  // User lines are anchored to the NEXT template line so they are re-inserted
+  // immediately before that line. This keeps content stable across blank template
+  // lines (which have no pattern and would otherwise shift content upward).
+  const nextAnchorOf = new Array(currentLines.length).fill(null);
+  let nextPi = null;
+  for (let i = currentLines.length - 1; i >= 0; i--) {
+    if (tempMarks[i] !== null) nextPi = tempMarks[i];
+    nextAnchorOf[i] = nextPi;
+  }
+
+  // Split user-added lines into "mid" (anchored to next template) and "tail" (after all templates).
+  // Blank lines are skipped: they already appear in newLines from the template.
+  const midUser = new Map();
   const tailLines = [];
   for (let i = 0; i < currentLines.length; i++) {
-    if (!lineClass[i].template) {
-      if (i > lastTplPos) {
+    if (tempMarks[i] === null) {
+      if (i > lastTplPos || nextAnchorOf[i] === null) {
         tailLines.push(currentLines[i]);
       } else if (currentLines[i].trim() !== '') {
-        const a = lineClass[i].anchor;
-        if (!midUser.has(a)) midUser.set(a, []);
-        midUser.get(a).push(currentLines[i]);
+        const na = nextAnchorOf[i];
+        if (!midUser.has(na)) midUser.set(na, []);
+        midUser.get(na).push(currentLines[i]);
       }
     }
   }
@@ -199,21 +205,22 @@ ocForm.patchScript = function() {
     if (ni >= 0 && !nlOwner.has(ni)) nlOwner.set(ni, pi);
   }
 
-  // Assemble output: pre-template user lines, then all new template lines in order
-  // (each followed by any between-template user lines anchored to it), then tail.
-  const out = [...(midUser.get(-1) || [])];
+  // Assemble output: for each new template line, first flush any user lines anchored
+  // to it (they appeared before it in the current script), then push the template line.
+  const out = [];
   for (let ni = 0; ni < newLines.length; ni++) {
-    out.push(newLines[ni]);
     const pi = nlOwner.get(ni);
-    if (pi !== undefined) out.push(...(midUser.get(pi) || []));
+    if (pi !== undefined && midUser.has(pi)) {
+      out.push(...midUser.get(pi));
+      midUser.delete(pi);
+    }
+    out.push(newLines[ni]);
   }
   out.push(...tailLines);
 
   // Orphaned user lines (anchored to a now-hidden template line) go at the very end.
   for (const [anchor, lines] of midUser) {
-    if (anchor >= 0 && lines.length > 0 && patNewLineIdx[anchor] < 0) {
-      out.push(...lines);
-    }
+    if (lines.length > 0) out.push(...lines);
   }
 
   ocForm.scriptArea.value = out.join('\n');

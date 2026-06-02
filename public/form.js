@@ -1434,9 +1434,34 @@ ocForm.mergeScriptChanges = function(currentScript, oldGenerated, newGenerated) 
   return result.join('\n');
 };
 
+// Return true if the script has no executable commands.
+// Lines that are blank, start with '#' (shebang, #SBATCH, comments), or
+// start with 'module' are considered boilerplate and not real commands.
+ocForm.scriptHasNoCommands = function(scriptText) {
+  var lines = (scriptText || '').split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (line === '') continue;
+    if (line.startsWith('#')) continue;
+    if (line.startsWith('module')) continue;
+    return false;
+  }
+  return true;
+};
+
 // Show "Submitting..." on the button and disable it to prevent double submission.
 // The form is submitted normally and the button resets after page reload.
 ocForm.submitEffect = function(action) {
+  var isSubmit = (action === 'submit' || action === 'confirm');
+  if (isSubmit) {
+    var scriptArea = document.getElementById('_script_content');
+    if (scriptArea && ocForm.scriptHasNoCommands(scriptArea.value)) {
+      if (!window.confirm('No commands have been added to the batch script.\n\nAre you sure you want to submit?')) {
+        return false;
+      }
+    }
+  }
+
   const btn = document.getElementById('_submitButton');
   btn.disabled = true;
   if (action === "submit") {

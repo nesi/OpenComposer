@@ -122,7 +122,6 @@ ocForm.patchModuleLoadLine = function(area, key) {
   if (!modName || !newVal) return;
 
   var escaped = modName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // Match optional indent + "module load" + optional whitespace + modName + optional /version
   var re = new RegExp('^(\\s*)module\\s+load(?:\\s+' + escaped + '(?:\\/\\S*)?)? *$');
 
   function patchArea(textarea, afterPatch) {

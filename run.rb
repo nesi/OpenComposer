@@ -522,6 +522,13 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   when "nodes"
     @name = "Nodes"
     return erb :nodes
+  when "templates/new"
+    @name = "New Template"
+    generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"
+    @generic_manifests = Dir.glob(File.join(generic_apps_dir, "*/manifest.yml")).filter_map do |path|
+      create_manifest(File.dirname(path))
+    end.sort_by { |m| m.name.downcase }
+    return erb :new_template
   else # application form
     @table_index     = 1
     generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"
@@ -680,9 +687,10 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
                         "Script Content"
                       end
 
-      @job_id    = job_id.is_a?(Array) ? job_id.join(", ") : job_id
-      @error_msg = error_msg&.force_encoding('UTF-8')
+      @job_id      = job_id.is_a?(Array) ? job_id.join(", ") : job_id
+      @error_msg   = error_msg&.force_encoding('UTF-8')
       @script_path = script_path
+      @new_template = params["new_template"] == "1"
       return erb :form
     else
       @error_msg = "#{request.url} is not found."

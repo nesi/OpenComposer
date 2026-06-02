@@ -69,12 +69,14 @@
         <textarea id="<%= OC_SCRIPT_CONTENT %>" name="<%= OC_SCRIPT_CONTENT %>" class="form-control position-relative mb-0" tabindex="<%= @table_index %>" accesskey="s" spellcheck="false" onchange="ocForm.markManuallyModified('script')" oninput="ocForm.updateHeight(ocForm.scriptArea); ocForm.storePreviousValue('<%= OC_SCRIPT_CONTENT %>'); ocForm.syncScriptHighlight()" required>(Something wrong)</textarea>
       </div>
       <!-- Submit Button -->
+      <% unless @new_template %>
       <% if @form_action == "confirm" || @form_action == "confirm-save" %>
       <button class="btn btn-primary d-block w-100" id="<%= SUBMIT_BUTTON %>" type="button" data-bs-toggle="modal" data-bs-target="#modal-<%= SUBMIT_CONFIRM %>" tabindex="<%= @table_index + 1 %>">
         Confirm
       </button>
       <% else %>
       <input type="submit" class="btn btn-primary d-block w-100" id="<%= SUBMIT_BUTTON %>" value="<%= @form_action.capitalize %>" tabindex="<%= @table_index + 1 %>">
+      <% end %>
       <% end %>
       <div class="modal fade" id="modal-<%= SUBMIT_CONFIRM %>" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg" style="overflow-y: initial !important;">
@@ -104,12 +106,12 @@
       </div>
       <!-- Save / Save as Template Button -->
       <% if @template_slug %>
-      <button type="button" class="btn btn-outline-secondary d-block w-100 mt-2"
+      <button type="button" class="btn <%= @new_template ? 'btn-primary' : 'btn-outline-secondary mt-2' %> d-block w-100"
               onclick="ocSaveTemplateOverwrite()">
         Save
       </button>
       <% else %>
-      <button type="button" class="btn btn-outline-secondary d-block w-100 mt-2"
+      <button type="button" class="btn <%= @new_template ? 'btn-primary' : 'btn-outline-secondary mt-2' %> d-block w-100"
               data-bs-toggle="modal" data-bs-target="#modal-save-template">
         Save as Template
       </button>

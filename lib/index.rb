@@ -101,7 +101,7 @@ helpers do
   # Create an HTML snippet for displaying a thumbnail image.
   # The image source can either be a URL, a bootstrap icon, a fontawesome icon or a local path.
   # If the icon is not provided. a placeholder image is used.
-  def output_thumbnail(dirname, name, icon)
+  def output_thumbnail(dirname, name, icon, href_suffix = "")
     is_bi_or_fa_icon, icon_path = get_icon_path(dirname, icon)
 
     # Use the text-reset class to prevent color changes when using font awesome icons
@@ -109,7 +109,7 @@ helpers do
       <div class="col text-center">
         <div class="d-flex flex-column h-100 align-items-center">
           <div class="flex-grow-1 d-flex align-items-center">
-            <a href="#{@script_name}/#{dirname}" class="stretched-link position-relative text-reset">
+            <a href="#{@script_name}/#{dirname}#{href_suffix}" class="stretched-link position-relative text-reset">
 HTML
     width = @conf['thumbnail_width']
     if is_bi_or_fa_icon
@@ -121,6 +121,45 @@ HTML
              </a>
            </div>
         #{name}
+        </div>
+      </div>
+    HTML
+  end
+
+  # Like output_thumbnail but resolves icons from generic_apps_dir and links to /_generic/{dirname}.
+  def output_generic_thumbnail(dirname, name, icon, href_suffix = "")
+    generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"
+    is_bi_or_fa_icon = false
+    icon_s = icon.to_s
+    icon_path = if icon_s.empty?
+                  URI.join(url, "no_image_square.jpg")
+                elsif valid_url?(icon_s)
+                  icon_s
+                elsif icon_s.start_with?("bi-", "fa-")
+                  is_bi_or_fa_icon = true
+                  nil
+                else
+                  tmp   = File.join("/", generic_apps_dir, dirname, icon_s)
+                  local = File.join(Dir.pwd, tmp)
+                  File.exist?(local) ? File.join(@script_name, tmp) : URI.join(url, "no_image_square.jpg")
+                end
+
+    width = @conf['thumbnail_width']
+    icon_html = if is_bi_or_fa_icon
+                  "<i class=\"#{ERB::Util.h(icon_s)}\" style=\"font-size: #{width}px; width: #{width}px; height: 100px; line-height: 1;\"></i>"
+                else
+                  "<img src=\"#{ERB::Util.h(icon_path.to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{ERB::Util.h(name)}\">"
+                end
+
+    <<~HTML
+      <div class="col text-center">
+        <div class="d-flex flex-column h-100 align-items-center">
+          <div class="flex-grow-1 d-flex align-items-center">
+            <a href="#{@script_name}/_generic/#{dirname}#{href_suffix}" class="stretched-link position-relative text-reset">
+              #{icon_html}
+            </a>
+          </div>
+          #{ERB::Util.h(name)}
         </div>
       </div>
     HTML

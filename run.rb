@@ -1069,19 +1069,20 @@ post "/*" do
         to   = Date.today.strftime("%Y-%m-%d")
         all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
         active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
-        sacct_status_map = {}
-        (all_sacct || []).each do |j|
+        active_count = (all_sacct || []).count do |j|
           jid = j["JobID"].to_s.strip
-          next unless valid_oc_job_id?(jid)
-          sacct_status_map[jid] = sacct_state_to_oc_status(j["State"].to_s)
+          valid_oc_job_id?(jid) && active_statuses.include?(sacct_state_to_oc_status(j["State"].to_s))
         end
-        deletable = sacct_status_map.reject { |_, status| active_statuses.include?(status) }.keys
-        skipped   = sacct_status_map.count  { |_, status| active_statuses.include?(status) }
-        delete_all_jobs(db, deleted_db, deletable)
-        output_log("Delete all job history", scheduler, cluster: cluster_name)
-        if skipped > 0
-          noun = skipped == 1 ? "job was" : "jobs were"
-          error_msg = "#{skipped} #{noun} not deleted because they are still Running or Queued. Cancel them first, then delete."
+        if active_count > 0
+          noun = active_count == 1 ? "job is" : "jobs are"
+          error_msg = "#{active_count} #{noun} still Running or Queued. Cancel them all first, then delete all history."
+        else
+          sacct_ids = (all_sacct || []).filter_map do |j|
+            jid = j["JobID"].to_s.strip
+            valid_oc_job_id?(jid) ? jid : nil
+          end
+          delete_all_jobs(db, deleted_db, sacct_ids)
+          output_log("Delete all job history", scheduler, cluster: cluster_name)
         end
       end
     end

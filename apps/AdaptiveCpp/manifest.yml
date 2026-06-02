@@ -1,6 +1,6 @@
 ---
 name: AdaptiveCpp
-category: Application
+category: Others
 description: |
   AdaptiveCpp (formerly hipSYCL) is a SYCL implementation targeting CPUs and
   GPUs, with a focus on leveraging existing toolchains such as CUDA or HIP

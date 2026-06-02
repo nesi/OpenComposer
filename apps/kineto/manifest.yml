@@ -1,4 +1,4 @@
 ---
 name: kineto
-category: Application
+category: Others
 description: A CPU+GPU Profiling library that provides access to timeline traces and hardware performance counters

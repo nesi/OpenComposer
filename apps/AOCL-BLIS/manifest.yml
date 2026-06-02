@@ -1,4 +1,4 @@
 ---
 name: AOCL-BLIS
-category: Application
+category: Others
 description: Optimized version of BLIS for AMD EPYC family of processors..

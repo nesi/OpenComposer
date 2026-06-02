@@ -1,6 +1,6 @@
 ---
 name: PAPI
-category: Application
+category: Others
 description: |
   PAPI provides the tool designer and application engineer with a consistent interface and
    methodology for use of the performance counter hardware found in most major microprocessors. PAPI enables

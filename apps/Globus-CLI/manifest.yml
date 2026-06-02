@@ -1,6 +1,6 @@
 ---
 name: Globus-CLI
-category: Application
+category: Others
 description: |
   A Command Line Wrapper over the Globus SDK for Python, which provides an interface to Globus services
    from the shell, and is suited to both interactive and simple scripting use cases.

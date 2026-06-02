@@ -1,6 +1,6 @@
 ---
 name: DB
-category: Application
+category: Others
 description: |
   Berkeley DB enables the development of custom data management
    solutions, without the overhead traditionally associated with such custom

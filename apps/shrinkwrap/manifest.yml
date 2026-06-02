@@ -1,4 +1,4 @@
 ---
 name: shrinkwrap
-category: Application
+category: Others
 description: "A std::streambuf wrapper for compression formats."

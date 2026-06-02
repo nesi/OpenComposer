@@ -1,6 +1,6 @@
 ---
 name: Mmg
-category: Application
+category: Others
 description: |
   Mmg is an open source software for simplicial remeshing. It provides 3 applications and 4 libraries:
   the mmg2d application and the libmmg2d library: adaptation and optimization of a two-dimensional

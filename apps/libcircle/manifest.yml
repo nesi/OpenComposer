@@ -1,4 +1,4 @@
 ---
 name: libcircle
-category: Application
+category: Others
 description: API for distributing embarrassingly parallel workloads using self-stabilization.

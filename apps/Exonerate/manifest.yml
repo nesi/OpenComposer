@@ -1,6 +1,6 @@
 ---
 name: Exonerate
-category: Application
+category: Others
 description: |
   Exonerate is a generic tool for pairwise sequence comparison.
    It allows you to align sequences using a many alignment models, using either

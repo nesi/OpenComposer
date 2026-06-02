@@ -1,4 +1,4 @@
 ---
 name: spdlog
-category: Application
+category: Others
 description: Fast C++ logging library.

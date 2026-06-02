@@ -1,6 +1,6 @@
 ---
 name: DBus
-category: Application
+category: Others
 description: |
   D-Bus is a message bus system, a simple way for applications to talk
    to one another.  In addition to interprocess communication, D-Bus helps

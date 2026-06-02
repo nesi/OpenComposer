@@ -1,4 +1,4 @@
 ---
 name: libdeflate
-category: Application
+category: Others
 description: Heavily optimized library for DEFLATE/zlib/gzip compression and decompression.

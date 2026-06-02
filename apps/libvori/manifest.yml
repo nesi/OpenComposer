@@ -1,6 +1,6 @@
 ---
 name: libvori
-category: Application
+category: Others
 description: |
   C++ library implementing the Voronoi integration as well as the compressed bqb
   file format. The present version of libvori is a very early development

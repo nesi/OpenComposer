@@ -1,6 +1,6 @@
 ---
 name: MDI
-category: Application
+category: Others
 description: |
   The MolSSI Driver Interface (MDI) project provides a
   standardized API for fast, on-the-fly communication between computational

@@ -1,6 +1,6 @@
 ---
 name: KEALib
-category: Application
+category: Others
 description: |
   KEALib provides an implementation of the GDAL data model. The
   format supports raster attribute tables, image pyramids, meta-data and in-built

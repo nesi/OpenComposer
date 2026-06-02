@@ -1,6 +1,6 @@
 ---
 name: VTune
-category: Application
+category: Others
 description: |
   Intel VTune Amplifier XE is the premier performance profiler for C, C++, C#, Fortran,
    Assembly and Java.

@@ -1,6 +1,6 @@
 ---
 name: funcx-endpoint
-category: Application
+category: Others
 description: |
   funcX is a distributed Function as a Service (FaaS) platform that enables flexible,
    scalable, and high performance remote function execution. Unlike centralized FaaS platforms,

@@ -1,4 +1,4 @@
 ---
 name: IRkernel
-category: Application
+category: Others
 description: R packages for providing R kernel for Jupyter.

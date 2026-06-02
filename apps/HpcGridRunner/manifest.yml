@@ -1,4 +1,4 @@
 ---
 name: HpcGridRunner
-category: Application
+category: Others
 description: HPC GridRunner is a simple command-line interface to high throughput computing using a variety of different grid computing platforms, including LSF, SGE, SLURM, and PBS.

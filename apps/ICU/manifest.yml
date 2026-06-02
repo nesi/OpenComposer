@@ -1,6 +1,6 @@
 ---
 name: ICU
-category: Application
+category: Others
 description: |
   C/C++ and Java libraries providing Unicode and Globalization
    support for software applications.

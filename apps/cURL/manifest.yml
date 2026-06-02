@@ -1,6 +1,6 @@
 ---
 name: cURL
-category: Application
+category: Others
 description: |
   libcurl is a free and easy-to-use client-side URL transfer library,
    supporting DICT, FILE, FTP, FTPS, Gopher, HTTP, HTTPS, IMAP, IMAPS, LDAP,

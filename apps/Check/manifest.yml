@@ -1,6 +1,6 @@
 ---
 name: Check
-category: Application
+category: Others
 description: |
   Check is a unit testing framework for C. It features a simple interface for
   defining unit tests, putting little in the way of the developer. Tests are

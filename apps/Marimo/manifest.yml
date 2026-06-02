@@ -1,6 +1,6 @@
 ---
 name: Marimo
-category: Application
+category: Others
 description: |
   Marimo is a reactive Python notebook and app framework:
   reproducible, git-friendly, with SQL and AI tooling; runs as scripts or apps.

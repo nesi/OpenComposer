@@ -1,6 +1,6 @@
 ---
 name: cimfomfa
-category: Application
+category: Others
 description: |
   library supports both MCL, a cluster algorithm for graphs, and zoem, a
   macro/DSL language

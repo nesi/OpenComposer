@@ -1,4 +1,4 @@
 ---
 name: gemmforge
-category: Application
+category: Others
 description: GPU-GEMM generator for the Discontinuous Galerkin method.

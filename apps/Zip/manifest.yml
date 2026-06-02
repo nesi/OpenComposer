@@ -1,6 +1,6 @@
 ---
 name: Zip
-category: Application
+category: Others
 description: |
   Zip is a compression and file packaging/archive utility.
   Although highly compatible both with PKWARE's PKZIP and PKUNZIP

@@ -1,6 +1,6 @@
 ---
 name: zstd
-category: Application
+category: Others
 description: |
   Zstandard is a real-time compression algorithm, providing high compression ratios.
    It offers a very wide range of compression/speed trade-off, while being backed by a very fast decoder.

@@ -1,6 +1,6 @@
 ---
 name: OpenMC
-category: Application
+category: Others
 description: |
   OpenMC is a community-developed Monte Carlo neutron and photon transport simulation code.
    It is capable of performing fixed source, k-eigenvalue, and subcritical multiplication calculations on

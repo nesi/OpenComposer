@@ -1,4 +1,4 @@
 ---
 name: pv
-category: Application
+category: Others
 description: Monitors the progress of data through a unix pipeline.

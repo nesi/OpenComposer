@@ -1,4 +1,4 @@
 ---
 name: File-Rename
-category: Application
+category: Others
 description: A Perl version of the rename utility, with support for regular expressions.

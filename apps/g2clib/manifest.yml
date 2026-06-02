@@ -1,4 +1,4 @@
 ---
 name: g2clib
-category: Application
+category: Others
 description: "Library contains GRIB2 encoder/decoder ('C' version)."

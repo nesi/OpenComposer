@@ -1,6 +1,6 @@
 ---
 name: f90wrap
-category: Application
+category: Others
 description: |
   f90wrap is a tool to automatically generate Python extension modules which
   interface to Fortran code that makes use of derived types. It builds on the

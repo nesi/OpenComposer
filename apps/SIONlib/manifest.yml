@@ -1,4 +1,4 @@
 ---
 name: SIONlib
-category: Application
+category: Others
 description: Scalable I/O library for parallel access to task-local files.

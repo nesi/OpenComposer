@@ -485,7 +485,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
   @ood_logo_path = URI.join(@my_ood_url, @script_name + "/", "ood.png")
   @current_path  = File.join(@script_name, @dir_name)
-  @manifests     = create_all_manifests(@apps_dir).sort_by { |m| [(m.category || "").downcase, m.name.downcase] }
+  @manifests     = create_all_manifests(@apps_dir).sort_by { |m| [m.category&.downcase == "others" ? 1 : 0, (m.category || "").downcase, m.name.downcase] }
   @manifests_w_category, @manifests_wo_category = @manifests.partition(&:category)
 
   case @dir_name

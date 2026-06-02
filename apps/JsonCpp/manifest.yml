@@ -1,6 +1,6 @@
 ---
 name: JsonCpp
-category: Application
+category: Others
 description: |
   JsonCpp is a C++ library that allows manipulating JSON values,
    including serialization and deserialization to and from strings. It can also preserve existing comment in

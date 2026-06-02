@@ -1,6 +1,6 @@
 ---
 name: PyQt
-category: Application
+category: Others
 description: |
   PyQt5 is a set of Python bindings for v5 of the Qt application framework from The Qt Company.
   This bundle includes PyQtWebEngine, a set of Python bindings for The Qt Company’s Qt WebEngine framework.

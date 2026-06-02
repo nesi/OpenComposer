@@ -1,6 +1,6 @@
 ---
 name: numactl
-category: Application
+category: Others
 description: |
   The numactl program allows you to run your application program on specific
    cpu's and memory nodes. It does this by supplying a NUMA memory policy to

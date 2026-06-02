@@ -1,4 +1,4 @@
 ---
 name: PnetCDF
-category: Application
+category: Others
 description: "Parallel netCDF: A Parallel I/O Library for NetCDF File Access"

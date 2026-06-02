@@ -1,6 +1,6 @@
 ---
 name: ifbf
-category: Application
+category: Others
 description: |
   Intel based compiler toolchain, including
    FlexiBLAS (BLAS and LAPACK support) and (serial) FFTW.

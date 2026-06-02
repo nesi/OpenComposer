@@ -1,6 +1,6 @@
 ---
 name: ZeroMQ
-category: Application
+category: Others
 description: |
   ZeroMQ looks like an embeddable networking library but acts like a concurrency framework.
    It gives you sockets that carry atomic messages across various transports like in-process,

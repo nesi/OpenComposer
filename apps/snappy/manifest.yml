@@ -1,6 +1,6 @@
 ---
 name: snappy
-category: Application
+category: Others
 description: |
   Snappy is a compression/decompression library. It does not aim
   for maximum compression, or compatibility with any other compression library;

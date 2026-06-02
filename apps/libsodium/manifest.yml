@@ -1,4 +1,4 @@
 ---
 name: libsodium
-category: Application
+category: Others
 description: library for encryption, decryption, signatures, password hashing and more.

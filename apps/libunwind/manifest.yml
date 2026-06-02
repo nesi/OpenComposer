@@ -1,4 +1,4 @@
 ---
 name: libunwind
-category: Application
+category: Others
 description: Define a portable and efficient C programming API to determine the call-chain of a program.

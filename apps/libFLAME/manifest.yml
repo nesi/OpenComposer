@@ -1,6 +1,6 @@
 ---
 name: libFLAME
-category: Application
+category: Others
 description: |
   libFLAME is a portable library for dense matrix computations,
   providing much of the functionality present in LAPACK.

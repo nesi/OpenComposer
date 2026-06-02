@@ -1,4 +1,4 @@
 ---
 name: DBD-mysql
-category: Application
+category: Others
 description: Perl binding for MySQL

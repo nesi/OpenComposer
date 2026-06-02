@@ -137,7 +137,7 @@ def sanitize_key(name: str) -> str:
 def category_for(domains: list) -> str:
     non_gpu = [d for d in domains if d.lower() != 'gpu']
     if not non_gpu:
-        return "Application"
+        return "Others"
     d = non_gpu[0].lower()
     return DOMAIN_CATEGORIES.get(d, ' '.join(w.capitalize() for w in re.split(r'[_\-]', d)))
 

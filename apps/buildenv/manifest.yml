@@ -1,6 +1,6 @@
 ---
 name: buildenv
-category: Application
+category: Others
 description: |
   This module sets a group of environment variables for compilers, linkers, maths libraries, etc., that
    you can use to easily transition between toolchains when building your software. To query the variables being set

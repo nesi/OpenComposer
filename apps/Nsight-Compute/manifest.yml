@@ -1,6 +1,6 @@
 ---
 name: Nsight-Compute
-category: Application
+category: Others
 description: |
   NVIDIA® Nsight™ Compute is an interactive kernel profiler for CUDA applications. It provides detailed
   performance metrics and API debugging via a user interface and command line tool.

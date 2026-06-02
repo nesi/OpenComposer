@@ -1,6 +1,6 @@
 ---
 name: CUDA
-category: Application
+category: Others
 description: |
   CUDA (formerly Compute Unified Device Architecture) is a parallel
    computing platform and programming model created by NVIDIA and implemented by the

@@ -1,6 +1,6 @@
 ---
 name: gfbf
-category: Application
+category: Others
 description: |
   GNU Compiler Collection (GCC) based compiler toolchain, including
    FlexiBLAS (BLAS and LAPACK support) and (serial) FFTW.

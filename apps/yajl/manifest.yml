@@ -1,4 +1,4 @@
 ---
 name: yajl
-category: Application
+category: Others
 description: Yet Another JSON Library. Why does the world need another C library for parsing JSON? Good question.

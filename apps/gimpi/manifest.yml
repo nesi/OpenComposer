@@ -1,4 +1,4 @@
 ---
 name: gimpi
-category: Application
+category: Others
 description: GNU Compiler Collection (GCC) based compiler toolchain with Intel MPI.

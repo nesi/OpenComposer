@@ -1,6 +1,6 @@
 ---
 name: safestringlib
-category: Application
+category: Others
 description: |
   The Secure Development Lifecycle (SDL) recommends banning certain C Library
   functions because they directly contribute to security vulnerabilities such as

@@ -1,6 +1,6 @@
 ---
 name: AutoDock-GPU
-category: Application
+category: Others
 description: |
   OpenCL and Cuda accelerated version of AutoDock. It leverages its embarrasingly
   parallelizable LGA by processing ligand-receptor poses in parallel over

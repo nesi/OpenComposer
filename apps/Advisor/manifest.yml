@@ -1,6 +1,6 @@
 ---
 name: Advisor
-category: Application
+category: Others
 description: |
   Vectorization Optimization and Thread Prototyping
    - Vectorize & thread code or performance “dies”

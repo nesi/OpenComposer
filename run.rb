@@ -472,7 +472,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @date_to       = escape_html(raw_date_to)
     @filter_mode   = escape_html(params["filter_mode"] || "and")
     @detail_open   = escape_html(params["detail_open"] || "false")
-    requested_rows = [(params["rows"] || HISTORY_ROWS).to_i, 1].max
+    requested_rows = [(params["rows"] || HISTORY_ROWS).to_i, HISTORY_ROWS].max
     @current_page  = (params["p"] || 1).to_i
     offset         = (@current_page - 1) * requested_rows
 

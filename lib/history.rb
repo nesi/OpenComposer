@@ -600,10 +600,10 @@ helpers do
   # Output a styled status badge for a job based on its current status.
   def output_status(job_status)
     badge_class, status_text = case job_status
-                               when JOB_STATUS["queued"]    then ["bg-warning text-dark", "Queued"]
+                               when JOB_STATUS["queued"]    then ["bg-info text-white", "Queued"]
                                when JOB_STATUS["running"]   then ["bg-primary", "Running"]
-                               when JOB_STATUS["completed"] then ["bg-success", "Completed"]
-                               when JOB_STATUS["cancelled"] then ["bg-secondary", "Cancelled"]
+                               when JOB_STATUS["completed"] then ["badge-completed", "Completed"]
+                               when JOB_STATUS["cancelled"] then ["badge-cancelled", "Cancelled"]
                                when JOB_STATUS["failed"]    then ["bg-danger", "Failed"]
                                else                              ["bg-secondary", "Unknown"]
                                end
@@ -948,9 +948,9 @@ helpers do
     end
   end
 
-  # Return true if a job ID has a valid format for recording: plain integer or integer_integer.
+  # Return true if a job ID has a valid format for recording: plain integer, integer_integer, or integer_[range].
   def valid_oc_job_id?(job_id)
-    job_id.to_s.match?(/\A\d+\z/) || job_id.to_s.match?(/\A\d+_\d+\z/)
+    job_id.to_s.match?(/\A\d+\z/) || job_id.to_s.match?(/\A\d+_\d+\z/) || job_id.to_s.match?(/\A\d+_\[/)
   end
 
   # Set the status of jobs to cancelled in the DB.

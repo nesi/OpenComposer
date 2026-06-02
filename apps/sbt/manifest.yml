@@ -2,3 +2,4 @@
 name: sbt
 category: Others
 description: sbt is a build tool for Scala, Java, and more.
+icon: icon.png

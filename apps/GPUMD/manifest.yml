@@ -4,3 +4,4 @@ category: Others
 description: |
   GPUMD stands for Graphics Processing Units Molecular Dynamics.
   It is a general-purpose molecular dynamics (MD) package fully implemented on graphics processing units.
+icon: icon.png

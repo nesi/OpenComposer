@@ -2,3 +2,4 @@
 name: wxWidgets
 category: Others
 description: widget toolkit and tools library for creating graphical user interfaces for cross-platform applications.
+icon: icon.png

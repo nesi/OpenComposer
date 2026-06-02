@@ -2,3 +2,4 @@
 name: GenoVi
 category: Biology
 description: Generates circular genome representations for complete, draft, and multiple bacterial and archaeal genomes.
+icon: icon.jpg

@@ -1,6 +1,0 @@
----
-name: AOCL-BLAS
-category: Others
-description: |
-  AOCL-BLAS is AMD's optimized version of
-                   BLAS targeted for AMD EPYC and Ryzen CPUs.

@@ -2,3 +2,4 @@
 name: double-conversion
 category: Others
 description: Efficient binary-decimal and decimal-binary conversion routines for IEEE doubles.
+icon: icon.jpg

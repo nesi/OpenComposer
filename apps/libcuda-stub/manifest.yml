@@ -1,4 +1,0 @@
----
-name: libcuda-stub
-category: Others
-description: Dummy libcuda and libnvidia libraries for compiling CUDA programs on non-GPU nodes

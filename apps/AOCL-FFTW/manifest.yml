@@ -1,4 +1,0 @@
----
-name: AOCL-FFTW
-category: Others
-description: Optimized version of FFTW for AMD EPYC family of processors.

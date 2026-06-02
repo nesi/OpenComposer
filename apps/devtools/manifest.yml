@@ -2,3 +2,4 @@
 name: devtools
 category: Others
 description: R functions that simplify and expedite common tasks in package development.
+icon: icon.jpg

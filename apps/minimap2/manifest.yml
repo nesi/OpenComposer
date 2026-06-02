@@ -8,3 +8,4 @@ description: |
   alignment (i.e. CIGAR). At present, it works efficiently with query
   sequences from a few kilobases to ~100 megabases in length at an error
   rate ~15%. .
+icon: icon.png

@@ -1,6 +1,0 @@
----
-name: AlwaysIntelMKL
-category: Others
-description: |
-  Overrides the MKL internal utility function mkl_serv_intel_cpu_true 
-  so that AVX2 optimised kernels will be used, even when running on an AMD CPU.

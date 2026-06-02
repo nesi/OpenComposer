@@ -1,4 +1,0 @@
----
-name: OpenSeesPy
-category: Earth Science
-description: Wraps OpenSees for Python.  Load an OpenSees module as well.

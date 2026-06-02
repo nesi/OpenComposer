@@ -2,3 +2,4 @@
 name: COMSOL
 category: Chemistry
 description: COMSOL is a multiphysics solver that provides a unified workflow for electrical, mechanical, fluid, and chemical applications.
+icon: icon.jpg

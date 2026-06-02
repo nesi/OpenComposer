@@ -6,3 +6,4 @@ description: |
    program for proteins. It produces biologically meaningful multiple
    sequence alignments of divergent sequences. Evolutionary relationships
    can be seen via viewing Cladograms or Phylograms
+icon: icon.png

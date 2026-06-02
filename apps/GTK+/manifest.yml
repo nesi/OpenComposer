@@ -2,3 +2,4 @@
 name: GTK+
 category: Others
 description: GTK+ is the primary library used to construct user interfaces in GNOME.
+icon: icon.png

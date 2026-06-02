@@ -2,3 +2,4 @@
 name: Pluto
 category: Others
 description: Simple, reactive programming environment for the Julia Language.
+icon: icon.png

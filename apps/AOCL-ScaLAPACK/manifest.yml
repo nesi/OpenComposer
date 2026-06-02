@@ -1,4 +1,0 @@
----
-name: AOCL-ScaLAPACK
-category: Others
-description: Optimized version of ScaLAPACK for AMD EPYC family of processors.

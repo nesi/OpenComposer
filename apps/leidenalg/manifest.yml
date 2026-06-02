@@ -4,3 +4,4 @@ category: Others
 description: |
   Implementation of the Leiden algorithm for various quality
   functions to be used with igraph in Python.
+icon: icon.jpg

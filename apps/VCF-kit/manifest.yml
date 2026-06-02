@@ -4,3 +4,4 @@ category: Biology
 description: |
   VCF-kit is a command-line based collection of utilities for performing analysis on
    Variant Call Format (VCF) files.
+icon: icon.jpg

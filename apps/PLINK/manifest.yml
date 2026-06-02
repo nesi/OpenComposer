@@ -8,3 +8,4 @@ description: |
    steps prior to this (e.g. study design and planning, generating genotype or CNV calls from raw data). 
    Through integration with gPLINK and Haploview, there is some support for the subsequent visualization, 
    annotation and storage of results.
+icon: icon.png

@@ -2,3 +2,4 @@
 name: VBZ-Compression
 category: Biology
 description: VBZ compression HDF5 plugin for nanopolish
+icon: icon.png

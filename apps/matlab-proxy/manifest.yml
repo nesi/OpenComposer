@@ -1,4 +1,0 @@
----
-name: matlab-proxy
-category: Engineering
-description: Python package which enables you to launch MATLAB and access it from a web browser.

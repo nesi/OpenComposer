@@ -1,6 +1,0 @@
----
-name: iofbf
-category: Others
-description: |
-  Intel based compiler toolchain, including
-   OpenMPI for MPI support, FlexiBLAS (Defaulting to OpenBLAS), FFTW and ScaLAPACK.

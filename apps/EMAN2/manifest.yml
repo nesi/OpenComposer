@@ -2,3 +2,4 @@
 name: EMAN2
 category: Biology
 description: Greyscale scientific image processing suite with a primary focus on processing data from transmission electron microscopes
+icon: icon.png

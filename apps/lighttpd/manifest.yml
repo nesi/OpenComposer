@@ -2,3 +2,4 @@
 name: lighttpd
 category: Others
 description: A web server.
+icon: icon.png

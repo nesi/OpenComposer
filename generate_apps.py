@@ -11,7 +11,30 @@ import ssl
 from tqdm import tqdm
 
 APPS_DIR  = os.path.join(os.path.dirname(__file__), "apps")
-SKIP_DIRS = {"LAMMPS", "SlurmGPU", "SlurmBasic"}
+SKIP_DIRS = {
+    # Hand-crafted apps — never overwrite
+    "LAMMPS", "SlurmGPU", "SlurmBasic",
+    # Manually removed — do not regenerate
+    "AOCC", "AOCL-BLAS", "AOCL-BLIS", "AOCL-FFTW", "AOCL-ScaLAPACK",
+    "AlphaFold2DB", "AlphaFold3DB", "AlwaysIntelMKL", "Apptainer",
+    "Boost", "CMake", "CUDA", "Clang", "Doxygen", "EasyBuild", "Eigen",
+    "FFTW", "FFTW.MPI", "FFmpeg", "FlexiBLAS", "Globus-CLI",
+    "ImageMagick", "JupyterLab", "M4", "Marimo", "Mesa", "Meson",
+    "NVHPC", "OpenBLAS", "OpenBabel", "OpenCV", "OpenFOAM", "OpenJPEG",
+    "OpenMC", "OpenMPI", "OpenSSL", "OpenSees", "OpenSeesPy", "OpenSlide",
+    "Parallel", "ParallelIO", "UCC", "UCC-CUDA", "UCX", "UCX-CUDA",
+    "XZ", "Zip", "binutils", "bzip2", "cairo", "code-server", "easi",
+    "f90wrap", "flex", "fontconfig", "foss", "freetype", "funcx-endpoint",
+    "g2clib", "gettext", "gfbf", "gimkl", "gimpi", "git",
+    "globus-compute-endpoint", "gompi", "google-sparsehash", "googletest",
+    "gperf", "h5pp", "h5py", "iccifort", "ifbf", "iimpi", "imkl",
+    "imkl-FFTW", "impi", "intel", "intel-compilers", "iofbf", "iompi",
+    "libRmath", "libarchive", "libcuda-stub", "libpng", "libreadline",
+    "libvori", "libxc", "libxml2", "libzstd", "matlab-proxy", "mctc-lib",
+    "mpcci", "nano", "ncurses", "nesi_eb", "nf-core", "numactl", "pandoc",
+    "parallel-fastq-dump", "pod5", "tmux", "wannier90", "x264", "x265",
+    "xkbcommon", "yaml-cpp", "zlib", "zstd",
+}
 URL       = "https://raw.githubusercontent.com/nesi/modules-list/main/module-list.json"
 
 DOMAIN_CATEGORIES = {

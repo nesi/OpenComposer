@@ -4,3 +4,4 @@ category: Biology
 description: |
   Assembly pipeline for bacterial genomes. It can assemble Illumina-only read sets
    where it functions as a SPAdes-optimiser.
+icon: icon.jpg

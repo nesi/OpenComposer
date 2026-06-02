@@ -2,3 +2,4 @@
 name: Bifrost
 category: Biology
 description: Highly parallel construction, indexing and querying of colored and compacted de Bruijn graphs.
+icon: icon.jpg

@@ -2,3 +2,4 @@
 name: pauvre
 category: Biology
 description: Tools for plotting Oxford Nanopore and other long-read data.
+icon: icon.png

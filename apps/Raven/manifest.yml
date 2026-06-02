@@ -2,3 +2,4 @@
 name: Raven
 category: Biology
 description: De novo genome assembler for long uncorrected reads.
+icon: icon.jpg

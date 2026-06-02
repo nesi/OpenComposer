@@ -5,3 +5,4 @@ description: |
   muParser is an extensible high performance math expression
   parser library written in C++. It works by transforming a mathematical
   expression into bytecode and precalculating constant parts of the expression.
+icon: icon.jpg

@@ -10,3 +10,4 @@ description: |
    because of the strength of its underlying mathematical models. In the past, this strength
    came at significant computational expense, but in the new HMMER3 project, HMMER is now
    essentially as fast as BLAST.
+icon: icon.jpg

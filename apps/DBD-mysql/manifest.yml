@@ -2,3 +2,4 @@
 name: DBD-mysql
 category: Others
 description: Perl binding for MySQL
+icon: icon.png

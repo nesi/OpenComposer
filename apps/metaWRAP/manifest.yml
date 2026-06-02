@@ -2,3 +2,4 @@
 name: metaWRAP
 category: Biology
 description: Flexible pipeline for genome-resolved metagenomic data analysis.
+icon: icon.png

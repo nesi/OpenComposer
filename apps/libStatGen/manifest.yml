@@ -2,3 +2,4 @@
 name: libStatGen
 category: Biology
 description: Set of classes for creating statistical genetic programs.
+icon: icon.jpg

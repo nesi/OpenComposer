@@ -2,3 +2,4 @@
 name: PhyloPhlAn
 category: Biology
 description: Integrated pipeline for large-scale phylogenetic profiling of genomes and metagenomes.
+icon: icon.png

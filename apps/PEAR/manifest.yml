@@ -2,3 +2,4 @@
 name: PEAR
 category: Biology
 description: Memory-efficient,fully parallelized and highly accurate pair-end read merger.
+icon: icon.jpg

@@ -4,3 +4,4 @@ category: Others
 description: |
   SpatiaLite is an open source library intended to extend the SQLite core to support
    fully fledged Spatial SQL capabilities.
+icon: icon.png

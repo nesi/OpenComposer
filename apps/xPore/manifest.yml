@@ -2,3 +2,4 @@
 name: xPore
 category: Biology
 description: A Python package for identification and quantification of differential RNA modifications from direct RNA sequencing
+icon: icon.gif

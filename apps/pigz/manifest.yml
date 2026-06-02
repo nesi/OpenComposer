@@ -2,3 +2,4 @@
 name: pigz
 category: Others
 description: parallel implementation of gzip,
+icon: icon.png

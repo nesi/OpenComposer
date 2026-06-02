@@ -2,3 +2,4 @@
 name: Valgrind
 category: Others
 description: "Valgrind: Debugging and profiling tools"
+icon: icon.png

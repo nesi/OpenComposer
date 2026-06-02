@@ -2,3 +2,4 @@
 name: D-Genies
 category: Biology
 description: D-Genies also allows to display dot plots from other aligners by uploading their PAF or MAF alignment file.
+icon: icon.png

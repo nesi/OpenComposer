@@ -4,3 +4,4 @@ category: Others
 description: |
   Split k-mer analysis (version 2) uses exact matching of split k-mer sequences to align closely
    related sequences, typically small haploid genomes such as bacteria and viruses.
+icon: icon.png

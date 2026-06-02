@@ -1,6 +1,0 @@
----
-name: libRmath
-category: Others
-description: |
-  The routines supporting the distribution and special functions in R and a few others are declared
-   in C header file Rmath.h. These can be compiled into a standalone library for linking to other applications.

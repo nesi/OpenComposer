@@ -2,3 +2,4 @@
 name: SQLite
 category: Others
 description: "SQLite: SQL Database Engine in a C Library"
+icon: icon.png

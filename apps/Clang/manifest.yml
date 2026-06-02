@@ -1,6 +1,0 @@
----
-name: Clang
-category: Others
-description: |
-  C, C++, Objective-C compiler, based on LLVM.  Does not
-   include C++ standard library -- use libstdc++ from GCC.

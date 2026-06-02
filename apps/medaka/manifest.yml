@@ -2,3 +2,4 @@
 name: medaka
 category: Biology
 description: Medaka is a tool to create a consensus sequence from nanopore sequencing data.
+icon: icon.jpg

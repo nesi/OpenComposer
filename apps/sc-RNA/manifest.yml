@@ -2,3 +2,4 @@
 name: sc-RNA
 category: Biology
 description: Bioconductor bundle for single-cell RNA-Seq Data analysis
+icon: icon.png

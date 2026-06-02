@@ -2,3 +2,4 @@
 name: libepoxy
 category: Others
 description: Library for handling OpenGL function pointer management
+icon: icon.png

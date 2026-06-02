@@ -584,16 +584,14 @@ ocForm.addSelectedItem = function(id) {
   };
 
   if (selectedText && validSuggestions.includes(selectedText)) {
-    const runAddBadge = () => addBadge();
-
     if (!scriptOverwriteFlag && !submitOverwriteFlag) {
-      runAddBadge();
+      addBadge();
     }
     else if (scriptOverwriteFlag) {
-      ocForm.confirmOverwrite('script', id, runAddBadge);
+      ocForm.confirmOverwrite('script', id, addBadge);
     }
     else {
-      ocForm.confirmOverwrite('submit', id, runAddBadge);
+      ocForm.confirmOverwrite('submit', id, addBadge);
     }
   }
 };

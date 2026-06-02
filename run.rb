@@ -519,7 +519,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     ssh_wrapper_s   = @conf.key?("clusters") ? @ssh_wrapper[@cluster_name]       : @ssh_wrapper
 
     db         = open_history_db(@conf, @cluster_name)
-    deleted_db = open_deleted_db(@conf, @cluster_name)
+    deleted_db = open_deleted_db(@conf, @cluster_name, main_db: db)
     deleted_ids = Set.new(deleted_db.execute("SELECT _job_id FROM deleted_jobs").map { |r| r["_job_id"] })
 
     sacct_from = raw_date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : raw_date_from.to_s
@@ -533,7 +533,17 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       sacct_map[jid] = j
     end
 
-    db1_map = db.execute("SELECT * FROM jobs").each_with_object({}) { |r, h| h[r["_job_id"]] = r }
+    # Only load DB rows that sacct returned — sacct is the sole source of which jobs exist,
+    # so DB rows for jobs outside the sacct window are never shown and need not be fetched.
+    db1_map = if sacct_map.empty?
+                {}
+              elsif sacct_map.size <= 900
+                placeholders = (['?'] * sacct_map.size).join(',')
+                db.execute("SELECT * FROM jobs WHERE _job_id IN (#{placeholders})", sacct_map.keys)
+                  .each_with_object({}) { |r, h| h[r["_job_id"]] = r }
+              else
+                db.execute("SELECT * FROM jobs").each_with_object({}) { |r, h| h[r["_job_id"]] = r }
+              end
 
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @jobs, @jobs_size = build_merged_history_jobs(
@@ -1142,8 +1152,8 @@ post "/*" do
     when "DeleteInfo"
       if history_db
         db         = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        job_ids.each { |job_id| delete_job(db, deleted_db, job_id) }
+        deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil, main_db: db)
+        delete_all_jobs(db, deleted_db, job_ids)
         output_log("Delete job information", scheduler, cluster: cluster_name, job_ids: job_ids)
         redirect request.url
       end
@@ -1164,7 +1174,7 @@ post "/*" do
     when "DeleteAll"
       if history_db
         db         = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil)
+        deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil, main_db: db)
         from = (Date.today - 29).strftime("%Y-%m-%d")
         to   = Date.today.strftime("%Y-%m-%d")
         all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)

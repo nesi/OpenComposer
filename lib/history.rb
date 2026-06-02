@@ -811,7 +811,9 @@ helpers do
   end
 
   # Open (or create) the deleted-jobs DB, applying any pending V3 migration exports.
-  def open_deleted_db(conf, cluster_name)
+  # Pass main_db: to reuse an already-open connection to the history DB instead of
+  # opening a second one (the caller must not close that connection itself).
+  def open_deleted_db(conf, cluster_name, main_db: nil)
     deleted_path = get_deleted_db_path(conf, cluster_name)
     FileUtils.mkdir_p(File.dirname(deleted_path))
     db = SQLite3::Database.new(deleted_path)
@@ -820,10 +822,14 @@ helpers do
 
     # If the main history DB has a _v3_deleted_export table (written during V3 migration),
     # drain it into the deleted DB now and drop it from the main DB.
-    main_path = get_history_db(conf, cluster_name)
-    if File.exist?(main_path.to_s)
-      main_db = SQLite3::Database.new(main_path)
-      main_db.results_as_hash = true
+    own_connection = main_db.nil?
+    if own_connection
+      main_path = get_history_db(conf, cluster_name)
+      main_db   = SQLite3::Database.new(main_path) if File.exist?(main_path.to_s)
+      main_db&.results_as_hash = true
+    end
+
+    if main_db
       begin
         rows = main_db.execute("SELECT _job_id, _deleted_at FROM _v3_deleted_export")
         unless rows.empty?
@@ -840,7 +846,7 @@ helpers do
       rescue SQLite3::Exception
         # _v3_deleted_export doesn't exist — that's fine, migration already done
       ensure
-        main_db.close
+        main_db.close if own_connection
       end
     end
 

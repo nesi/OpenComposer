@@ -131,7 +131,8 @@ document.querySelectorAll('input[id^="_historyStatus"]').forEach(input => {
 });
 
 // Update the status of a batch operation (e.g., CancelJob, DeleteInfo) for selected jobs.
-ocHistory.updateStatusBatch = function(action, jobIds) {
+// blockedIds (optional): jobs excluded from the action that the user must cancel first.
+ocHistory.updateStatusBatch = function(action, jobIds, blockedIds) {
   if (!Array.isArray(jobIds)) return;
 
   const button    = document.getElementById(`_history${action}Badge`);
@@ -160,7 +161,9 @@ ocHistory.updateStatusBatch = function(action, jobIds) {
     : ` ${jobIds.length} ${action === 'CancelJob' ? 'jobs' : 'information'} ?`;
 
   const action_str = action === 'CancelJob' ? "cancel" : "delete";
-  modalBody.innerHTML = `Do you want to ${action_str} ${jobCountText}`;
+  modalBody.innerHTML = jobIds.length > 0
+    ? `Do you want to ${action_str} ${jobCountText}`
+    : '';
 
   // If more than one job is selected, display the list of job IDs.
   if (jobIds.length > 1) {
@@ -172,29 +175,43 @@ ocHistory.updateStatusBatch = function(action, jobIds) {
     });
     modalBody.appendChild(jobList);
   }
+
+  // Warn about jobs that cannot be deleted because they are active.
+  if (action === 'DeleteInfo' && Array.isArray(blockedIds) && blockedIds.length > 0) {
+    const noun = blockedIds.length === 1 ? 'job' : 'jobs';
+    const warning = document.createElement('div');
+    warning.className = 'alert alert-warning mt-2 mb-0';
+    warning.innerHTML =
+      `<strong>${blockedIds.length} ${noun} cannot be deleted</strong> — ` +
+      `they are Running or Queued. Cancel them first, then delete.`;
+    modalBody.appendChild(warning);
+  }
 };
 
 // Update the batch operations for checked rows (e.g., CancelJob, DeleteInfo).
 ocHistory.updateBatch = function(rows) {
-  const countId = { checked: [], running: [] };
+  const countId = { running: [], deletable: [], blocked: [] };
 
   rows.forEach(row => {
-    const checkbox    = row.querySelector('td input[type="checkbox"]');
-    const jobId       = row.getElementsByTagName('td')[1].textContent.trim();
-    const statusIndex = row.getElementsByTagName('td').length - 1;
-    const status      = row.getElementsByTagName('td')[statusIndex].textContent.trim();
+    const checkbox = row.querySelector('td input[type="checkbox"]');
+    const jobId    = row.getElementsByTagName('td')[1].textContent.trim();
+    const status   = (row.dataset.status || '').toUpperCase();
 
     if (checkbox && checkbox.checked) {
-      countId.checked.push(jobId);
-      if (status === "Running" || status === "Queued") {
+      const isActive = (status === 'QUEUED' || status === 'RUNNING');
+      if (isActive) {
         countId.running.push(jobId);
+        countId.blocked.push(jobId);
+      } else {
+        countId.deletable.push(jobId);
       }
     }
   });
 
-  // Update batch status for deleting job or info action.
+  // Only deletable (non-active) jobs appear in the delete action.
+  // Blocked jobs get a warning in the modal instead.
   ocHistory.updateStatusBatch("CancelJob",  countId.running);
-  ocHistory.updateStatusBatch("DeleteInfo", countId.checked);
+  ocHistory.updateStatusBatch("DeleteInfo", countId.deletable, countId.blocked);
 };
 
 // Redirect to the current URL with the selected number of rows as a query parameter.

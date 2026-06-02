@@ -1065,18 +1065,23 @@ post "/*" do
       if history_db
         db         = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
         deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil)
-        # Collect all visible job IDs: DB1 OC jobs + sacct external jobs (last 30 days)
         db1_ids = db.execute("SELECT _job_id FROM jobs").map { |r| r["_job_id"] }
         from = (Date.today - 29).strftime("%Y-%m-%d")
         to   = Date.today.strftime("%Y-%m-%d")
         all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
-        sacct_ids = (all_sacct || []).filter_map do |j|
-          jid = j["JobID"].to_s.strip
-          valid_oc_job_id?(jid) ? jid : nil
-        end
-        all_ids = (db1_ids + sacct_ids).uniq
-        delete_all_jobs(db, deleted_db, all_ids)
+        active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
+        sacct_status_map = {}
+        (all_sacct || []).each { |j| sacct_status_map[j["JobID"].to_s.strip] = sacct_state_to_oc_status(j["State"].to_s) }
+        sacct_ids   = sacct_status_map.keys.select { |jid| valid_oc_job_id?(jid) }
+        all_ids     = (db1_ids + sacct_ids).uniq
+        deletable   = all_ids.reject { |jid| active_statuses.include?(sacct_status_map[jid]) }
+        skipped     = all_ids.length - deletable.length
+        delete_all_jobs(db, deleted_db, deletable)
         output_log("Delete all job history", scheduler, cluster: cluster_name)
+        if skipped > 0
+          noun = skipped == 1 ? "job was" : "jobs were"
+          error_msg = "#{skipped} #{noun} not deleted because they are still Running or Queued. Cancel them first, then delete."
+        end
       end
     end
 

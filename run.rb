@@ -541,9 +541,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     applicable_generic_dirs = configured_schedulers
                                 .map { |s| SCHEDULER_TO_GENERIC_APP[s.downcase] }
                                 .compact.uniq
-    glob_pattern = File.join(generic_apps_dir, "*/manifest.yml")
-    glob_results = Dir.glob(glob_pattern)
-    all_generic = glob_results.filter_map do |path|
+    all_generic = Dir.glob(File.join(generic_apps_dir, "*/manifest.yml")).filter_map do |path|
       create_manifest(File.dirname(path))
     end.sort_by { |m| m.name.downcase }
     # Filter to the configured scheduler; if the lookup produced nothing, show all
@@ -553,16 +551,6 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
                          else
                            all_generic
                          end
-    @debug_generic = {
-      cwd: Dir.pwd,
-      generic_apps_dir: generic_apps_dir,
-      glob_pattern: glob_pattern,
-      glob_results: glob_results,
-      configured_schedulers: configured_schedulers,
-      applicable_generic_dirs: applicable_generic_dirs,
-      all_generic_dirnames: all_generic.map(&:dirname),
-      generic_manifests_count: @generic_manifests.size
-    }
     return erb :new_template
   else # application form
     @table_index     = 1
@@ -776,6 +764,14 @@ def output_log(action, scheduler, **details)
             .map    { |k, v| "#{k}=#{v}" }
             .join(" : ")
   puts [base, extra].reject(&:empty?).join(" : ")
+end
+
+# Send a generic application icon.
+get "/_generic_icon/:folder/:icon" do
+  conf = create_conf
+  generic_apps_dir = conf["generic_apps_dir"] || "./generic_apps"
+  icon_path = File.join(generic_apps_dir, params[:folder], params[:icon])
+  send_file(icon_path) if File.exist?(icon_path)
 end
 
 # Send an application icon.

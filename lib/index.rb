@@ -139,9 +139,8 @@ HTML
                   is_bi_or_fa_icon = true
                   nil
                 else
-                  tmp   = File.join("/", generic_apps_dir, dirname, icon_s)
-                  local = File.join(Dir.pwd, tmp)
-                  File.exist?(local) ? File.join(@script_name, tmp) : URI.join(url, "no_image_square.jpg")
+                  local = File.join(Dir.pwd, generic_apps_dir, dirname, icon_s)
+                  File.exist?(local) ? File.join(@script_name, "_generic_icon", dirname, icon_s) : URI.join(url, "no_image_square.jpg")
                 end
 
     width = @conf['thumbnail_width']

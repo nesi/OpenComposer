@@ -41,16 +41,5 @@
     <% end %>
   </div>
 <% else %>
-  <div class="px-4 py-2 small text-muted mb-3">
-    No generic templates found.
-    <!-- debug:
-      cwd=<%= @debug_generic[:cwd].inspect %>
-      generic_apps_dir=<%= @debug_generic[:generic_apps_dir].inspect %>
-      glob_pattern=<%= @debug_generic[:glob_pattern].inspect %>
-      glob_results=<%= @debug_generic[:glob_results].inspect %>
-      configured_schedulers=<%= @debug_generic[:configured_schedulers].inspect %>
-      applicable_generic_dirs=<%= @debug_generic[:applicable_generic_dirs].inspect %>
-      all_generic_dirnames=<%= @debug_generic[:all_generic_dirnames].inspect %>
-    -->
-  </div>
+  <div class="px-4 py-2 small text-muted mb-3">No generic templates found.</div>
 <% end %>

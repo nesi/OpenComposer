@@ -864,7 +864,7 @@ post "/history/cancel_one" do
   job_id       = params["jobId"].to_s.strip
   content_type :json
   return JSON.generate({ ok: false, error: "No job ID" }) if job_id.empty?
-  return JSON.generate({ ok: false, error: "Invalid job ID" }) unless job_id.match?(/\A[\d_.\[\]+]+\z/)
+  return JSON.generate({ ok: false, error: "Invalid job ID" }) unless job_id.match?(/\A[\d_.\[\]+\-]+\z/)
 
   cluster_name  = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
   scheduler     = conf.key?("clusters") ? create_scheduler(conf)[cluster_name] : create_scheduler(conf)

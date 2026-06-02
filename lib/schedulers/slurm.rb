@@ -49,14 +49,17 @@ class Slurm < Scheduler
 
   # Cancel one or more jobs in the Slurm scheduler using the 'scancel' command.
   # Bracket-range IDs like "6801262_[1494-2000]" or "6801262_[1494-2000:2]" are
-  # expanded to individual task IDs because not all Slurm versions accept that
-  # notation in scancel.
+  # expanded and each task is cancelled with a separate scancel call.
   def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
     scancel  = get_command_path("scancel", bin, bin_overrides)
     expanded = jobs.flat_map { |j| expand_array_range(j) }
-    command  = [ssh_wrapper, scancel, expanded.join(' ')].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
-    return status.success? ? nil : [stdout, stderr].join(" ")
+    errors   = []
+    expanded.each do |id|
+      command = [ssh_wrapper, scancel, id].compact.join(" ")
+      stdout, stderr, status = Open3.capture3(command)
+      errors << [stdout, stderr].join(" ").strip unless status.success?
+    end
+    errors.empty? ? nil : errors.join("; ")
   rescue Exception => e
     return e.message
   end

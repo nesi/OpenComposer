@@ -948,9 +948,9 @@ helpers do
     end
   end
 
-  # Return true if a job ID has a valid format for recording: plain integer, integer_integer, or integer_[range].
+  # Return true if a job ID has a valid format for recording: plain integer or integer_integer.
   def valid_oc_job_id?(job_id)
-    job_id.to_s.match?(/\A\d+\z/) || job_id.to_s.match?(/\A\d+_\d+\z/) || job_id.to_s.match?(/\A\d+_\[/)
+    job_id.to_s.match?(/\A\d+\z/) || job_id.to_s.match?(/\A\d+_\d+\z/)
   end
 
   # Set the status of jobs to cancelled in the DB.

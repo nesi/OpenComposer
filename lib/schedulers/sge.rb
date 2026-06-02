@@ -132,6 +132,51 @@ class Sge < Scheduler
     return nil, e.message, nil
   end
 
+  # Fetch node information from qhost and return it in the sinfo_nodes format.
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    qhost   = get_command_path("qhost", bin, bin_overrides)
+    command = [ssh_wrapper, qhost].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    return nil, [stdout, stderr].join(" ").strip, command unless status.success?
+
+    nodes = []
+    stdout.each_line do |line|
+      line = line.chomp
+      next if line =~ /\AHOSTNAME/i || line =~ /\A-{5}/ || line =~ /\Aglobal\s/i
+      parts = line.split
+      next if parts.size < 9
+      hostname = parts[0]
+      ncpu_s   = parts[2]
+      load_s   = parts[6]
+      memtot_s = parts[7]
+      memuse_s = parts[8]
+
+      if load_s == "-" || ncpu_s == "-"
+        state    = "down"
+        used_cpu = 0
+        idle_cpu = 0
+        total_cpu = ncpu_s == "-" ? 0 : ncpu_s.to_i
+      else
+        total_cpu = ncpu_s.to_i
+        load      = load_s.to_f
+        used_cpu  = [load.ceil, total_cpu].min
+        idle_cpu  = [total_cpu - used_cpu, 0].max
+        state     = used_cpu >= total_cpu ? "allocated" : (used_cpu > 0 ? "mixed" : "idle")
+      end
+
+      cpus_str     = "#{used_cpu}/#{idle_cpu}/0/#{total_cpu}"
+      total_mem_mb = sge_mem_to_mb(memtot_s)
+      used_mem_mb  = sge_mem_to_mb(memuse_s)
+      free_mem_mb  = [total_mem_mb - used_mem_mb, 0].max
+
+      nodes << [hostname, state, cpus_str, total_mem_mb.to_s, free_mem_mb.to_s, "", ""]
+    end
+
+    [nodes, nil, command]
+  rescue Exception => e
+    return nil, e.message, nil
+  end
+
   # Return Job Name, Job Partition, Job Status ID.
   def get_job_info(columns)
     job_name = columns[2]
@@ -303,5 +348,22 @@ class Sge < Scheduler
     return info, nil
   rescue Exception => e
     return nil, e.message
+  end
+
+  private
+
+  def sge_mem_to_mb(mem_str)
+    return 0 if mem_str.nil? || mem_str == "-"
+    m = mem_str.match(/\A([\d.]+)\s*([TGMK]?)\z/i)
+    return 0 unless m
+    val  = m[1].to_f
+    unit = m[2].upcase
+    case unit
+    when 'T' then (val * 1_048_576).to_i
+    when 'G' then (val * 1_024).to_i
+    when 'M' then val.to_i
+    when 'K' then (val / 1_024).to_i
+    else          val.to_i
+    end
   end
 end

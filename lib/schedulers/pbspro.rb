@@ -150,6 +150,34 @@ class Pbspro < Scheduler
     return nil, e.message, nil
   end
 
+  # Fetch node information from pbsnodes -av and return it in the sinfo_nodes format.
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    pbsnodes = get_command_path("pbsnodes", bin, bin_overrides)
+    command  = [ssh_wrapper, pbsnodes, "-av"].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    return nil, [stdout, stderr].join(" ").strip, command unless status.success?
+
+    nodes     = []
+    cur_name  = nil
+    cur_attrs = {}
+
+    stdout.each_line do |line|
+      line = line.chomp
+      if line =~ /\A\S/
+        nodes << build_pbs_node_row(cur_name, cur_attrs) if cur_name
+        cur_name  = line.strip
+        cur_attrs = {}
+      elsif line =~ /\A\s+(\S+)\s*=\s*(.+)\z/
+        cur_attrs[$1.strip] = $2.strip
+      end
+    end
+    nodes << build_pbs_node_row(cur_name, cur_attrs) if cur_name
+
+    [nodes.compact, nil, command]
+  rescue Exception => e
+    return nil, e.message, nil
+  end
+
   # Query the status of one or more jobs in PBS using 'qstat'.
   # It retrieves job details such as submission time, partition, and status.
   def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
@@ -181,5 +209,39 @@ class Pbspro < Scheduler
     return info, nil
   rescue Exception => e
     return nil, e.message
+  end
+
+  private
+
+  def build_pbs_node_row(name, attrs)
+    return nil if name.nil?
+    state     = attrs["state"] || "unknown"
+    total_cpu = (attrs["resources_available.ncpus"] || attrs["pcpus"] || "0").to_i
+    used_cpu  = (attrs["resources_assigned.ncpus"]  || "0").to_i
+    idle_cpu  = [total_cpu - used_cpu, 0].max
+    cpus_str  = "#{used_cpu}/#{idle_cpu}/0/#{total_cpu}"
+    total_mem_mb = pbs_mem_to_mb(attrs["resources_available.mem"] || "0")
+    used_mem_mb  = pbs_mem_to_mb(attrs["resources_assigned.mem"]  || "0")
+    free_mem_mb  = [total_mem_mb - used_mem_mb, 0].max
+    gpu_total = (attrs["resources_available.ngpus"] || "0").to_i
+    gpu_used  = (attrs["resources_assigned.ngpus"]  || "0").to_i
+    gres      = gpu_total > 0 ? "gpu:#{gpu_total}" : ""
+    gres_used = gpu_used  > 0 ? "gpu:#{gpu_used}"  : ""
+    [name, state, cpus_str, total_mem_mb.to_s, free_mem_mb.to_s, gres, gres_used]
+  end
+
+  def pbs_mem_to_mb(mem_str)
+    return 0 if mem_str.nil? || mem_str.empty?
+    m = mem_str.match(/\A([\d.]+)\s*([tTgGmMkK]?)[bB]?\z/)
+    return 0 unless m
+    val  = m[1].to_f
+    unit = m[2].downcase
+    case unit
+    when 't' then (val * 1_048_576).to_i
+    when 'g' then (val * 1_024).to_i
+    when 'm' then val.to_i
+    when 'k' then (val / 1_024).to_i
+    else          val.to_i
+    end
   end
 end

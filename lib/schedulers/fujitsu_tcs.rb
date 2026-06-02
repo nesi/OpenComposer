@@ -102,6 +102,40 @@ class Fujitsu_tcs < Scheduler
     return nil, e.message, nil
   end
 
+  # Fetch resource-group availability from pjstat -A --data and return it in the sinfo_nodes format.
+  # Fujitsu TCS manages resources at the group level; each resource group appears as a "node".
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    pjstat  = get_command_path("pjstat", bin, bin_overrides)
+    command = [ssh_wrapper, pjstat, "-A --data"].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    return nil, [stdout, stderr].join(" ").strip, command unless status.success?
+
+    rows = []
+    CSV.new(stdout, headers: true).each do |row|
+      fields = row.fields
+      next if fields.compact.empty?
+      # Column order from pjstat -A --data (site-dependent; adjust indices if needed):
+      # H, RSC_GRP, AVST, MND_TOT, MND_USE, MND_FRE, CPU_TOT, CPU_USE, CPU_FRE, MEM_TOT, MEM_USE, MEM_FRE
+      rscg     = fields[1].to_s.strip
+      avst     = fields[2].to_s.strip.downcase  # "up" / "down" / etc.
+      cpu_tot  = fields[6].to_i
+      cpu_use  = fields[7].to_i
+      cpu_fre  = fields[8].to_i
+      mem_tot  = (fields[9].to_f  * 1_024).to_i  # GB → MB
+      mem_use  = (fields[10].to_f * 1_024).to_i
+      mem_fre  = (fields[11].to_f * 1_024).to_i
+
+      next if rscg.empty?
+      state    = avst == "up" ? (cpu_use >= cpu_tot ? "allocated" : (cpu_use > 0 ? "mixed" : "idle")) : avst
+      cpus_str = "#{cpu_use}/#{[cpu_fre, 0].max}/0/#{cpu_tot}"
+      rows << [rscg, state, cpus_str, mem_tot.to_s, mem_fre.to_s, "", ""]
+    end
+
+    [rows, nil, command]
+  rescue Exception => e
+    return nil, e.message, nil
+  end
+
   # Query the status of one or more jobs in the Fujitsu TCS system using 'pjstat'.
   # It retrieves job details and combines information for both active and completed jobs.
   def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)

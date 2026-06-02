@@ -613,7 +613,7 @@ ocHistory.startCancelAll = function() {
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(jobIds) {
-      jobIds = jobIds || [];
+      jobIds = (jobIds || []).slice().reverse();
       if (!jobIds || jobIds.length === 0) {
         progressArea.innerHTML = '<p class="text-muted mb-0">No queued or running jobs found.</p>';
         abortBtn.classList.add('d-none');
@@ -722,12 +722,21 @@ ocHistory.startCancelAll = function() {
   });
 })();
 
+// Remove error_msg from the URL after the banner has rendered so a manual refresh doesn't re-show it.
+(function() {
+  var url = new URL(window.location.href);
+  if (url.searchParams.has('error_msg')) {
+    url.searchParams.delete('error_msg');
+    history.replaceState(null, '', url.toString());
+  }
+})();
+
 var _ocCancelForm = document.getElementById('_historyCancelJobForm');
 if (_ocCancelForm) {
   _ocCancelForm.addEventListener('submit', function(e) {
     e.preventDefault();
     var input  = document.getElementById('_historyCancelJobInput');
-    var jobIds = (input && input.value) ? input.value.split(',').filter(Boolean) : [];
+    var jobIds = (input && input.value) ? input.value.split(',').filter(Boolean).reverse() : [];
     if (!jobIds.length) return;
     var cluster = new URLSearchParams(window.location.search).get('cluster');
     ocHistory.cancelJobsOneByOne(jobIds, cluster);

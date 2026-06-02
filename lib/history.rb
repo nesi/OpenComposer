@@ -511,17 +511,6 @@ helpers do
     [jobs[offset, limit] || [], total]
   end
 
-  def history_filter_mode_matches?(search_text, filter_text, filter_mode)
-    terms = history_filter_terms(filter_text)
-    return true if terms.empty?
-
-    if filter_mode == "or"
-      terms.any? { |term| search_text.to_s.include?(term) }
-    else
-      terms.all? { |term| search_text.to_s.include?(term) }
-    end
-  end
-
   def history_filter_hits_text?(text, filter)
     terms = history_filter_terms(filter)
     return false if terms.empty?

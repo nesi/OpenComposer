@@ -369,32 +369,6 @@ ocForm.storePreviousValue = function(id) {
   }
 };
 
-// Save the current value of a form element before modification.
-ocForm.restorePreviousValue = function(id) {
-  const element = document.getElementById(id);
-  if (!element) return;
-
-  if (element.type === "radio") {
-    const prevId = ocForm.previousRadioValues[element.name];
-
-    if (prevId) {
-      const prev = document.getElementById(prevId);
-      if (prev) {
-        prev.checked = true;
-        ocForm.previousValues[element.name] = prevId;
-      }
-    }
-  }
-  else if (element.type === "checkbox") {
-    element.checked = !element.checked;
-  }
-  else {
-    if (ocForm.previousValues[id] !== undefined) {
-      element.value = ocForm.previousValues[id];
-    }
-  }
-};
-
 // Mark that the submit section was manually edited by the user.
 ocForm.markManuallyModified = function(content_type) {
   if (content_type === "submit") {

@@ -1,6 +1,7 @@
 require "sinatra"
 require "date"
 require "uri"
+require "open3"
 require "set"
 require "sinatra/reloader" if ENV.fetch("RACK_ENV", "production") == "development"
 require "yaml"

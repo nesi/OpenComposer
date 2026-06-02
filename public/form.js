@@ -124,6 +124,8 @@ ocForm.patchModuleLoadLine = function(area, key) {
   var escaped = modName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   var re = new RegExp('^(\\s*)module\\s+load(?:\\s+' + escaped + '(?:\\/\\S*)?)? *$');
 
+  var foundAny = false;
+
   function patchArea(textarea, afterPatch) {
     if (!textarea) return;
     var lines = textarea.value.split('\n');
@@ -136,6 +138,7 @@ ocForm.patchModuleLoadLine = function(area, key) {
       }
     }
     if (changed) {
+      foundAny = true;
       textarea.value = lines.join('\n');
       ocForm.updateHeight(textarea);
       if (afterPatch) afterPatch();
@@ -147,6 +150,13 @@ ocForm.patchModuleLoadLine = function(area, key) {
   }
   if (area === 'submit' || area === 'both') {
     patchArea(ocForm.submitArea, null);
+  }
+
+  // No existing "module load" line found — the line hasn't been inserted yet
+  // (e.g. initial AJAX load). Fall back to a full updateArea so patchScript
+  // can insert it from the template.
+  if (!foundAny) {
+    ocForm.updateArea(area, key);
   }
 };
 

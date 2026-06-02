@@ -182,27 +182,62 @@ ocForm.patchScript = function() {
     nextAnchorOf[i] = nextPi;
   }
 
-  // Split user-added lines into "mid" (anchored to next template) and "tail" (after all templates).
-  // Blank lines are skipped: they already appear in newLines from the template.
-  const midUser = new Map();
-  const tailLines = [];
-  for (let i = 0; i < currentLines.length; i++) {
-    if (tempMarks[i] === null) {
-      if (i > lastTplPos || nextAnchorOf[i] === null) {
-        tailLines.push(currentLines[i]);
-      } else if (currentLines[i].trim() !== '') {
-        const na = nextAnchorOf[i];
-        if (!midUser.has(na)) midUser.set(na, []);
-        midUser.get(na).push(currentLines[i]);
-      }
-    }
-  }
-
   // Build reverse map: newLines index → pattern index that owns it.
   const nlOwner = new Map();
   for (let pi = 0; pi < sortedPatterns.length; pi++) {
     const ni = patNewLineIdx[pi];
     if (ni >= 0 && !nlOwner.has(ni)) nlOwner.set(ni, pi);
+  }
+
+  // For each visible template pattern, count how many blank lines newLines generates
+  // immediately before it. Those blanks will be re-emitted from newLines, so the same
+  // count of leading blanks in the current script's user slot should be consumed rather
+  // than forwarded — only excess blanks (user-typed) are preserved.
+  const blanksBeforePattern = new Map();
+  for (let pi = 0; pi < sortedPatterns.length; pi++) {
+    const ni = patNewLineIdx[pi];
+    if (ni < 0) continue;
+    let prevNi = -1;
+    for (let ni2 = ni - 1; ni2 >= 0; ni2--) {
+      if (nlOwner.has(ni2)) { prevNi = ni2; break; }
+    }
+    let blanks = 0;
+    for (let ni2 = prevNi + 1; ni2 < ni; ni2++) {
+      if (newLines[ni2] === '') blanks++;
+    }
+    blanksBeforePattern.set(pi, blanks);
+  }
+
+  // Collect ALL non-template lines per anchor (blanks included, preserving order).
+  const rawUser = new Map();
+  const tailLines = [];
+  for (let i = 0; i < currentLines.length; i++) {
+    if (tempMarks[i] === null) {
+      if (i > lastTplPos || nextAnchorOf[i] === null) {
+        tailLines.push(currentLines[i]);
+      } else {
+        const na = nextAnchorOf[i];
+        if (!rawUser.has(na)) rawUser.set(na, []);
+        rawUser.get(na).push(currentLines[i]);
+      }
+    }
+  }
+
+  // Convert rawUser → midUser: consume the first N leading blank lines in each slot
+  // (N = blanksBeforePattern[pi]) since those will already be emitted from newLines.
+  // Extra blanks beyond N, and all non-blank lines, are user content to preserve.
+  const midUser = new Map();
+  for (const [pi, lines] of rawUser) {
+    let blankBudget = blanksBeforePattern.get(pi) || 0;
+    const userLines = [];
+    for (const line of lines) {
+      if (blankBudget > 0 && line.trim() === '') {
+        blankBudget--;
+      } else {
+        userLines.push(line);
+      }
+    }
+    if (userLines.length > 0) midUser.set(pi, userLines);
   }
 
   // Assemble output: for each new template line, first flush any user lines anchored

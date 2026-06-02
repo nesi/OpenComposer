@@ -63,9 +63,9 @@ helpers do
         File.exist?(local) ? File.join(@script_name, tp) : nil
       end
       url_path ? "<img src=\"#{ERB::Util.h(url_path)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">" :
-                 "<i class=\"bi bi-file-earmark-code\" style=\"font-size: #{width}px; width: #{width}px; height: 100px; line-height: 1;\"></i>"
+                 "<img src=\"#{URI.join(url, 'app_default.svg')}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     else
-      "<i class=\"bi bi-file-earmark-code\" style=\"font-size: #{width}px; width: #{width}px; height: 100px; line-height: 1;\"></i>"
+      "<img src=\"#{URI.join(url, 'app_default.svg')}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     end
 
     <<~HTML

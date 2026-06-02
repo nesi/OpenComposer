@@ -1,6 +1,15 @@
 ---
 # Required settings
 apps_dir: "./apps"
+
+# Scheduler type — controls job submission, history, cancellation, and
+# which generic script template appears under "New Template".
+# Valid values: slurm, pbspro, miyabi, sge, fujitsu_tcs
+#
+# Single-cluster (no "clusters:" block):
+#   scheduler: "slurm"
+#
+# Multi-cluster: set per cluster under "clusters:" (see below).
 clusters:
   mahuika:
     scheduler: "slurm"

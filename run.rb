@@ -70,6 +70,13 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_END_TIME"        => "End"
 }.freeze
 CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "sge_root"].freeze
+SCHEDULER_TO_GENERIC_APP ||= {
+  "slurm"       => "Slurm",
+  "pbspro"      => "PBS",
+  "miyabi"      => "PBS",
+  "sge"         => "Grid_Engine",
+  "fujitsu_tcs" => "Fujitsu_TCS"
+}.freeze
 
 # Structure of manifest
 Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps)
@@ -525,8 +532,12 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   when "templates/new"
     @name = "New Template"
     generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"
+    configured_schedulers = @conf["scheduler"].is_a?(Hash) ? @conf["scheduler"].values.uniq : [@conf["scheduler"].to_s]
+    applicable_generic_dirs = configured_schedulers.map { |s| SCHEDULER_TO_GENERIC_APP[s] }.compact.uniq
     @generic_manifests = Dir.glob(File.join(generic_apps_dir, "*/manifest.yml")).filter_map do |path|
-      create_manifest(File.dirname(path))
+      m = create_manifest(File.dirname(path))
+      next unless m && applicable_generic_dirs.include?(m.dirname)
+      m
     end.sort_by { |m| m.name.downcase }
     return erb :new_template
   else # application form

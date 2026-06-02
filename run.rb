@@ -510,7 +510,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @page_size   = (@rows == 0) ? 1 : ((@jobs_size - 1) / @rows) + 1
     @start_index = @jobs_size == 0 ? 0 : (@current_page - 1) * @rows
     @end_index   = @jobs_size == 0 ? 0 : [@current_page * @rows, @jobs_size].min - 1
-    @error_msg   = error_msg || escape_html(params["error_msg"])
+    url_msg      = params["error_msg"]
+    @error_msg   = error_msg || (url_msg.nil? || url_msg.empty? ? nil : escape_html(url_msg))
 
     @filter_column_items = history_filter_column_items(@conf)
     @date_range_items    = history_date_range_items

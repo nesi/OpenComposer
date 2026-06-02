@@ -461,7 +461,8 @@ helpers do
       <<~SQL.gsub(/\s+/, " ").strip
         CAST(_job_id AS INTEGER) #{direction},
         CASE
-          WHEN instr(_job_id,'_') > 0 THEN CAST(substr(_job_id,instr(_job_id,'_')+1) AS INTEGER)
+          WHEN instr(_job_id,'_[') > 0 THEN CAST(substr(_job_id,instr(_job_id,'_[')+2) AS INTEGER)
+          WHEN instr(_job_id,'_') > 0  THEN CAST(substr(_job_id,instr(_job_id,'_')+1) AS INTEGER)
           ELSE -1
         END #{direction},
         _job_id #{direction}

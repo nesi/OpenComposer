@@ -479,12 +479,7 @@ helpers do
   # All filtering, sorting, and pagination is done in Ruby.
   def build_merged_history_jobs(sacct_map, db1_map, deleted_ids, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset)
     # sacct is the sole source of which jobs exist. DB1 only enriches (app name, script, etc.).
-    # Suppress [range] entries when individual P_N entries also appear in sacct for the same
-    # parent — prevents showing both the range and its already-dispatched individual tasks.
-    parents_with_individual_sacct = Set.new
-    sacct_map.each_key { |jid| parents_with_individual_sacct.add(jid.split("_").first) if jid.match?(/\A\d+_\d+\z/) }
-
-    all_ids = sacct_map.keys.reject { |jid| jid.match?(/\A\d+_\[/) && parents_with_individual_sacct.include?(jid.split("_").first) }
+    all_ids = sacct_map.keys
 
     jobs = all_ids.filter_map do |jid|
       next if deleted_ids.include?(jid)

@@ -464,7 +464,6 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
   var closeBtn = document.getElementById('_historyCancelJobCloseBtn');
   if (!modal || !body) return;
 
-  jobIds = ocExpandJobIds(jobIds);
   var total   = jobIds.length;
   var done    = 0;
   var errors  = [];
@@ -597,7 +596,7 @@ ocHistory.startCancelAll = function() {
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(jobIds) {
-      jobIds = ocExpandJobIds(jobIds || []);
+      jobIds = jobIds || [];
       if (!jobIds || jobIds.length === 0) {
         progressArea.innerHTML = '<p class="text-muted mb-0">No queued or running jobs found.</p>';
         abortBtn.classList.add('d-none');

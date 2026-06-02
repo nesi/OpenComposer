@@ -547,8 +547,9 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       create_manifest(File.dirname(path))
     end.sort_by { |m| m.name.downcase }
     # Filter to the configured scheduler; if the lookup produced nothing, show all
-    @generic_manifests = if applicable_generic_dirs.any?
-                           all_generic.select { |m| applicable_generic_dirs.include?(m.dirname) }
+    applicable_generic_dirs_down = applicable_generic_dirs.map(&:downcase)
+    @generic_manifests = if applicable_generic_dirs_down.any?
+                           all_generic.select { |m| applicable_generic_dirs_down.include?(m.dirname.downcase) }
                          else
                            all_generic
                          end

@@ -3,6 +3,7 @@ require "date"
 require "uri"
 require "open3"
 require "shellwords"
+require "net/http"
 require "set"
 require "sinatra/reloader" if ENV.fetch("RACK_ENV", "production") == "development"
 require "yaml"
@@ -71,6 +72,8 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_END_TIME"        => "End"
 }.freeze
 CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "sge_root"].freeze
+MODULES_LIST_URL ||= "https://raw.githubusercontent.com/nesi/modules-list/main/.module-list-generated.json"
+MODULES_CACHE_TTL ||= 86_400  # 24 hours
 SCHEDULER_TO_GENERIC_APP ||= {
   "slurm"       => "Slurm",
   "pbspro"      => "PBS",
@@ -93,6 +96,32 @@ def read_yaml(yml_path)
   end
 
   return nil
+end
+
+# Download (and cache for 24 h) the NeSI modules-list JSON.
+# Returns a Hash keyed by module name, or {} on failure.
+def fetch_modules_list(data_dir)
+  cache_path = File.join(data_dir, ".module-list-cache.json")
+
+  if File.exist?(cache_path) && (Time.now.to_i - File.mtime(cache_path).to_i) < MODULES_CACHE_TTL
+    return JSON.parse(File.read(cache_path))
+  end
+
+  uri      = URI(MODULES_LIST_URL)
+  response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, read_timeout: 15, open_timeout: 10) do |http|
+    http.get(uri.request_uri)
+  end
+
+  if response.is_a?(Net::HTTPSuccess)
+    FileUtils.mkdir_p(data_dir)
+    File.write(cache_path, response.body)
+    return JSON.parse(response.body)
+  end
+
+  return JSON.parse(File.read(cache_path)) if File.exist?(cache_path)
+  {}
+rescue Exception
+  JSON.parse(File.read(cache_path)) rescue {}
 end
 
 # Create a configuration object.
@@ -767,36 +796,29 @@ def output_log(action, scheduler, **details)
   puts [base, extra].reject(&:empty?).join(" : ")
 end
 
-# Return available modules matching a name, for the module_load widget.
+# Return available module versions for the module_load widget.
+# Looks up the given module name in the cached NeSI modules-list JSON and returns
+# full "Name/version" strings, default version first.
 get "/_module_avail" do
   content_type :json
   mod = params[:module].to_s.strip
-  return [].to_json if mod.empty? || mod.match?(/[;&|`$\n\r]/)
+  return [].to_json if mod.empty?
 
-  conf        = create_conf
-  cluster     = params[:cluster].to_s.strip
-  ssh_wrapper = if conf.key?("clusters")
-                  conf["ssh_wrapper"][cluster] || conf["ssh_wrapper"].values.compact.first
-                else
-                  conf["ssh_wrapper"]
-                end
+  conf       = create_conf
+  all_mods   = fetch_modules_list(conf["data_dir"])
+  entry      = all_mods.find { |k, _| k.casecmp(mod).zero? }
+  return [].to_json unless entry
 
-  safe_mod = Shellwords.escape(mod)
-  cmd = if ssh_wrapper.to_s.empty?
-          "bash -lc 'module -t avail #{safe_mod} 2>&1'"
-        else
-          "#{ssh_wrapper} 'module -t avail #{safe_mod} 2>&1'"
-        end
+  name, data    = entry
+  versions      = Array(data["versions"])
+  default_ver   = data["default"].to_s.strip
+  default_full  = default_ver.empty? ? nil : "#{name}/#{default_ver}"
 
-  stdout, _stderr, _status = Open3.capture3(cmd)
+  full = versions.map { |v| "#{name}/#{v}" }
+  sorted = full.sort.reverse  # newest first by string sort
+  sorted.unshift(default_full) if default_full && sorted.delete(default_full)
 
-  modules = stdout.lines.filter_map do |line|
-    line = line.strip.gsub(/\(.*?\)/, "").strip
-    next if line.empty? || line.start_with?("/") || line =~ /\A[-=:\s]+\z/
-    line
-  end.uniq.sort
-
-  modules.to_json
+  sorted.to_json
 rescue Exception
   [].to_json
 end

@@ -1,0 +1,6 @@
+---
+name: Circos
+category: Application
+description: |
+  Package for visualizing data in a circular layout - this makes Circos ideal for exploring
+   relationships between objects or positions.

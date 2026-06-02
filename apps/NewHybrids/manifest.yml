@@ -1,0 +1,6 @@
+---
+name: NewHybrids
+category: Biology
+description: |
+  This implements a Gibbs sampler to estimate the posterior probability that genetically sampled
+  individuals fall into each of a set of user-defined hybrid categories.

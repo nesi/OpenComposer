@@ -1,0 +1,4 @@
+---
+name: miniasm
+category: Biology
+description: Fast OLC-based de novo assembler for noisy long reads.

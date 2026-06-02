@@ -1,0 +1,4 @@
+---
+name: DeepLabCut
+category: Biology
+description: Efficient method for 3D markerless pose estimation based on transfer learning with deep neural networks.

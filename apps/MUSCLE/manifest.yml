@@ -1,0 +1,7 @@
+---
+name: MUSCLE
+category: Biology
+description: |
+  MUSCLE is a program for creating multiple alignments of amino acid or nucleotide
+  sequences. A range of options is provided that give you the choice of optimizing accuracy, speed,
+  or some compromise between the two.

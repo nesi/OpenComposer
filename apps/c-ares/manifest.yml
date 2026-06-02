@@ -1,0 +1,4 @@
+---
+name: c-ares
+category: Application
+description: c-ares is a C library for asynchronous DNS requests (including name resolves)

@@ -1,0 +1,4 @@
+---
+name: libepoxy
+category: Application
+description: Library for handling OpenGL function pointer management

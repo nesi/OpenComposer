@@ -1,0 +1,8 @@
+---
+name: VCFtools
+category: Biology
+description: |
+  The aim of VCFtools is to provide 
+   methods for working with VCF files: validating, 
+   merging, comparing and calculate some basic population
+   genetic statistics.

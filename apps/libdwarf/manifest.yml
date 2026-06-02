@@ -1,0 +1,6 @@
+---
+name: libdwarf
+category: Application
+description: |
+  The DWARF Debugging Information Format is of interest to programmers working on compilers
+  and debuggers

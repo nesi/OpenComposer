@@ -1,0 +1,4 @@
+---
+name: DeePMD-plugin
+category: Application
+description: Deep learning-based models of interatomic potential energy and force field, as a LAMMPS plugin.

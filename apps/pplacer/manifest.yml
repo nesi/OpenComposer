@@ -1,0 +1,6 @@
+---
+name: pplacer
+category: Biology
+description: |
+  Places query sequences on a fixed reference phylogenetic tree 
+  to maximize phylogenetic likelihood or posterior probability according to a reference alignment

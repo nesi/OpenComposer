@@ -1,0 +1,6 @@
+---
+name: BCL-Convert
+category: Biology
+description: |
+  Converts per cycle binary data output by Illumina sequencers containing basecall
+  files and quality scores to per read FASTQ files

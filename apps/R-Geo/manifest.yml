@@ -1,0 +1,6 @@
+---
+name: R-Geo
+category: Earth Science
+description: |
+  R packages for Geometric and Geospatial data which depend 
+  on GEOS and/or GDAL.

@@ -1,0 +1,6 @@
+---
+name: somalier
+category: Biology
+description: |
+  extract informative sites, evaluate relatedness, and 
+  perform quality-control on BAM/CRAM/BCF/VCF/GVCF

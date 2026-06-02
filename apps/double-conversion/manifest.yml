@@ -1,0 +1,4 @@
+---
+name: double-conversion
+category: Application
+description: Efficient binary-decimal and decimal-binary conversion routines for IEEE doubles.

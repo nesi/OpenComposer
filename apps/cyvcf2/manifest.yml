@@ -1,0 +1,4 @@
+---
+name: cyvcf2
+category: Biology
+description: cython + htslib == fast VCF and BCF processing

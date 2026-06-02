@@ -1,0 +1,4 @@
+---
+name: uv
+category: Application
+description: An extremely fast Python package installer and resolver, written in Rust.

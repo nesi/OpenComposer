@@ -1,0 +1,4 @@
+---
+name: libgpuarray
+category: Mathematics
+description: Arrays on GPU device memory, for Theano

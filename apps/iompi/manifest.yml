@@ -1,0 +1,6 @@
+---
+name: iompi
+category: Application
+description: |
+  GNU Compiler Collection (GCC) based compiler toolchain,
+   including OpenMPI for MPI support.

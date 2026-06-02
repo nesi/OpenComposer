@@ -1,0 +1,6 @@
+---
+name: entrez-direct
+category: Biology
+description: |
+  an advanced method for accessing the NCBI's set of interconnected databases 
+  such as publication, sequence, structure, gene, variation, expression, etc.

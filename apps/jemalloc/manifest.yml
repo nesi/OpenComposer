@@ -1,0 +1,6 @@
+---
+name: jemalloc
+category: Application
+description: |
+  A general purpose malloc(3) implementation that emphasizes fragmentation avoidance and
+   scalable concurrency support.

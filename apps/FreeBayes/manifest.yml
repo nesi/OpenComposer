@@ -1,0 +1,4 @@
+---
+name: FreeBayes
+category: Biology
+description: Genetic variant detector designed to find polymorphisms smaller than the length of a short-read sequencing alignment.

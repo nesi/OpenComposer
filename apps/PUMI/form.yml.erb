@@ -1,0 +1,40 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = YAML.load_file(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['pumi_module'] = {
+      'widget' => 'module_load',
+      'module' => "PUMI",
+      'label'  => "PUMI Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = <<~'SCRIPT'
+  #!/bin/bash -e
+  #SBATCH --job-name=#{OC_JOB_NAME}
+  #SBATCH --partition=#{partition}
+  #SBATCH --ntasks=#{cores_simple}
+  #SBATCH --ntasks=#{cores_advanced_1}
+  #SBATCH --cpus-per-task=#{cores_advanced_2}
+  #SBATCH --nodes=#{number_of_nodes}
+  #SBATCH --mem=#{memory_total_gb}G
+  #SBATCH --mem-per-cpu=#{memory_per_cpu_gb}G
+  #SBATCH --time=#{time_days_hours_minutes_1}-#{zeropadding(time_days_hours_minutes_2,2)}:#{zeropadding(time_days_hours_minutes_3,2)}:#{zeropadding(time_days_hours_minutes_4,2)}
+  #SBATCH --array=#{array_1}-#{array_2}:#{array_3}
+  #SBATCH --qos=#{testing}
+  #SBATCH --profile=#{profiling}
+  #SBATCH --acctg-freq=#{profiling_time}
+  #SBATCH --mail-type=#{mail_option}
+
+  module purge
+  module load #{pumi_module}
+
+SCRIPT
+%>
+<%= base.to_yaml -%>

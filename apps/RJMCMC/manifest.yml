@@ -1,0 +1,4 @@
+---
+name: RJMCMC
+category: Application
+description: This library provides routines for running Reversible Jump Monte-Carlo Markov chains for 1-D and 2-D spatial regression problems.

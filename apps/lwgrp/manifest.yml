@@ -1,0 +1,6 @@
+---
+name: lwgrp
+category: Application
+description: |
+  The light-weight group library defines data structures and collective operations to
+  group MPI processes as an ordered set.

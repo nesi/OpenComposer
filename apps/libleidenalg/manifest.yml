@@ -1,0 +1,4 @@
+---
+name: libleidenalg
+category: Application
+description: Implements the Leiden algorithm in C++

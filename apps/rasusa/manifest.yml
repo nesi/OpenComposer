@@ -1,0 +1,4 @@
+---
+name: rasusa
+category: Biology
+description: Randomly subsample sequencing reads to a specified coverage.

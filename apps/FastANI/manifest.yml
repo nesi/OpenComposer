@@ -1,0 +1,6 @@
+---
+name: FastANI
+category: Biology
+description: |
+  Tool for fast alignment-free computation of
+   whole-genome Average Nucleotide Identity (ANI).

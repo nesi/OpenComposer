@@ -1,0 +1,4 @@
+---
+name: NCO
+category: Application
+description: manipulates and analyzes data stored in netCDF-accessible formats, including DAP, HDF4, and HDF5

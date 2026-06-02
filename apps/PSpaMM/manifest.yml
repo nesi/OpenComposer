@@ -1,0 +1,4 @@
+---
+name: PSpaMM
+category: Application
+description: Generates inline-Assembly for sparse Matrix Multiplication.

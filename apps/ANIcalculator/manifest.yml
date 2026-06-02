@@ -1,0 +1,6 @@
+---
+name: ANIcalculator
+category: Biology
+description: |
+  Calculate the bidirectional average nucleotide identity (gANI) and 
+  Alignment Fraction (AF) between two genomes.

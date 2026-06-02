@@ -1,0 +1,7 @@
+---
+name: ProtHint
+category: Biology
+description: |
+  Pipeline for predicting and scoring hints (in the form of introns, start and
+   stop codons) in the genome of interest by mapping and spliced aligning predicted genes to a database of
+   reference protein sequences.

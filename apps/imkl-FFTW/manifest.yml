@@ -1,0 +1,4 @@
+---
+name: imkl-FFTW
+category: Application
+description: FFTW interfaces using Intel oneAPI Math Kernel Library

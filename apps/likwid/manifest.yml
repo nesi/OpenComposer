@@ -1,0 +1,6 @@
+---
+name: likwid
+category: Application
+description: |
+  Command line tools for Linux to support programmers in developing high
+   performance multi threaded programs.

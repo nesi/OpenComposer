@@ -1,0 +1,4 @@
+---
+name: libpciaccess
+category: Application
+description: Generic PCI access library.

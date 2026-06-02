@@ -1,0 +1,6 @@
+---
+name: slow5tools
+category: Application
+description: |
+  Toolkit for converting (FAST5 <-> SLOW5), compressing, viewing, indexing
+   and manipulating data in SLOW5 format.

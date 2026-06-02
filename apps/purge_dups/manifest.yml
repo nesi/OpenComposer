@@ -1,0 +1,4 @@
+---
+name: purge_dups
+category: Biology
+description: purge haplotigs and overlaps in an assembly based on read depth

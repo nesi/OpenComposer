@@ -1,0 +1,4 @@
+---
+name: h5pp
+category: Application
+description: A simple C++17 wrapper for HDF5.

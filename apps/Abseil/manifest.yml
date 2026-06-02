@@ -1,0 +1,6 @@
+---
+name: Abseil
+category: Application
+description: |
+  Collection of C++ library code designed to augment the
+  C++ standard library.

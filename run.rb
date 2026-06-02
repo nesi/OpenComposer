@@ -72,7 +72,7 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_END_TIME"        => "End"
 }.freeze
 CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "sge_root"].freeze
-MODULES_LIST_URL ||= "https://raw.githubusercontent.com/nesi/modules-list/main/.module-list-generated.json"
+MODULES_LIST_URL ||= "https://raw.githubusercontent.com/nesi/modules-list/main/module-list.json"
 MODULES_CACHE_TTL ||= 86_400  # 24 hours
 SCHEDULER_TO_GENERIC_APP ||= {
   "slurm"       => "Slurm",

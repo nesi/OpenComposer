@@ -1,0 +1,6 @@
+---
+name: FreeFEM
+category: Mathematics
+description: |
+  FreeFEM offers a fast interpolation algorithm and a language for the manipulation
+   of data on multiple meshes.

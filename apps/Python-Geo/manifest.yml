@@ -1,0 +1,4 @@
+---
+name: Python-Geo
+category: Earth Science
+description: Python packages for geospatial data I/O, mostly based on the OSGEO libraries GDAL and OGR

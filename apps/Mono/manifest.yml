@@ -1,0 +1,6 @@
+---
+name: Mono
+category: Application
+description: |
+  An open source, cross-platform, implementation of C# and the CLR that is
+   binary compatible with Microsoft.NET.

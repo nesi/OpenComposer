@@ -1,0 +1,4 @@
+---
+name: haplocheck
+category: Biology
+description: Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content

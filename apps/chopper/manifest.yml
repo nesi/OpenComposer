@@ -1,0 +1,4 @@
+---
+name: chopper
+category: Biology
+description: Rust implementation of NanoFilt+NanoLyse

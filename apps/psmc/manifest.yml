@@ -1,0 +1,4 @@
+---
+name: psmc
+category: Biology
+description: Infers population size history from a diploid sequence using the PSMC model.

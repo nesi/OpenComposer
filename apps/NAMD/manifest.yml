@@ -1,0 +1,6 @@
+---
+name: NAMD
+category: Biology
+description: |
+  NAMD is a parallel molecular dynamics code designed for high-performance simulation of
+   large biomolecular systems.

@@ -1,0 +1,4 @@
+---
+name: parallel-fastq-dump
+category: Biology
+description: parallel fastq-dump wrapper

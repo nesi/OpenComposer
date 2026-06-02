@@ -1,0 +1,4 @@
+---
+name: lp_solve
+category: Mathematics
+description: Mixed Integer Linear Programming (MILP) solver.

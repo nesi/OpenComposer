@@ -1,0 +1,4 @@
+---
+name: slow5-dorado
+category: Application
+description: "Fork of nanopore's Dorado which supports S/BLOW5."

@@ -1,0 +1,4 @@
+---
+name: nf-core
+category: Application
+description: Python package with helper tools for the nf-core community.

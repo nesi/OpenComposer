@@ -1,0 +1,6 @@
+---
+name: gffread
+category: Biology
+description: |
+  GFF/GTF parsing utility providing format conversions,
+  region filtering, FASTA sequence extraction and more.

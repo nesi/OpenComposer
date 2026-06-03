@@ -260,8 +260,8 @@
               <% end %>
               <% if @conf["show_open_ondemand"] %>
                 <li class="nav-item d-flex align-items-center">
-                  <a target="_blank" href="<%= @my_ood_url %>" class="nav-link py-0 h-100 d-flex align-items-center">
-                    <%= ERB::Util.h(@conf["open_ondemand_label"]) %>
+                  <a target="_blank" href="<%= @my_ood_url %>" class="nav-link py-0">
+                    <span style="display: inline-block; vertical-align: middle;"><%= ERB::Util.h(@conf["open_ondemand_label"]) %></span>
                   </a>
                 </li>
               <% end %>

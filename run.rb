@@ -333,6 +333,7 @@ end
 # Replace with cached value.
 def replace_with_cache(form, cache)
   form.each do |key, value|
+    next unless value.is_a?(Hash)
     value["value"] = case value["widget"]
                      when "number", "text", "email"
                        if value.key?("size")

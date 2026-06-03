@@ -869,6 +869,7 @@ HTML
       end
 
       form.each do |k, v|
+        next unless v.is_a?(Hash)
         if key =~ /^set-#{attr}-#{k}$/
           elements.push({"attr" => attr, "key" => k, "value" => value})
         elsif ["number", "text", "email"].include?(v["widget"]) && key =~ /^set-#{attr}-#{k}_\d+$/
@@ -897,6 +898,7 @@ HTML
       next if option.is_a?(Hash) # Skip if the option is a Hash
 
       form.each do |k, v|
+        next unless v.is_a?(Hash)
         if option =~ /^disable-#{k}$/
           disable_elements.push({"key" => k})
         elsif option =~ /^enable-#{k}$/
@@ -934,6 +936,7 @@ HTML
   # For radio or checkbox widgets, the size is determined by the number of options.
   # For other widgets, it checks for a 'size' attribute.
   def get_target_size(target_key, form)
+    return "null" unless form[target_key].is_a?(Hash)
     widget = form[target_key]["widget"]
 
     if ["radio", "checkbox"].include?(widget)

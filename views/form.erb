@@ -36,9 +36,19 @@
     <!-- Application Info Section -->
     <div class="col pt-2 bg-gradient border-bottom" style="background:<%= @conf['description_color'] %>;">
       <h3>
-        <a href="<%= @script_name %>/<%= @manifest['dirname'] %>" class="fw-semibold" style="color: inherit; text-decoration: none;">
-          <%= @manifest['name'] %>
-        </a>
+        <div class="d-flex align-items-center gap-2">
+          <% if @manifest['icon'].to_s.strip != '' %>
+            <% _is_bi_fa, _icon_src = get_icon_path(@manifest['dirname'], @manifest['icon']) %>
+            <% if _is_bi_fa %>
+              <i class="<%= ERB::Util.h(@manifest['icon']) %>" style="font-size:2.5rem; width:48px; height:48px; line-height:1; flex-shrink:0;"></i>
+            <% else %>
+              <img src="<%= ERB::Util.h(_icon_src.to_s) %>" alt="" height="48" style="object-fit:contain; flex-shrink:0;">
+            <% end %>
+          <% end %>
+          <a href="<%= @script_name %>/<%= @manifest['dirname'] %>" class="fw-semibold" style="color: inherit; text-decoration: none;">
+            <%= @manifest['name'] %>
+          </a>
+        </div>
       </h3>
       <input type="hidden" name="<%= JOB_APP_NAME %>" value="<%= @manifest['name'] %>">
       <input type="hidden" name="<%= JOB_DIR_NAME %>" value="<%= @dir_name %>">

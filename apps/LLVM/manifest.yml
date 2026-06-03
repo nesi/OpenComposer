@@ -1,8 +1,0 @@
----
-name: LLVM
-category: Others
-description: |
-  The LLVM Core libraries provide a modern source- and target-independent
-  optimizer, along with code generation support.
-homepage: https://llvm.org/
-icon: icon.png

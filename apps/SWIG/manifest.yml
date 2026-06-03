@@ -1,8 +1,0 @@
----
-name: SWIG
-category: Others
-description: |
-  SWIG is a software development tool that connects programs written in C and C++ with
-   a variety of high-level programming languages.
-homepage: http://www.swig.org/
-icon: icon.png

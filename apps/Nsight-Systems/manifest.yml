@@ -1,9 +1,0 @@
----
-name: Nsight-Systems
-category: Others
-description: |
-  NVIDIA® Nsight™ Systems is a system-wide performance analysis tool designed to visualize an
-  application’s algorithm, help you select the largest opportunities to optimize, and tune to scale efficiently across
-  any quantity of CPUs and GPUs
-homepage: https://developer.nvidia.com/nsight-compute
-icon: icon.png

@@ -1,6 +1,0 @@
----
-name: GST-plugins-base
-category: Visualisation
-description: GStreamer plug-ins and elements.
-homepage: https://gstreamer.freedesktop.org/
-icon: icon.png

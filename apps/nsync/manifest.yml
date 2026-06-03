@@ -1,6 +1,0 @@
-category: Others
-description: nsync is a C library that exports various synchronization primitives,
-  such as mutexes
-homepage: https://github.com/google/nsync
-icon: icon.png
-name: nsync

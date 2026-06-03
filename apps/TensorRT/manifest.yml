@@ -1,6 +1,0 @@
----
-name: TensorRT
-category: Others
-description: NVIDIA TensorRT is a platform for high-performance deep learning inference
-homepage: https://developer.nvidia.com/tensorrt
-icon: icon.png

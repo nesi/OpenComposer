@@ -1,8 +1,0 @@
----
-name: FreeXL
-category: Others
-description: |
-  FreeXL is an open source library to extract valid data from within an
-   Excel (.xls) spreadsheet.
-homepage: https://www.gaia-gis.it/fossil/freexl/index
-icon: icon.png

@@ -1,6 +1,0 @@
----
-name: gcloud
-category: Others
-description: Libraries and tools for interacting with Google Cloud products and services.
-homepage: https://cloud.google.com/sdk
-icon: icon.png

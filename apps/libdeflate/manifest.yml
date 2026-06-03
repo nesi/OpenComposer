@@ -1,6 +1,0 @@
----
-name: libdeflate
-category: Others
-description: Heavily optimized library for DEFLATE/zlib/gzip compression and decompression.
-homepage: https://github.com/ebiggers/libdeflate
-icon: icon.png

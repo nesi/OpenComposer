@@ -1,5 +1,0 @@
-category: Others
-description: R functions that simplify and expedite common tasks in package development.
-homepage: https://github.com/r-lib/devtools
-icon: icon.png
-name: devtools

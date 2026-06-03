@@ -1,7 +1,0 @@
----
-name: DeePMD-plugin
-category: Others
-description: Deep learning-based models of interatomic potential energy and force
-  field, as a LAMMPS plugin.
-homepage: https://docs.deepmodeling.com/projects/deepmd
-icon: icon.png

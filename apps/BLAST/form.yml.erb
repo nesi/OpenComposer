@@ -10,6 +10,11 @@ base['form'].each do |k, v|
       'module' => "BLAST",
       'label'  => "BLAST Module"
     }
+    new_form['blastdb_module'] = {
+      'widget' => 'module_load',
+      'module' => "BLASTDB",
+      'label'  => "BLASTDB Module"
+    }
   end
   new_form[k] = v
 end
@@ -34,6 +39,7 @@ base['script'] = <<~'SCRIPT'
 
   module purge
   module load #{blast_module}
+  module load #{blastdb_module}
 
 SCRIPT
 %>

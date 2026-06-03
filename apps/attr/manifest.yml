@@ -1,6 +1,0 @@
----
-name: attr
-category: Others
-description: Commands for Manipulating Filesystem Extended Attributes
-homepage: https://savannah.nongnu.org/projects/attr
-icon: icon.png

@@ -1,6 +1,0 @@
----
-name: spdlog
-category: Others
-description: Fast C++ logging library.
-homepage: https://github.com/gabime/spdlog
-icon: icon.jpg

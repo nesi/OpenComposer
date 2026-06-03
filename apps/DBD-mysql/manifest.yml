@@ -1,6 +1,0 @@
----
-name: DBD-mysql
-category: Others
-description: Perl binding for MySQL
-homepage: https://metacpan.org/pod/distribution/DBD-mysql/lib/DBD/mysql.pm
-icon: icon.png

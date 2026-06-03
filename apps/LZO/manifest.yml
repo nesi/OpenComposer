@@ -1,6 +1,0 @@
----
-name: LZO
-category: Others
-description: Portable lossless data compression library
-homepage: http://www.oberhumer.com/opensource/lzo/
-icon: icon.png

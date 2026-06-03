@@ -1,9 +1,0 @@
-category: Visualisation
-description: "Graphviz is open source graph visualization software. Graph visualization\n\
-  \ is a way of representing structural information as diagrams of\n abstract graphs\
-  \ and networks. It has important applications in networking,\n bioinformatics, \
-  \ software engineering, database and web design, machine learning,\n and in visual\
-  \ interfaces for other technical domains.\n"
-homepage: https://www.graphviz.org/
-icon: icon.png
-name: Graphviz

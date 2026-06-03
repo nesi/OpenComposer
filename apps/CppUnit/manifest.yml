@@ -1,6 +1,0 @@
----
-name: CppUnit
-category: Others
-description: C++ port of the JUnit framework for unit testing.
-homepage: http://freedesktop.org/wiki/Software/cppunit
-icon: icon.png

@@ -1,6 +1,0 @@
----
-name: pv
-category: Others
-description: Monitors the progress of data through a unix pipeline.
-homepage: http://www.ivarch.com/programs/pv.shtml
-icon: icon.png

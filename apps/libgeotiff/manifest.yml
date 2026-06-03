@@ -1,7 +1,0 @@
----
-name: libgeotiff
-category: Earth Science
-description: Library for reading and writing coordinate system information from/to
-  GeoTIFF files
-homepage: https://github.com/OSGeo/libgeotiff/
-icon: icon.png

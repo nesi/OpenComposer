@@ -1,8 +1,0 @@
----
-name: python-igraph
-category: Others
-description: |
-  Python interface to the igraph high performance graph library, primarily aimed at complex network
-   research and analysis.
-homepage: https://igraph.org/python
-icon: icon.png

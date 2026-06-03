@@ -1,6 +1,0 @@
----
-name: Pluto
-category: Others
-description: Simple, reactive programming environment for the Julia Language.
-homepage: https://plutojl.org/
-icon: icon.png

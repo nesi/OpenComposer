@@ -1,8 +1,0 @@
----
-name: dtcmp
-category: Others
-description: |
-  DTCMP Library provides pre-defined and user-defined
-  comparison operations to compare the values of two items which can be arbitrary MPI datatypes.
-homepage: https://github.com/LLNL/dtcmp
-icon: icon.jpg

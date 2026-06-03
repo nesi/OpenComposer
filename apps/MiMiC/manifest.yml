@@ -1,10 +1,5 @@
 category: Chemistry
-description: 'MiMiC: A Framework for Multiscale Modeling in Computational Chemistry
-homepage: https://gitlab.com/MiMiC-projects
-
-
-  This package includes mimicpy
-
-  '
+description: 'MiMiC: A Framework for Multiscale Modeling in Computational Chemistry. This package includes mimicpy'
 icon: icon.png
 name: MiMiC
+homepage: https://gitlab.com/MiMiC-projects

@@ -1,5 +1,0 @@
-category: Others
-description: A std::streambuf wrapper for compression formats.
-homepage: https://github.com/jonathonl/shrinkwrap
-icon: icon.png
-name: shrinkwrap

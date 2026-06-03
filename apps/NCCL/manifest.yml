@@ -1,8 +1,0 @@
----
-name: NCCL
-category: Others
-description: |
-  The NVIDIA Collective Communications Library (NCCL) implements multi-GPU and multi-node collective
-  communication primitives that are performance optimized for NVIDIA GPUs.
-homepage: https://developer.nvidia.com/nccl
-icon: icon.png

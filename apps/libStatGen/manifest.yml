@@ -1,6 +1,0 @@
----
-name: libStatGen
-category: Biology
-description: Set of classes for creating statistical genetic programs.
-homepage: https://genome.sph.umich.edu/wiki/C++_Library:_libStatGen
-icon: icon.jpg

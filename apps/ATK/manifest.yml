@@ -1,7 +1,0 @@
----
-name: ATK
-category: Others
-description: ATK provides the set of accessibility interfaces that are implemented
-  by other toolkits and applications.
-homepage: https://developer.gnome.org/atk/
-icon: icon.png

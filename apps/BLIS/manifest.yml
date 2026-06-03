@@ -1,8 +1,0 @@
----
-name: BLIS
-category: Mathematics
-description: |
-  BLIS is a portable software framework for instantiating high-performance
-  BLAS-like dense linear algebra libraries.
-homepage: https://developer.amd.com/amd-cpu-libraries/blas-library/
-icon: icon.png

@@ -1,9 +1,0 @@
----
-name: DB
-category: Others
-description: |
-  Berkeley DB enables the development of custom data management
-   solutions, without the overhead traditionally associated with such custom
-   projects.
-homepage: https://www.oracle.com/technetwork/products/berkeleydb
-icon: icon.png

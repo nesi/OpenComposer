@@ -1,7 +1,6 @@
 category: Biology
-description: "Basic Local Alignment Search Tool, or BLAST, is an algorithm\n for comparing\
-  \ primary biological sequence information, such as the amino-acid\n sequences of\
-  \ different proteins or the nucleotides of DNA sequences.\n"
+description: "Basic Local Alignment Search Tool (BLAST) for comparing biological sequences.\
+  \ Loads both the BLAST tool and the BLASTDB sequence databases.\n"
 homepage: http://blast.ncbi.nlm.nih.gov/
 icon: icon.png
 name: BLAST

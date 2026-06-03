@@ -1,5 +1,4 @@
----
-name: ModDotPlot
 category: Biology
 description: Novel dot plot visualization tool used to view tandem repeats
 icon: icon.jpg
+name: ModDotPlot

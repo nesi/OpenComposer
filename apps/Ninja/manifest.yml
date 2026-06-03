@@ -1,5 +1,4 @@
----
-name: Ninja
 category: Others
 description: Ninja is a small build system with a focus on speed.
-icon: icon.jpg
+icon: icon.png
+name: Ninja

@@ -2,3 +2,4 @@
 name: SIONlib
 category: Others
 description: Scalable I/O library for parallel access to task-local files.
+icon: icon.png

@@ -6,3 +6,4 @@ description: |
    - Vectorize & thread code or performance “dies”
    - Easy workflow + data + tips = faster code faster
    - Prioritize, Prototype & Predict performance gain
+icon: icon.png

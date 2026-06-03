@@ -1,5 +1,5 @@
----
-name: PRANK
 category: Biology
-description: Probabilistic multiple alignment program for DNA, codon and amino-acid sequences. .
-icon: icon.jpg
+description: Probabilistic multiple alignment program for DNA, codon and amino-acid
+  sequences. .
+icon: icon.png
+name: PRANK

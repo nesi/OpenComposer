@@ -1,7 +1,5 @@
----
-name: Structure
 category: Biology
-description: |
-  The program structure is a free software package for using multi-locus genotype data to investigate
-   population structure.
+description: "The program structure is a free software package for using multi-locus\
+  \ genotype data to investigate\n population structure.\n"
 icon: icon.png
+name: Structure

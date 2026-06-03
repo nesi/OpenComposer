@@ -4,3 +4,4 @@ category: Biology
 description: |
   Winnowmap is a long-read mapping algorithm, and a result of our exploration
    into superior minimizer sampling techniques.
+icon: icon.png

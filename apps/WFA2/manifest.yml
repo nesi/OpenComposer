@@ -1,8 +1,6 @@
----
-name: WFA2
 category: Others
-description: |
-  The wavefront alignment (WFA) algorithm is an exact
-   gap-affine algorithm that takes advantage of homologous regions
-   between the sequences to accelerate the alignment process.
-icon: icon.png
+description: "The wavefront alignment (WFA) algorithm is an exact\n gap-affine algorithm\
+  \ that takes advantage of homologous regions\n between the sequences to accelerate\
+  \ the alignment process.\n"
+icon: icon.jpg
+name: WFA2

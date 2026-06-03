@@ -1,6 +1,7 @@
 ---
 name: SNVoter-NanoMethPhase
 category: Biology
-description: |
-  SNVoter - A top up tool to enhance SNV calling from Nanopore sequencing data & 
-  NanoMethPhase - Phase long reads and CpG methylations from Oxford Nanopore Technologies.
+description: "SNVoter - A top up tool to enhance SNV calling from Nanopore sequencing
+  data & \nNanoMethPhase - Phase long reads and CpG methylations from Oxford Nanopore
+  Technologies.\n"
+icon: icon.png

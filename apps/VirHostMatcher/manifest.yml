@@ -1,4 +1,6 @@
 ---
 name: VirHostMatcher
 category: Biology
-description: Tools for computing various oligonucleotide frequency (ONF) based distance/dissimialrity measures.
+description: Tools for computing various oligonucleotide frequency (ONF) based distance/dissimialrity
+  measures.
+icon: icon.jpg

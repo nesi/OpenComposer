@@ -1,5 +1,4 @@
----
-name: yak
 category: Biology
 description: Yet another k-mer analyzer
-icon: icon.jpg
+icon: icon.png
+name: yak

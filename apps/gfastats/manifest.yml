@@ -1,4 +1,6 @@
 ---
 name: gfastats
 category: Biology
-description: single fast and exhaustive tool for summary statistics and simultaneous *fa* (fasta, fastq, gfa [.gz]) genome assembly file manipulation.
+description: single fast and exhaustive tool for summary statistics and simultaneous
+  *fa* (fasta, fastq, gfa [.gz]) genome assembly file manipulation.
+icon: icon.png

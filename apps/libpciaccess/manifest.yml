@@ -2,3 +2,4 @@
 name: libpciaccess
 category: Others
 description: Generic PCI access library.
+icon: icon.png

@@ -6,3 +6,4 @@ description: |
   a collection of Aspera tools for performing high-speed, secure data
   transfers from the command line. The Aspera CLI is for users and
   organizations who want to automate their transfer workflows.
+icon: icon.png

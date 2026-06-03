@@ -6,3 +6,4 @@ description: |
    It gives you sockets that carry atomic messages across various transports like in-process,
    inter-process, TCP, and multicast. You can connect sockets N-to-N with patterns like fanout,
    pub-sub, task distribution, and request-reply.
+icon: icon.png

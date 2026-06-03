@@ -1,5 +1,4 @@
----
-name: minigraph
 category: Biology
 description: Sequence-to-graph mapper and graph generator
-icon: icon.jpg
+icon: icon.png
+name: minigraph

@@ -4,3 +4,4 @@ category: Others
 description: |
   The LLVM Core libraries provide a modern source- and target-independent
   optimizer, along with code generation support.
+icon: icon.png

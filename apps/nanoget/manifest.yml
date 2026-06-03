@@ -1,4 +1,6 @@
 ---
 name: nanoget
 category: Biology
-description: Functions to extract information from Oxford Nanopore sequencing data and alignments
+description: Functions to extract information from Oxford Nanopore sequencing data
+  and alignments
+icon: icon.jpg

@@ -2,3 +2,4 @@
 name: NanoPlot
 category: Biology
 description: Plotting suite for Oxford Nanopore sequencing data and alignments.
+icon: icon.jpg

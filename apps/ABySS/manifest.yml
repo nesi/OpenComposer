@@ -1,4 +1,6 @@
 ---
 name: ABySS
 category: Biology
-description: Assembly By Short Sequences - a de novo, parallel, paired-end sequence assembler
+description: Assembly By Short Sequences - a de novo, parallel, paired-end sequence
+  assembler
+icon: icon.png

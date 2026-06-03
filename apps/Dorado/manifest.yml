@@ -1,5 +1,5 @@
----
-name: Dorado
 category: Biology
-description: High-performance, easy-to-use, open source basecaller for Oxford Nanopore reads.
+description: High-performance, easy-to-use, open source basecaller for Oxford Nanopore
+  reads.
 icon: icon.png
+name: Dorado

@@ -1,4 +1,6 @@
 ---
 name: bioawk
 category: Biology
-description: An extension to awk, adding the support of several common biological data formats
+description: An extension to awk, adding the support of several common biological
+  data formats
+icon: icon.png

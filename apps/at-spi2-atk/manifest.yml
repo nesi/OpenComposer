@@ -1,5 +1,4 @@
----
-name: at-spi2-atk
 category: Others
 description: AT-SPI 2 toolkit bridge
 icon: icon.png
+name: at-spi2-atk

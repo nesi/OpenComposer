@@ -1,6 +1,6 @@
 ---
 name: SeqAn3
 category: Biology
-description: |
-  C++ library of efficient algorithms and data structures for the 
-   analysis of sequences with the focus on biological data.
+description: "C++ library of efficient algorithms and data structures for the \n analysis
+  of sequences with the focus on biological data.\n"
+icon: icon.png

@@ -1,4 +1,6 @@
 ---
 name: KAT
 category: Biology
-description: The K-mer Analysis Toolkit (KAT) contains a number of tools that analyse and compare K-mer spectra.
+description: The K-mer Analysis Toolkit (KAT) contains a number of tools that analyse
+  and compare K-mer spectra.
+icon: icon.png

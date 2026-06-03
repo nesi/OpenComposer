@@ -10,3 +10,4 @@ description: |
   prevent serious security vulnerabilities (e.g. buffer overflows, string format
   attacks, conversion overflows/underflows, etc.) are available in the SafeString
   Library.
+icon: icon.png

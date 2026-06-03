@@ -1,4 +1,6 @@
 ---
 name: ModelTest-NG
 category: Biology
-description: Tool for selecting the best-fit model of evolution for DNA and protein alignments.
+description: Tool for selecting the best-fit model of evolution for DNA and protein
+  alignments.
+icon: icon.jpg

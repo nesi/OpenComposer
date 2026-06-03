@@ -2,3 +2,4 @@
 name: cromwell
 category: Workflow Management
 description: Workflow Management System geared towards scientific workflows.
+icon: icon.png

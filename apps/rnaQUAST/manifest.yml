@@ -1,4 +1,5 @@
----
-name: rnaQUAST
 category: Biology
-description: Tool for evaluating RNA-Seq assemblies using reference genome and gene database
+description: Tool for evaluating RNA-Seq assemblies using reference genome and gene
+  database
+icon: icon.png
+name: rnaQUAST

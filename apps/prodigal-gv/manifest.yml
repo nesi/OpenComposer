@@ -1,6 +1,6 @@
 ---
 name: prodigal-gv
 category: Biology
-description: |
-  A fork of Prodigal meant to improve gene calling 
-  for giant viruses and viruses that use alternative genetic codes.
+description: "A fork of Prodigal meant to improve gene calling \nfor giant viruses
+  and viruses that use alternative genetic codes.\n"
+icon: icon.png

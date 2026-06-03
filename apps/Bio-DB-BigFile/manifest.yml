@@ -2,3 +2,4 @@
 name: Bio-DB-BigFile
 category: Biology
 description: Read BigWig and BigBed genome feature databases
+icon: icon.png

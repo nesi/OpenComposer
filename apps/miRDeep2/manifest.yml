@@ -1,4 +1,6 @@
 ---
 name: miRDeep2
 category: Biology
-description: Completely overhauled tool which discovers microRNA genes by analyzing sequenced RNAs
+description: Completely overhauled tool which discovers microRNA genes by analyzing
+  sequenced RNAs
+icon: icon.png

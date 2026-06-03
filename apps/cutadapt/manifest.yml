@@ -7,3 +7,4 @@ description: |
    necessary when the read length of the sequencing machine
    is longer than the molecule that is sequenced, for
    example when sequencing microRNAs.
+icon: icon.png

@@ -4,3 +4,4 @@ category: Biology
 description: |
   An open-source bioinformatics pipeline for microbiome analysis
    from raw DNA sequencing data.
+icon: icon.png

@@ -1,6 +1,5 @@
----
-name: slow5tools
 category: Others
-description: |
-  Toolkit for converting (FAST5 <-> SLOW5), compressing, viewing, indexing
-   and manipulating data in SLOW5 format.
+description: "Toolkit for converting (FAST5 <-> SLOW5), compressing, viewing, indexing\n\
+  \ and manipulating data in SLOW5 format.\n"
+icon: icon.png
+name: slow5tools

@@ -2,3 +2,4 @@
 name: Mash
 category: Biology
 description: Fast genome and metagenome distance estimation using MinHash
+icon: icon.png

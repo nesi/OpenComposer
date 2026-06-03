@@ -1,4 +1,6 @@
 ---
 name: libiconv
 category: Others
-description: Libiconv converts from one character encoding to another through Unicode conversion
+description: Libiconv converts from one character encoding to another through Unicode
+  conversion
+icon: icon.png

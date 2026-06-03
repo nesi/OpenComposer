@@ -1,5 +1,4 @@
----
-name: Beagle
 category: Biology
 description: Package for phasing genotypes and for imputing ungenotyped markers.
-icon: icon.jpg
+icon: icon.png
+name: Beagle

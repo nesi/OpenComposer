@@ -1,4 +1,6 @@
 ---
 name: yajl
 category: Others
-description: Yet Another JSON Library. Why does the world need another C library for parsing JSON? Good question.
+description: Yet Another JSON Library. Why does the world need another C library for
+  parsing JSON? Good question.
+icon: icon.png

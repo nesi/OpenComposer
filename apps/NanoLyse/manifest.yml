@@ -2,3 +2,4 @@
 name: NanoLyse
 category: Biology
 description: Removing reads mapping to the lambda genome.
+icon: icon.jpg

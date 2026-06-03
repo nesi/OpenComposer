@@ -4,3 +4,4 @@ category: Biology
 description: |
   Takes RNA-seq (and similar data) and annotates reads
   to both genes & transposable elements.
+icon: icon.png

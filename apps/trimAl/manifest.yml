@@ -1,5 +1,4 @@
----
-name: trimAl
 category: Biology
 description: Tool for automated alignment trimming in large-scale phylogenetic analyses
-icon: icon.png
+icon: icon.jpg
+name: trimAl

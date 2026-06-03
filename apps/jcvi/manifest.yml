@@ -1,4 +1,6 @@
 ---
 name: jcvi
 category: Biology
-description: Collection of Python libraries to parse bioinformatics files, or perform computation related to assembly, annotation, and comparative genomics.
+description: Collection of Python libraries to parse bioinformatics files, or perform
+  computation related to assembly, annotation, and comparative genomics.
+icon: icon.jpg

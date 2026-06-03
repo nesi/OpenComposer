@@ -1,7 +1,5 @@
----
-name: MEGAHIT
 category: Biology
-description: |
-  An ultra-fast single-node solution for large and complex
-   metagenomics assembly via succinct de Bruijn graph
-icon: icon.png
+description: "An ultra-fast single-node solution for large and complex\n metagenomics\
+  \ assembly via succinct de Bruijn graph\n"
+icon: icon.jpg
+name: MEGAHIT

@@ -1,7 +1,5 @@
----
-name: Mono
 category: Others
-description: |
-  An open source, cross-platform, implementation of C# and the CLR that is
-   binary compatible with Microsoft.NET.
+description: "An open source, cross-platform, implementation of C# and the CLR that\
+  \ is\n binary compatible with Microsoft.NET.\n"
 icon: icon.png
+name: Mono

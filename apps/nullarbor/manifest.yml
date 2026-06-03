@@ -1,5 +1,4 @@
----
-name: nullarbor
 category: Biology
 description: Reads to report pipeline for bacterial isolate NGS data.
 icon: icon.jpg
+name: nullarbor

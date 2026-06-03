@@ -1,4 +1,4 @@
----
-name: csvtk
 category: Others
 description: A cross-platform, efficient and practical CSV/TSV toolkit
+icon: icon.jpg
+name: csvtk

@@ -2,3 +2,4 @@
 name: spdlog
 category: Others
 description: Fast C++ logging library.
+icon: icon.jpg

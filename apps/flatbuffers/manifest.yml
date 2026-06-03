@@ -1,4 +1,5 @@
 ---
 name: flatbuffers
 category: Others
-description: "FlatBuffers: Memory Efficient Serialization Library"
+description: 'FlatBuffers: Memory Efficient Serialization Library'
+icon: icon.png

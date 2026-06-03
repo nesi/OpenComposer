@@ -1,6 +1,6 @@
 ---
 name: CGAL
 category: Others
-description: |
-  The goal of the CGAL Open Source Project is to provide easy access to efficient 
-   and reliable geometric algorithms in the form of a C++ library.
+description: "The goal of the CGAL Open Source Project is to provide easy access to
+  efficient \n and reliable geometric algorithms in the form of a C++ library.\n"
+icon: icon.png

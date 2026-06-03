@@ -1,4 +1,6 @@
 ---
 name: NCL
 category: Visualisation
-description: NCL is an interpreted language designed specifically for scientific data analysis and visualization.
+description: NCL is an interpreted language designed specifically for scientific data
+  analysis and visualization.
+icon: icon.png

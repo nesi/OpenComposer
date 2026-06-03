@@ -1,9 +1,7 @@
----
-name: Clustal-Omega
 category: Biology
-description: |
-  Clustal Omega is a multiple sequence alignment
-   program for proteins. It produces biologically meaningful multiple
-   sequence alignments of divergent sequences. Evolutionary relationships
-   can be seen via viewing Cladograms or Phylograms
+description: "Clustal Omega is a multiple sequence alignment\n program for proteins.\
+  \ It produces biologically meaningful multiple\n sequence alignments of divergent\
+  \ sequences. Evolutionary relationships\n can be seen via viewing Cladograms or\
+  \ Phylograms\n"
 icon: icon.png
+name: Clustal-Omega

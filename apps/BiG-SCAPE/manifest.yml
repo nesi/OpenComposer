@@ -1,4 +1,6 @@
 ---
 name: BiG-SCAPE
 category: Biology
-description: Constructs sequence similarity networks of Biosynthetic Gene Clusters (BGCs) and groups them into Gene Cluster Families (GCFs).
+description: Constructs sequence similarity networks of Biosynthetic Gene Clusters
+  (BGCs) and groups them into Gene Cluster Families (GCFs).
+icon: icon.png

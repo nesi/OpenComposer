@@ -4,3 +4,4 @@ category: Others
 description: |
   DTCMP Library provides pre-defined and user-defined
   comparison operations to compare the values of two items which can be arbitrary MPI datatypes.
+icon: icon.jpg

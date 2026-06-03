@@ -2,3 +2,4 @@
 name: tabixpp
 category: Biology
 description: C++ wrapper to tabix indexer
+icon: icon.png

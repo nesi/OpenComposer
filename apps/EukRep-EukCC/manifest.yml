@@ -4,3 +4,4 @@ category: Biology
 description: |
   Completeness and contamination estimator for metagenomic assembled microbial eukaryotic genomes.
   Also condatains smetana, carveme and memote .
+icon: icon.png

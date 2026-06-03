@@ -1,4 +1,5 @@
 ---
 name: slow5-dorado
 category: Others
-description: "Fork of nanopore's Dorado which supports S/BLOW5."
+description: Fork of nanopore's Dorado which supports S/BLOW5.
+icon: icon.jpg

@@ -1,4 +1,4 @@
----
-name: SPAdes
 category: Biology
 description: Genome assembler for single-cell and isolates data sets
+icon: icon.png
+name: SPAdes

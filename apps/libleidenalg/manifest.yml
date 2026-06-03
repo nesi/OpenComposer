@@ -2,3 +2,4 @@
 name: libleidenalg
 category: Others
 description: Implements the Leiden algorithm in C++
+icon: icon.png

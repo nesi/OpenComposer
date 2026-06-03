@@ -1,4 +1,6 @@
 ---
 name: REViewer
 category: Biology
-description: Tool for visualizing alignments of reads in regions containing tandem repeats
+description: Tool for visualizing alignments of reads in regions containing tandem
+  repeats
+icon: icon.jpg

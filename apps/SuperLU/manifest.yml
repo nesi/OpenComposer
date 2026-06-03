@@ -2,3 +2,4 @@
 name: SuperLU
 category: Others
 description: Solution of large, sparse, nonsymmetric systems of linear equations.
+icon: icon.png

@@ -1,4 +1,6 @@
 ---
 name: GEOS
 category: Mathematics
-description: GEOS (Geometry Engine - Open Source) is a C++ port of the  Java Topology Suite (JTS)
+description: GEOS (Geometry Engine - Open Source) is a C++ port of the  Java Topology
+  Suite (JTS)
+icon: icon.png

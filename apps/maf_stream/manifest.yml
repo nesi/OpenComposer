@@ -1,5 +1,5 @@
----
-name: maf_stream
 category: Biology
-description: Collection of utilities to manipulate multiple alignments in the Multiple Alignment Format
-icon: icon.jpg
+description: Collection of utilities to manipulate multiple alignments in the Multiple
+  Alignment Format
+icon: icon.png
+name: maf_stream

@@ -1,7 +1,6 @@
----
-name: FastQ_Screen
 category: Biology
-description: |
-  FastQ Screen allows you to screen a library of sequences in FastQ
-   format against a set of sequence databases so you can see if the composition of the
-   library matches with what you expect.
+description: "FastQ Screen allows you to screen a library of sequences in FastQ\n\
+  \ format against a set of sequence databases so you can see if the composition of\
+  \ the\n library matches with what you expect.\n"
+icon: icon.jpg
+name: FastQ_Screen

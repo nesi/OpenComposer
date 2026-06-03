@@ -2,3 +2,4 @@
 name: samclip
 category: Others
 description: Filter SAM file for soft and hard clipped alignments.
+icon: icon.jpg

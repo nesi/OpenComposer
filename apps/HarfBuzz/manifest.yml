@@ -2,3 +2,4 @@
 name: HarfBuzz
 category: Others
 description: HarfBuzz is an OpenType text shaping engine.
+icon: icon.png

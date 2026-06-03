@@ -2,3 +2,4 @@
 name: gemmforge
 category: Others
 description: GPU-GEMM generator for the Discontinuous Galerkin method.
+icon: icon.png

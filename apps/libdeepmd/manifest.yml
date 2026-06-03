@@ -1,4 +1,6 @@
 ---
 name: libdeepmd
 category: Others
-description: Deep learning-based models of interatomic potential energy and force field
+description: Deep learning-based models of interatomic potential energy and force
+  field
+icon: icon.png

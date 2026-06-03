@@ -4,3 +4,4 @@ category: Biology
 description: |
   Tool set for simulating/evaluating SVs, merging and comparing SVs within and among samples,
    and includes various methods to reformat or summarize SVs.
+icon: icon.jpg

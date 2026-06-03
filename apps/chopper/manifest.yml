@@ -2,3 +2,4 @@
 name: chopper
 category: Biology
 description: Rust implementation of NanoFilt+NanoLyse
+icon: icon.jpg

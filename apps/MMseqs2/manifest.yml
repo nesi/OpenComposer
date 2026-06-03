@@ -1,5 +1,4 @@
----
-name: MMseqs2
 category: Biology
-description: "MMseqs2: ultra fast and sensitive search and clustering suite"
-icon: icon.gif
+description: 'MMseqs2: ultra fast and sensitive search and clustering suite'
+icon: icon.png
+name: MMseqs2

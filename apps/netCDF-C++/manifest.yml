@@ -1,7 +1,7 @@
 ---
 name: netCDF-C++
 category: Others
-description: |
-  NetCDF (network Common Data Form) is a set of software libraries 
-   and machine-independent data formats that support the creation, access, and sharing of array-oriented 
-   scientific data.
+description: "NetCDF (network Common Data Form) is a set of software libraries \n
+  and machine-independent data formats that support the creation, access, and sharing
+  of array-oriented \n scientific data.\n"
+icon: icon.png

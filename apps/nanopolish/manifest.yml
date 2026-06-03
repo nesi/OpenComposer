@@ -1,4 +1,6 @@
 ---
 name: nanopolish
 category: Biology
-description: Software package for signal-level analysis of Oxford Nanopore sequencing data.
+description: Software package for signal-level analysis of Oxford Nanopore sequencing
+  data.
+icon: icon.png

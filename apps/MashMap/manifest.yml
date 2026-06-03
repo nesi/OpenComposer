@@ -1,5 +1,5 @@
----
-name: MashMap
 category: Biology
-description: Implements a fast and approximate algorithm for computing local alignment boundaries between long DNA sequences
+description: Implements a fast and approximate algorithm for computing local alignment
+  boundaries between long DNA sequences
 icon: icon.png
+name: MashMap

@@ -1,4 +1,4 @@
----
-name: jq
 category: Others
 description: Lightweight and flexible command-line JSON processor.
+icon: icon.png
+name: jq

@@ -2,3 +2,4 @@
 name: Monocle3
 category: Biology
 description: An analysis toolkit for single-cell RNA-seq.
+icon: icon.png

@@ -2,3 +2,4 @@
 name: BBMap
 category: Biology
 description: BBMap short read aligner, and other bioinformatic tools.
+icon: icon.png

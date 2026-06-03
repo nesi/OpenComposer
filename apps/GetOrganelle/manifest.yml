@@ -1,5 +1,4 @@
----
-name: GetOrganelle
 category: Biology
 description: Toolkit to assemble organelle genome from genomic skimming data.
-icon: icon.png
+icon: icon.jpg
+name: GetOrganelle

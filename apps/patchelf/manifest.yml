@@ -1,4 +1,6 @@
 ---
 name: patchelf
 category: Others
-description: PatchELF is a small utility to modify the dynamic linker and RPATH of ELF executables.
+description: PatchELF is a small utility to modify the dynamic linker and RPATH of
+  ELF executables.
+icon: icon.png

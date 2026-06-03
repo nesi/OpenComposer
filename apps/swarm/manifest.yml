@@ -1,7 +1,12 @@
----
-name: swarm
 category: Biology
-description: |
-  A robust and fast clustering method for amplicon-based studies.
-  The purpose of swarm is to provide a novel clustering algorithm that handles massive sets of amplicons. Results of traditional clustering algorithms are strongly input-order dependent, and rely on an arbitrary global clustering threshold. swarm results are resilient to input-order changes and rely on a small local linking threshold d, representing the maximum number of differences between two amplicons.
+description: 'A robust and fast clustering method for amplicon-based studies.
+
+  The purpose of swarm is to provide a novel clustering algorithm that handles massive
+  sets of amplicons. Results of traditional clustering algorithms are strongly input-order
+  dependent, and rely on an arbitrary global clustering threshold. swarm results are
+  resilient to input-order changes and rely on a small local linking threshold d,
+  representing the maximum number of differences between two amplicons.
+
+  '
 icon: icon.jpg
+name: swarm

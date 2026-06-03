@@ -2,3 +2,4 @@
 name: MAFFT
 category: Biology
 description: Multiple sequence alignment program offering a range of methods.
+icon: icon.png

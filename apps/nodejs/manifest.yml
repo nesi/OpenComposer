@@ -1,9 +1,7 @@
----
-name: nodejs
 category: Language
-description: |
-  Node.js is a platform built on Chrome's JavaScript runtime
-   for easily building fast, scalable network applications. Node.js uses an
-   event-driven, non-blocking I/O model that makes it lightweight and efficient,
-   perfect for data-intensive real-time applications that run across distributed devices.
+description: "Node.js is a platform built on Chrome's JavaScript runtime\n for easily\
+  \ building fast, scalable network applications. Node.js uses an\n event-driven,\
+  \ non-blocking I/O model that makes it lightweight and efficient,\n perfect for\
+  \ data-intensive real-time applications that run across distributed devices.\n"
 icon: icon.png
+name: nodejs

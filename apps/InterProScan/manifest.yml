@@ -4,3 +4,4 @@ category: Biology
 description: |
   Sequence analysis application (nucleotide and protein sequences) that combines
    different protein signature recognition methods into one resource.
+icon: icon.png

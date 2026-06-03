@@ -5,3 +5,4 @@ description: |
   The tool bwa-mem2 is the next version of the bwa-mem algorithm in bwa. It
   produces alignment identical to bwa and is ~1.3-3.1x faster depending on the
   use-case, dataset and the running machine.
+icon: icon.png

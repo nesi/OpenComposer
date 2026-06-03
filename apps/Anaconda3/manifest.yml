@@ -1,17 +1,13 @@
 ---
 name: Anaconda3
 category: Machine Learning
-description: |
-  Built to complement the rich, open source Python community,
-  the Anaconda platform provides an enterprise-ready data analytics platform 
-  that empowers companies to adopt a modern open data science analytics architecture.
-  
-  IMPORTANT: This version of Anaconda Python comes with Intel MKL support to speed up
-             certain types of mathematical computations, such as linear algebra or FFT.
-             The module sets
-  
-             MKL_NUM_THREADS=1
-  
-             to run MKL on a single thread by default, avoiding accidental oversubscription
-             of cores. The number of threads can be increased for large problems, please
-             refer to the Intel MKL documentation for guidance.
+description: "Built to complement the rich, open source Python community,\nthe Anaconda
+  platform provides an enterprise-ready data analytics platform \nthat empowers companies
+  to adopt a modern open data science analytics architecture.\n\nIMPORTANT: This version
+  of Anaconda Python comes with Intel MKL support to speed up\n           certain
+  types of mathematical computations, such as linear algebra or FFT.\n           The
+  module sets\n\n           MKL_NUM_THREADS=1\n\n           to run MKL on a single
+  thread by default, avoiding accidental oversubscription\n           of cores. The
+  number of threads can be increased for large problems, please\n           refer
+  to the Intel MKL documentation for guidance.\n"
+icon: icon.png

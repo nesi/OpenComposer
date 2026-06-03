@@ -2,3 +2,4 @@
 name: pairtools
 category: Biology
 description: CLI tools to process mapped Hi-C data
+icon: icon.png

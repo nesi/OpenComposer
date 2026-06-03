@@ -2,3 +2,4 @@
 name: ACTC
 category: Others
 description: ACTC converts independent triangles into triangle strips or fans.
+icon: icon.png

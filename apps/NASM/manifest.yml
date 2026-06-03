@@ -1,4 +1,5 @@
 ---
 name: NASM
 category: Language
-description: "NASM: General-purpose x86 assembler"
+description: 'NASM: General-purpose x86 assembler'
+icon: icon.png

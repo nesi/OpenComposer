@@ -1,4 +1,4 @@
----
-name: Cereal
 category: Others
 description: C++11 serialization library
+icon: icon.png
+name: Cereal

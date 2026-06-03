@@ -1,4 +1,6 @@
 ---
 name: FragGeneScan
 category: Biology
-description: FragGeneScan is an application for finding (fragmented) genes in short reads.
+description: FragGeneScan is an application for finding (fragmented) genes in short
+  reads.
+icon: icon.png

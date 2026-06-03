@@ -1,5 +1,5 @@
----
-name: Racon
 category: Biology
-description: Ultrafast consensus module for raw de novo genome assembly of long uncorrected reads.
-icon: icon.jpg
+description: Ultrafast consensus module for raw de novo genome assembly of long uncorrected
+  reads.
+icon: icon.png
+name: Racon

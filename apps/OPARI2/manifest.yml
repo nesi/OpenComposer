@@ -4,3 +4,4 @@ category: Others
 description: |
   source-to-source instrumentation tool for OpenMP and hybrid codes.
    It surrounds OpenMP directives and runtime library calls with calls to the POMP2 measurement interface.
+icon: icon.png

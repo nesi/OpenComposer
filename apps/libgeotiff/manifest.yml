@@ -1,4 +1,6 @@
 ---
 name: libgeotiff
 category: Earth Science
-description: Library for reading and writing coordinate system information from/to GeoTIFF files
+description: Library for reading and writing coordinate system information from/to
+  GeoTIFF files
+icon: icon.png

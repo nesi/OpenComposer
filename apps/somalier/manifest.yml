@@ -1,7 +1,5 @@
----
-name: somalier
 category: Biology
-description: |
-  extract informative sites, evaluate relatedness, and 
-  perform quality-control on BAM/CRAM/BCF/VCF/GVCF
-icon: icon.png
+description: "extract informative sites, evaluate relatedness, and \nperform quality-control\
+  \ on BAM/CRAM/BCF/VCF/GVCF\n"
+icon: icon.jpg
+name: somalier

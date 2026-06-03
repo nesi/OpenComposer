@@ -1,5 +1,5 @@
----
-name: CoverM
 category: Biology
-description: DNA read coverage and relative abundance calculator focused on metagenomics applications
-icon: icon.jpg
+description: DNA read coverage and relative abundance calculator focused on metagenomics
+  applications
+icon: icon.png
+name: CoverM

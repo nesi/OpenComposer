@@ -1,4 +1,6 @@
 ---
 name: vg
 category: Biology
-description: variation graph data structures, interchange formats, alignment, genotyping, and variant calling methods
+description: variation graph data structures, interchange formats, alignment, genotyping,
+  and variant calling methods
+icon: icon.png

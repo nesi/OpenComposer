@@ -2,3 +2,4 @@
 name: mosdepth
 category: Biology
 description: Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
+icon: icon.jpg

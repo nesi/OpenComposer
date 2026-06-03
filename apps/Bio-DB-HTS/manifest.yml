@@ -2,3 +2,4 @@
 name: Bio-DB-HTS
 category: Biology
 description: Read files using HTSlib including BAM/CRAM, Tabix and BCF database files
+icon: icon.png

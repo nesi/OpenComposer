@@ -1,5 +1,4 @@
----
-name: DIAMOND
 category: Biology
 description: Sequence aligner for protein and translated DNA searches
-icon: icon.jpg
+icon: icon.png
+name: DIAMOND

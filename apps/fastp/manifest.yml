@@ -2,3 +2,4 @@
 name: fastp
 category: Biology
 description: A tool designed to provide fast all-in-one preprocessing for FastQ files.
+icon: icon.png

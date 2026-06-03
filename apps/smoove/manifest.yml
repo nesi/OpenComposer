@@ -1,5 +1,4 @@
----
-name: smoove
 category: Biology
 description: simplifies and speeds calling and genotyping SVs for short reads.
-icon: icon.jpg
+icon: icon.png
+name: smoove

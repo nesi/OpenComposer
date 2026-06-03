@@ -1,4 +1,6 @@
 ---
 name: preseq
 category: Biology
-description: Software for predicting library complexity and genome coverage in high-throughput sequencing.
+description: Software for predicting library complexity and genome coverage in high-throughput
+  sequencing.
+icon: icon.png

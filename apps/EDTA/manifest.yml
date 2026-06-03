@@ -1,5 +1,5 @@
----
-name: EDTA
 category: Biology
-description: Automated whole-genome de-novo TE annotation and benchmarking the annotation performance of TE libraries.
-icon: icon.png
+description: Automated whole-genome de-novo TE annotation and benchmarking the annotation
+  performance of TE libraries.
+icon: icon.jpg
+name: EDTA

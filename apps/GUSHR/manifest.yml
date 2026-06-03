@@ -1,4 +1,6 @@
 ---
 name: GUSHR
 category: Biology
-description: Assembly-free construction of UTRs from short read RNA-Seq data on the basis of coding sequence annotation.
+description: Assembly-free construction of UTRs from short read RNA-Seq data on the
+  basis of coding sequence annotation.
+icon: icon.png

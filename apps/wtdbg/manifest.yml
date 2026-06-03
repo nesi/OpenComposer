@@ -1,4 +1,6 @@
 ---
 name: wtdbg
 category: Biology
-description: de novo sequence assembler for long noisy reads produced by PacBio or Oxford Nanopore Technologies.
+description: de novo sequence assembler for long noisy reads produced by PacBio or
+  Oxford Nanopore Technologies.
+icon: icon.jpg

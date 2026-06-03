@@ -1,4 +1,6 @@
 ---
 name: libsodium
 category: Others
-description: library for encryption, decryption, signatures, password hashing and more.
+description: library for encryption, decryption, signatures, password hashing and
+  more.
+icon: icon.png

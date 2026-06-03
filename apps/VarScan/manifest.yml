@@ -1,4 +1,6 @@
 ---
 name: VarScan
 category: Biology
-description: Variant calling and somatic mutation/CNV detection for next-generation sequencing data
+description: Variant calling and somatic mutation/CNV detection for next-generation
+  sequencing data
+icon: icon.jpg

@@ -1,7 +1,6 @@
----
-name: DAS_Tool
 category: Biology
-description: |
-  DAS Tool is an automated method that integrates the results of a flexible number of binning
-   algorithms to calculate an optimized, non-redundant set of bins from a single assembly.
-icon: icon.jpg
+description: "DAS Tool is an automated method that integrates the results of a flexible\
+  \ number of binning\n algorithms to calculate an optimized, non-redundant set of\
+  \ bins from a single assembly.\n"
+icon: icon.png
+name: DAS_Tool

@@ -1,5 +1,4 @@
----
-name: nanomath
 category: Biology
 description: A few simple math function for other Oxford Nanopore processing scripts
-icon: icon.png
+icon: icon.jpg
+name: nanomath

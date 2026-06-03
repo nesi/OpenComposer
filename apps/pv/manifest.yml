@@ -2,3 +2,4 @@
 name: pv
 category: Others
 description: Monitors the progress of data through a unix pipeline.
+icon: icon.png

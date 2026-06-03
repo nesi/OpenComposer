@@ -1,7 +1,5 @@
----
-name: HDF
 category: Others
-description: |
-  HDF (also known as HDF4) is a library and multi-object file format for
-   storing and managing data between machines.
+description: "HDF (also known as HDF4) is a library and multi-object file format for\n\
+  \ storing and managing data between machines.\n"
 icon: icon.png
+name: HDF

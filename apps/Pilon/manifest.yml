@@ -1,4 +1,6 @@
 ---
 name: Pilon
 category: Biology
-description: Pilon is an automated genome assembly improvement and variant detection tool
+description: Pilon is an automated genome assembly improvement and variant detection
+  tool
+icon: icon.png

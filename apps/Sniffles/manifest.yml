@@ -1,5 +1,4 @@
----
-name: Sniffles
 category: Biology
 description: A fast structural variant caller for long-read sequencing.
 icon: icon.jpg
+name: Sniffles

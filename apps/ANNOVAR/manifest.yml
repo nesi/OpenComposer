@@ -1,6 +1,6 @@
 ---
 name: ANNOVAR
 category: Biology
-description: |
-  Efficient software tool to utilize update-to-date information to functionally 
-  annotate genetic variants detected from diverse genomes .
+description: "Efficient software tool to utilize update-to-date information to functionally
+  \nannotate genetic variants detected from diverse genomes .\n"
+icon: icon.png

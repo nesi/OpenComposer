@@ -1,5 +1,5 @@
----
-name: skani
 category: Biology
-description: accurate, fast nucleotide identity calculation for MAGs, genomes, and databases
+description: accurate, fast nucleotide identity calculation for MAGs, genomes, and
+  databases
 icon: icon.png
+name: skani

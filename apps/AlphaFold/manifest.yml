@@ -1,5 +1,5 @@
----
-name: AlphaFold
 category: Biology
-description: AlphaFold can predict protein structures with atomic accuracy even where no similar structure is known
-icon: icon.gif
+description: AlphaFold can predict protein structures with atomic accuracy even where
+  no similar structure is known
+icon: icon.png
+name: AlphaFold

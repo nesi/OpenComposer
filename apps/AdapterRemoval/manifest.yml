@@ -1,7 +1,8 @@
----
-name: AdapterRemoval
 category: Biology
-description: |
-  Ssearches for and removes remnant adapter sequences
+description: 'Ssearches for and removes remnant adapter sequences
+
   from High-Throughput Sequencing  data.
+
+  '
 icon: icon.png
+name: AdapterRemoval

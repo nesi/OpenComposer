@@ -1,4 +1,4 @@
----
-name: trf
 category: Biology
 description: Locates tandem repeats in DNA sequences.
+icon: icon.png
+name: trf

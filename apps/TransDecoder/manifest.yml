@@ -2,3 +2,4 @@
 name: TransDecoder
 category: Biology
 description: TransDecoder identifies candidate coding regions within transcript sequences.
+icon: icon.png

@@ -1,6 +1,6 @@
 ---
 name: R-Geo
 category: Earth Science
-description: |
-  R packages for Geometric and Geospatial data which depend 
-  on GEOS and/or GDAL.
+description: "R packages for Geometric and Geospatial data which depend \non GEOS
+  and/or GDAL.\n"
+icon: icon.png

@@ -2,3 +2,4 @@
 name: IRkernel
 category: Others
 description: R packages for providing R kernel for Jupyter.
+icon: icon.png

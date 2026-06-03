@@ -2,3 +2,4 @@
 name: RapidNJ
 category: Biology
 description: An algorithmic engineered implementation of canonical neighbour-joining.
+icon: icon.png

@@ -1,7 +1,6 @@
----
-name: seqmagick
 category: Biology
-description: |
-  Seqmagick is a utility built in the spirit of imagemagick to expose the
-   file format conversion in Biopython in a convenient way. Instead of having a
-   big mess of scripts, there is one that takes arguments.
+description: "Seqmagick is a utility built in the spirit of imagemagick to expose\
+  \ the\n file format conversion in Biopython in a convenient way. Instead of having\
+  \ a\n big mess of scripts, there is one that takes arguments.\n"
+icon: icon.png
+name: seqmagick

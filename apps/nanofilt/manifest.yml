@@ -2,3 +2,4 @@
 name: nanofilt
 category: Biology
 description: Filtering and trimming of long read sequencing data.
+icon: icon.jpg

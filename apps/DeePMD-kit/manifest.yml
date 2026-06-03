@@ -1,5 +1,6 @@
----
-name: DeePMD-kit
 category: Chemistry
-description: Package written in Python/C++, designed to minimize the effort required to build deep learning-based models of interatomic potential energy and force field and to perform molecular dynamics.
-icon: icon.gif
+description: Package written in Python/C++, designed to minimize the effort required
+  to build deep learning-based models of interatomic potential energy and force field
+  and to perform molecular dynamics.
+icon: icon.jpg
+name: DeePMD-kit

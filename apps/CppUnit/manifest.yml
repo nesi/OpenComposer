@@ -2,3 +2,4 @@
 name: CppUnit
 category: Others
 description: C++ port of the JUnit framework for unit testing.
+icon: icon.png

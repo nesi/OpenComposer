@@ -1,4 +1,6 @@
 ---
 name: libgcrypt
 category: Others
-description: Libgpg-error is a small library that defines common error values for all GnuPG components.
+description: Libgpg-error is a small library that defines common error values for
+  all GnuPG components.
+icon: icon.png

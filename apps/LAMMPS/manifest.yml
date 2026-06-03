@@ -1,6 +1,6 @@
----
-name: LAMMPS
 category: Chemistry
-icon: LAMMPS.png
-description: |
-  This application generates a job script for LAMMPS.
+description: 'This application generates a job script for LAMMPS.
+
+  '
+icon: icon.png
+name: LAMMPS

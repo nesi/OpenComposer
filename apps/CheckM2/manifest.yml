@@ -1,5 +1,4 @@
----
-name: CheckM2
 category: Biology
 description: Rapid assessment of genome bin quality using machine learning
-icon: icon.jpg
+icon: icon.png
+name: CheckM2

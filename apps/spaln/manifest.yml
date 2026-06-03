@@ -4,3 +4,4 @@ category: Biology
 description: |
   Spaln (space-efficient spliced alignment) is a stand-alone program that maps
    and aligns a set of cDNA or protein sequences onto a whole genomic sequence in a single job.
+icon: icon.png

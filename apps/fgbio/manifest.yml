@@ -1,4 +1,6 @@
 ---
 name: fgbio
 category: Biology
-description: A set of tools to analyze genomic data with a focus on Next Generation Sequencing.
+description: A set of tools to analyze genomic data with a focus on Next Generation
+  Sequencing.
+icon: icon.png

@@ -1,5 +1,4 @@
----
-name: Arrow
 category: Others
 description: Apache Arrow, a cross-language development platform for in-memory data.
-icon: icon.jpg
+icon: icon.png
+name: Arrow

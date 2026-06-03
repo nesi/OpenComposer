@@ -1,4 +1,6 @@
 ---
 name: ATK
 category: Others
-description: ATK provides the set of accessibility interfaces that are implemented by other toolkits and applications.
+description: ATK provides the set of accessibility interfaces that are implemented
+  by other toolkits and applications.
+icon: icon.png

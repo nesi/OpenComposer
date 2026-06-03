@@ -1,4 +1,4 @@
----
-name: tabix
 category: Biology
 description: Generic indexer for TAB-delimited genome position files
+icon: icon.png
+name: tabix

@@ -8,3 +8,4 @@ description: |
    evaluation and parameter tuning. Faiss is written in C++ with complete
    wrappers for Python/numpy. Some of the most useful algorithms are implemented
    on the GPU. It is developed primarily at Meta's Fundamental AI Research group.
+icon: icon.png

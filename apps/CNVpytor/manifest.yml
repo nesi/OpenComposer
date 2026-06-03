@@ -1,4 +1,6 @@
 ---
 name: CNVpytor
 category: Biology
-description: Python package and command line tool for CNV/CNA analysis from depth-of-coverage by mapped read
+description: Python package and command line tool for CNV/CNA analysis from depth-of-coverage
+  by mapped read
+icon: icon.png

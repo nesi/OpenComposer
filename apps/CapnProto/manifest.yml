@@ -1,4 +1,4 @@
----
-name: CapnProto
 category: Others
 description: Fast data interchange format and capability-based RPC system.
+icon: icon.png
+name: CapnProto

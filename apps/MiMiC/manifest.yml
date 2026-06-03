@@ -1,8 +1,9 @@
----
-name: MiMiC
 category: Chemistry
-description: |
-  MiMiC: A Framework for Multiscale Modeling in Computational Chemistry
-  
+description: 'MiMiC: A Framework for Multiscale Modeling in Computational Chemistry
+
+
   This package includes mimicpy
-icon: icon.jpg
+
+  '
+icon: icon.png
+name: MiMiC

@@ -1,7 +1,8 @@
----
-name: Bismark
 category: Biology
-description: |
-  A tool to map bisulfite converted sequence reads and
+description: 'A tool to map bisulfite converted sequence reads and
+
   determine cytosine methylation states
+
+  '
 icon: icon.jpg
+name: Bismark

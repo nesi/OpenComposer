@@ -7,3 +7,4 @@ description: |
    but now offers also some utility functions for calculations with the GFNn–xTB methods. Generally
    the program functions as an IO based OMP scheduler (i.e., calculations are performed by the xtb
    program) and tool for the creation and analysation of structure ensembles.
+icon: icon.png

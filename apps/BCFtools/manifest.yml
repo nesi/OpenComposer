@@ -1,4 +1,5 @@
----
-name: BCFtools
 category: Biology
-description: Manipulate variant calls in the Variant Call Format (VCF) and its binary counterpart BCF.
+description: Manipulate variant calls in the Variant Call Format (VCF) and its binary
+  counterpart BCF.
+icon: icon.png
+name: BCFtools

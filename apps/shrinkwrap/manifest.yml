@@ -1,5 +1,4 @@
----
-name: shrinkwrap
 category: Others
-description: "A std::streambuf wrapper for compression formats."
-icon: icon.jpg
+description: A std::streambuf wrapper for compression formats.
+icon: icon.png
+name: shrinkwrap

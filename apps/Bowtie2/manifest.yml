@@ -1,6 +1,8 @@
----
-name: Bowtie2
 category: Biology
-description: |
-  Ultrafast and memory-efficient tool for aligning
+description: 'Ultrafast and memory-efficient tool for aligning
+
   sequencing reads to long reference sequences.
+
+  '
+icon: icon.png
+name: Bowtie2

@@ -1,5 +1,6 @@
----
-name: Riskscape
 category: Earth Science
-description: RiskScape is an open-source spatial data processing application used for multi-hazard risk analysis. RiskScape is highly customisable, letting modellers tailor the risk analysis to suit the problem domain and input data being modelled.
-icon: icon.jpg
+description: RiskScape is an open-source spatial data processing application used
+  for multi-hazard risk analysis. RiskScape is highly customisable, letting modellers
+  tailor the risk analysis to suit the problem domain and input data being modelled.
+icon: icon.png
+name: Riskscape

@@ -1,6 +1,6 @@
 ---
 name: kma
 category: Biology
-description: |
-  KMA is a mapping method designed to map raw reads directly against redundant databases, 
-  in an ultra-fast manner using seed and extend.
+description: "KMA is a mapping method designed to map raw reads directly against redundant
+  databases, \nin an ultra-fast manner using seed and extend.\n"
+icon: icon.png

@@ -11,3 +11,4 @@ description: |
    positives. Additionally, BOLT-LMM applies algorithmic advances to compute mixed model association
    statistics much faster than eigendecomposition-based methods, both when using the Bayesian mixture
    model and when specialized to standard mixed model association.
+icon: icon.png

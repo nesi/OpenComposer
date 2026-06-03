@@ -1,4 +1,5 @@
----
-name: FastQC
 category: Biology
-description: A set of tools (in Java) for working with next generation sequencing data in the BAM format.
+description: A set of tools (in Java) for working with next generation sequencing
+  data in the BAM format.
+icon: icon.jpg
+name: FastQC

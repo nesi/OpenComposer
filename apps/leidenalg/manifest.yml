@@ -1,7 +1,8 @@
----
-name: leidenalg
 category: Others
-description: |
-  Implementation of the Leiden algorithm for various quality
+description: 'Implementation of the Leiden algorithm for various quality
+
   functions to be used with igraph in Python.
-icon: icon.jpg
+
+  '
+icon: icon.png
+name: leidenalg

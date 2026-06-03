@@ -4,3 +4,4 @@ category: Others
 description: |
   fast, safe, thread-friendly alternative to backtracking regular
                   expression engines like those used in PCRE, Perl, and Python. It is a C++library.
+icon: icon.png

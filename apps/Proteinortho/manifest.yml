@@ -2,3 +2,4 @@
 name: Proteinortho
 category: Others
 description: Proteinortho is a tool to detect orthologous genes within different species.
+icon: icon.png

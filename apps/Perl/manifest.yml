@@ -1,5 +1,4 @@
----
-name: Perl
 category: Language
-description: "Larry Wall's Practical Extraction and Report Language"
+description: Larry Wall's Practical Extraction and Report Language
 icon: icon.png
+name: Perl

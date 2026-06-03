@@ -1,8 +1,6 @@
----
-name: MitoZ
 category: Biology
-description: |
-  Toolkit which aims to automatically filter pair-end raw data,
-   assemble genome, search for mitogenome sequences from the genome assembly result, annotate mitogenome,
-   and mitogenome visualization.
+description: "Toolkit which aims to automatically filter pair-end raw data,\n assemble\
+  \ genome, search for mitogenome sequences from the genome assembly result, annotate\
+  \ mitogenome,\n and mitogenome visualization.\n"
 icon: icon.jpg
+name: MitoZ

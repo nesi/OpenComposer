@@ -1,4 +1,6 @@
 ---
 name: SKESA
 category: Biology
-description: SKESA is a de-novo sequence read assembler for cultured single isolate genomes based on DeBruijn graphs.
+description: SKESA is a de-novo sequence read assembler for cultured single isolate
+  genomes based on DeBruijn graphs.
+icon: icon.png

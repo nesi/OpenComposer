@@ -1,7 +1,5 @@
----
-name: Java
 category: Language
-description: |
-  Java Platform, Standard Edition (Java SE) lets you develop and deploy
-   Java applications on desktops and servers.
+description: "Java Platform, Standard Edition (Java SE) lets you develop and deploy\n\
+  \ Java applications on desktops and servers.\n"
 icon: icon.png
+name: Java

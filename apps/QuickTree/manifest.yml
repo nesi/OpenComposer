@@ -1,4 +1,6 @@
 ---
 name: QuickTree
 category: Biology
-description: Efficient implementation of the Neighbor-Joining algorithm, capable of reconstructing phylogenies from huge alignments .
+description: Efficient implementation of the Neighbor-Joining algorithm, capable of
+  reconstructing phylogenies from huge alignments .
+icon: icon.png

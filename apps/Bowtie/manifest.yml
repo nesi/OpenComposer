@@ -1,5 +1,4 @@
----
-name: Bowtie
 category: Biology
 description: Ultrafast, memory-efficient short read aligner.
-icon: icon.jpg
+icon: icon.png
+name: Bowtie

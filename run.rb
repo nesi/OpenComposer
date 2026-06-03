@@ -613,7 +613,21 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
         @OC_APP_NAME = @name
         @OC_DIR_NAME = @manifest["dirname"]
         @body = read_yaml(File.join(@app_base_path, "form.yml"))
-        @header = if @body.key?("header")
+
+        # If the app's form file is missing (moved, deleted, or app not set),
+        # fall back to the generic Slurm app so the history script can still be loaded.
+        if @body.nil?
+          generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"
+          fallback_app     = @conf["external_reload_app"] || "Slurm"
+          @app_base_path   = File.join(generic_apps_dir, fallback_app)
+          @manifest        = create_manifest(@app_base_path)
+          @name            = @manifest&.[]("name") || fallback_app
+          @OC_APP_NAME     = @name
+          @OC_DIR_NAME     = @manifest&.[]("dirname") || "_generic/#{fallback_app}"
+          @body            = read_yaml(File.join(@app_base_path, "form.yml")) || {}
+        end
+
+        @header = if @body.is_a?(Hash) && @body.key?("header")
                     @body["header"]
                   else
                     read_yaml("./lib/header.yml")["header"]
@@ -631,7 +645,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
         file = File.join(@app_base_path, name)
         next unless File.exist?(file)
 
-        halt 500, "In ./#{file}, \"form:\" must be defined." unless @body.key?("form")
+        halt 500, "In ./#{file}, \"form:\" must be defined." unless @body.is_a?(Hash) && @body.key?("form")
       end
       @body["form"] ||= {} if @body.is_a?(Hash) && @body.key?("form")
 

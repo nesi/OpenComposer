@@ -77,10 +77,11 @@
       #<%= OC_SCRIPT_CONTENT %>::-webkit-scrollbar, #<%= SUBMIT_CONTENT %>::-webkit-scrollbar {
         display: none;
       }
-      #<%= OC_SCRIPT_CONTENT %>::placeholder {
-        color: rgba(108, 117, 125, 0.65);
-        font-family: 'JetBrains Mono', monospace;
-        white-space: pre-wrap;
+      .oc-script-placeholder-hint {
+        color: rgba(108, 117, 125, 0.55);
+        font-style: italic;
+        white-space: pre;
+        pointer-events: none;
       }
       #<%= OC_SCRIPT_CONTENT %>:focus, #<%= SUBMIT_CONTENT %>:focus {
         background: transparent;

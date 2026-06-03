@@ -1,5 +1,4 @@
 category: Biology
 description: Finds SNP sites from a multi-FASTA alignment file.
 homepage: https://sanger-pathogens.github.io/snp-sites/
-icon: icon.png
 name: snp-sites

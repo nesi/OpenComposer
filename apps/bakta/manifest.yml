@@ -1,8 +1,4 @@
-category: Others
-description: "Bakta is a tool for the rapid & standardized annotation of bacterial\
-  \ genomes and plasmids\n from both isolates and MAGs. It provides dbxref-rich, sORF-including\
-  \ and taxon-independent annotations\n in machine-readable JSON & bioinformatics\
-  \ standard file formats for automated downstream analysis.\n"
-homepage: https://github.com/oschwengers/bakta
-icon: icon.png
 name: bakta
+category: Others
+description: Bakta is a tool for the rapid & standardized annotation of bacterial genomes and plasmids from both isolates and MAGs.
+homepage: https://github.com/oschwengers/bakta

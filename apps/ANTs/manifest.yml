@@ -1,8 +1,5 @@
----
 name: ANTs
 category: Others
-description: |
-  ANTs extracts information from complex datasets that include imaging. ANTs is useful for managing,
-   interpreting and visualizing multidimensional data.
+description: ANTs extracts information from complex datasets that include imaging.
 homepage: https://stnava.github.io/ANTs/
-icon: icon.jpg
+icon: icon.png

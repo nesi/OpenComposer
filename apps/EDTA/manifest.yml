@@ -2,5 +2,4 @@ category: Biology
 description: Automated whole-genome de-novo TE annotation and benchmarking the annotation
   performance of TE libraries.
 homepage: https://github.com/oushujun/EDTA
-icon: icon.jpg
 name: EDTA

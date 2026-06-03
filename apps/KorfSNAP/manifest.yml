@@ -1,5 +1,4 @@
----
 name: KorfSNAP
 category: Biology
-description: Semi-HMM-based Nucleic Acid Parser
+description: Semi-HMM-based Nucleic Acid Parser.
 homepage: http://korflab.ucdavis.edu/software.html

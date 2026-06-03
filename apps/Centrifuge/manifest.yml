@@ -1,6 +1,4 @@
----
 name: Centrifuge
 category: Biology
-description: Classifier for metagenomic sequences
+description: Classifier for metagenomic sequences.
 homepage: https://ccb.jhu.edu/software/centrifuge/
-icon: icon.png

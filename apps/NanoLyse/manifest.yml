@@ -3,4 +3,3 @@ name: NanoLyse
 category: Biology
 description: Removing reads mapping to the lambda genome.
 homepage: https://github.com/wdecoster/nanolyse
-icon: icon.jpg

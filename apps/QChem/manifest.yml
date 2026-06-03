@@ -1,4 +1,5 @@
 ---
 name: QChem
+icon: icon.jpg
 category: Chemistry
 description: QChem application.

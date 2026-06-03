@@ -1,6 +1,4 @@
----
 name: SeqKit
 category: Biology
-description: Ultrafast toolkit for FASTA/Q file manipulation
+description: Ultrafast toolkit for FASTA/Q file manipulation.
 homepage: https://bioinf.shenwei.me/seqkit/
-icon: icon.png

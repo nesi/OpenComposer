@@ -1,6 +1,4 @@
----
 name: pullseq
 category: Biology
-description: Utility program for extracting sequences from a fasta/fastq file
+description: Utility program for extracting sequences from a fasta/fastq file.
 homepage: https://github.com/bcthomas/pullseq
-icon: icon.png

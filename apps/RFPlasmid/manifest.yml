@@ -1,6 +1,4 @@
----
 name: RFPlasmid
 category: Biology
-description: Predicting plasmid contigs from assemblies
+description: Predicting plasmid contigs from assemblies.
 homepage: https://github.com/aldertzomer/RFPlasmid
-icon: icon.jpg

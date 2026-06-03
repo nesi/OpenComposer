@@ -1,7 +1,4 @@
-category: Biology
-description: "The aim of VCFtools is to provide \n methods for working with VCF files:\
-  \ validating, \n merging, comparing and calculate some basic population\n genetic\
-  \ statistics.\n"
-homepage: http://vcftools.sourceforge.net/
-icon: icon.png
 name: VCFtools
+category: Biology
+description: 'The aim of VCFtools is to provide methods for working with VCF files: validating, merging, comparing and calculate some basic population genetic statistics.'
+homepage: http://vcftools.sourceforge.net/

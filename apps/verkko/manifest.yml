@@ -1,7 +1,4 @@
----
 name: verkko
 category: Biology
-description: Hybrid genome assembly pipeline developed for telomere-to-telomere assembly
-  of PacBio HiFi and Oxford Nanopore reads
+description: Hybrid genome assembly pipeline developed for telomere-to-telomere assembly of PacBio HiFi and Oxford Nanopore reads.
 homepage: https://github.com/marbl/verkko
-icon: icon.png

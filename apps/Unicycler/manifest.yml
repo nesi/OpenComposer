@@ -1,6 +1,5 @@
-category: Biology
-description: "Assembly pipeline for bacterial genomes. It can assemble Illumina-only\
-  \ read sets\n where it functions as a SPAdes-optimiser.\n"
-homepage: https://github.com/rrwick/Unicycler
-icon: icon.jpg
 name: Unicycler
+category: Biology
+description: Assembly pipeline for bacterial genomes.
+homepage: https://github.com/rrwick/Unicycler
+icon: icon.png

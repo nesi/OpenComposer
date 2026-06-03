@@ -4,4 +4,3 @@ category: Biology
 description: Tool for phasing genomic variants using DNA sequencing reads, also called
   read-based phasing or haplotype assembly.
 homepage: https://github.com/wdecoster/nanostat
-icon: icon.jpg

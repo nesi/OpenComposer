@@ -3,4 +3,3 @@ name: BGC-Bayesian-genomic-clines
 category: Biology
 description: Collection of code for Bayesian genomic cline analyses.
 homepage: https://github.com/zgompert/BGC-Bayesian-genomic-clines
-icon: icon.jpg

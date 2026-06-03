@@ -1,5 +1,5 @@
+name: Emu
 category: Biology
-description: species-level taxonomic abundance for full-length 16S reads.
+description: Species-level taxonomic abundance for full-length 16S reads.
 homepage: https://gitlab.com/treangenlab/emu
 icon: icon.png
-name: Emu

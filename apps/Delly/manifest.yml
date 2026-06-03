@@ -1,6 +1,5 @@
+name: Delly
 category: Biology
-description: Structural variant discovery by integrated paired-end and split-read
-  analysis
+description: Structural variant discovery by integrated paired-end and split-read analysis.
 homepage: https://github.com/dellytools/delly
 icon: icon.png
-name: Delly

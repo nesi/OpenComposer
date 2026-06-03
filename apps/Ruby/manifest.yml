@@ -1,7 +1,5 @@
+name: Ruby
 category: Language
-description: "Ruby is a dynamic, open source programming language with\n a focus on\
-  \ simplicity and productivity. It has an elegant syntax that is\n natural to read\
-  \ and easy to write.\n"
+description: Ruby is a dynamic, open source programming language with a focus on simplicity and productivity.
 homepage: https://www.ruby-lang.org
 icon: icon.png
-name: Ruby

@@ -1,8 +1,4 @@
----
 name: seqtk
 category: Biology
-description: "Seqtk is a fast and lightweight tool for processing sequences in the
-  FASTA or FASTQ format. \n It seamlessly parses both FASTA and FASTQ files which
-  can also be optionally compressed by gzip.\n"
+description: Seqtk is a fast and lightweight tool for processing sequences in the FASTA or FASTQ format.
 homepage: https://github.com/lh3/seqtk/
-icon: icon.png

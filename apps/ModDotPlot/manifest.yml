@@ -1,5 +1,4 @@
-category: Biology
-description: Novel dot plot visualization tool used to view tandem repeats
-homepage: https://github.com/agshumate/Liftoff
-icon: icon.jpg
 name: ModDotPlot
+category: Biology
+description: Novel dot plot visualization tool used to view tandem repeats.
+homepage: https://github.com/agshumate/Liftoff

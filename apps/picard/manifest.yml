@@ -4,4 +4,3 @@ category: Biology
 description: A set of tools (in Java) for working with next generation sequencing
   data in the BAM format.
 homepage: https://sourceforge.net/projects/picard
-icon: icon.png

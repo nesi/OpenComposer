@@ -1,7 +1,5 @@
----
 name: Delft3D_FM
 category: Earth Science
-description: 3D modeling suite to investigate hydrodynamics, sediment transport and
-  morphology and water quality for fluvial, estuarine and coastal environments
+description: 3D modeling suite to investigate hydrodynamics, sediment transport and morphology and water quality for fluvial, estuarine and coastal environments.
 homepage: http://oss.deltares.nl/web/delft3d
-icon: icon.jpg
+icon: icon.png

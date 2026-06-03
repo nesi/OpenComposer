@@ -1,6 +1,5 @@
-category: Biology
-description: "Pipeline for fully automated prediction of protein coding genes with\
-  \ GeneMark-ES/ET\n and AUGUSTUS in novel eukaryotic genomes.\n"
-homepage: https://github.com/Gaius-Augustus/BRAKER
-icon: icon.png
 name: BRAKER
+category: Biology
+description: Pipeline for fully automated prediction of protein coding genes with GeneMark-ES/ET and AUGUSTUS in novel eukaryotic genomes.
+homepage: https://github.com/Gaius-Augustus/BRAKER
+icon: icon.jpg

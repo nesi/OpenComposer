@@ -1,6 +1,4 @@
----
 name: cdbfasta
 category: Biology
-description: Fasta file indexing and retrival tool
+description: Fasta file indexing and retrival tool.
 homepage: https://sourceforge.net/projects/cdbfasta
-icon: icon.png

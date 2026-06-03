@@ -1,6 +1,4 @@
----
 name: AMOS
 category: Biology
-description: Collection of tools for genome assembly
+description: Collection of tools for genome assembly.
 homepage: http://amos.sourceforge.net
-icon: icon.png

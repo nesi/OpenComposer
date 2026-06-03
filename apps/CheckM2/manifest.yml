@@ -1,5 +1,4 @@
-category: Biology
-description: Rapid assessment of genome bin quality using machine learning
-homepage: https://github.com/chklovski/CheckM2
-icon: icon.png
 name: CheckM2
+category: Biology
+description: Rapid assessment of genome bin quality using machine learning.
+homepage: https://github.com/chklovski/CheckM2

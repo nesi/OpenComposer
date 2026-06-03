@@ -3,4 +3,3 @@ name: gemmforge
 category: Others
 description: GPU-GEMM generator for the Discontinuous Galerkin method.
 homepage: https://github.com/SeisSol/gemmforge
-icon: icon.png

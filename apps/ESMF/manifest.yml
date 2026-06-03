@@ -1,8 +1,4 @@
----
 name: ESMF
 category: Climate Science
-description: |
-  The Earth System Modeling Framework (ESMF) is a suite of software tools for developing
-   high-performance, multi-component Earth science modeling applications.
+description: The Earth System Modeling Framework (ESMF) is a suite of software tools for developing high-performance, multi-component Earth science modeling applications.
 homepage: https://www.earthsystemcog.org/projects/esmf/
-icon: icon.png

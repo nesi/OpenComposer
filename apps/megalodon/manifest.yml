@@ -1,7 +1,5 @@
+name: megalodon
 category: Biology
-description: "Tool to extract high accuracy modified base and sequence variant calls\
-  \ from raw nanopore reads \nby anchoring the information rich basecalling neural\
-  \ network output to a reference genome/transcriptome.\n"
+description: Tool to extract high accuracy modified base and sequence variant calls from raw nanopore reads by anchoring the information rich basecalling neural network output to a reference genome/transcriptome.
 homepage: https://github.com/nanoporetech/megalodon
 icon: icon.png
-name: megalodon

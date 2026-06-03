@@ -4,4 +4,3 @@ category: Biology
 description: Manta calls structural variants (SVs) and indels from mapped paired-end
   sequencing reads.
 homepage: https://github.com/Illumina/manta
-icon: icon.jpg

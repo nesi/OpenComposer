@@ -1,9 +1,4 @@
----
 name: FastTree
 category: Biology
-description: |
-  FastTree infers approximately-maximum-likelihood phylogenetic trees from alignments of nucleotide
-   or protein sequences. FastTree can handle alignments with up to a million of sequences in a reasonable amount of
-   time and memory.
+description: FastTree infers approximately-maximum-likelihood phylogenetic trees from alignments of nucleotide or protein sequences.
 homepage: http://www.microbesonline.org/fasttree/
-icon: icon.jpg

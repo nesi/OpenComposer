@@ -1,6 +1,4 @@
----
 name: best
 category: Biology
-description: 'Bam Error Stats Tool (best): analysis of error types in aligned reads'
+description: 'Bam Error Stats Tool (best): analysis of error types in aligned reads.'
 homepage: https://github.com/google/best
-icon: icon.png

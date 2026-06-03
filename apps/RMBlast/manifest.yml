@@ -1,10 +1,4 @@
----
 name: RMBlast
 category: Biology
-description: |
-  RMBlast supports RepeatMasker searches by adding a few necessary features to the stock NCBI blastn program. These include:
-  Support for custom matrices ( without KA-Statistics ).
-  Support for cross_match-like complexity adjusted scoring. Cross_match is Phil Green's seeded smith-waterman search algorithm.
-  Support for cross_match-like masklevel filtering..
+description: RMBlast supports RepeatMasker searches by adding a few necessary features to the stock NCBI blastn program.
 homepage: http://www.repeatmasker.org/RMBlast.html
-icon: icon.png

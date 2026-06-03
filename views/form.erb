@@ -38,13 +38,16 @@
       <div class="d-flex gap-3">
         <% if @manifest['icon'].to_s.strip != '' %>
           <% _is_bi_fa, _icon_src = get_icon_path(@manifest['dirname'], @manifest['icon']) %>
-          <div class="flex-shrink-0 align-self-stretch d-flex align-items-center">
-            <% if _is_bi_fa %>
-              <i class="<%= ERB::Util.h(@manifest['icon']) %>" style="font-size:4rem; line-height:1;"></i>
-            <% else %>
-              <img src="<%= ERB::Util.h(_icon_src.to_s) %>" alt="" style="height:100%; width:auto; max-width:120px; object-fit:contain;">
-            <% end %>
-          </div>
+          <% _real_icon = _is_bi_fa || (_icon_src && !_icon_src.to_s.include?('app_default')) %>
+          <% if _real_icon %>
+            <div class="flex-shrink-0 align-self-stretch d-flex align-items-center">
+              <% if _is_bi_fa %>
+                <i class="<%= ERB::Util.h(@manifest['icon']) %>" style="font-size:4rem; line-height:1;"></i>
+              <% else %>
+                <img src="<%= ERB::Util.h(_icon_src.to_s) %>" alt="" style="height:100%; width:auto; max-width:120px; object-fit:contain;">
+              <% end %>
+            </div>
+          <% end %>
         <% end %>
         <div>
           <h3>

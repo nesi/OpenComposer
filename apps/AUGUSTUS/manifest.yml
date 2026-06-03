@@ -1,6 +1,4 @@
----
 name: AUGUSTUS
 category: Biology
-description: AUGUSTUS is a program that predicts genes in eukaryotic genomic sequences
+description: AUGUSTUS is a program that predicts genes in eukaryotic genomic sequences.
 homepage: http://bioinf.uni-greifswald.de/augustus/
-icon: icon.jpg

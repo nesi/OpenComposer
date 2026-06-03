@@ -1,8 +1,5 @@
----
 name: CD-HIT
 category: Biology
-description: |
-  CD-HIT is a very widely used program for clustering and
-   comparing protein or nucleotide sequences.
+description: CD-HIT is a very widely used program for clustering and comparing protein or nucleotide sequences.
 homepage: http://weizhong-lab.ucsd.edu/cd-hit/
-icon: icon.png
+icon: icon.gif

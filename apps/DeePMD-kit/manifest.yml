@@ -3,5 +3,5 @@ description: Package written in Python/C++, designed to minimize the effort requ
   to build deep learning-based models of interatomic potential energy and force field
   and to perform molecular dynamics.
 homepage: https://docs.deepmodeling.com/projects/deepmd/en/master/
-icon: icon.jpg
+icon: icon.svg
 name: DeePMD-kit

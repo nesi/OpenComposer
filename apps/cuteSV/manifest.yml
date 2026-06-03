@@ -1,5 +1,4 @@
-category: Biology
-description: Fast and scalable long-read-based SV detection
-homepage: https://github.com/tjiangHIT/cuteSV
-icon: icon.png
 name: cuteSV
+category: Biology
+description: Fast and scalable long-read-based SV detection.
+homepage: https://github.com/tjiangHIT/cuteSV

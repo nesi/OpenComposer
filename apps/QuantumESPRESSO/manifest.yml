@@ -1,13 +1,5 @@
-category: Chemistry
-description: 'Quantum ESPRESSO  is an integrated suite of computer codes
-homepage: https://www.quantum-espresso.org
-
-  for electronic-structure calculations and materials modeling at the nanoscale.
-
-  It is based on density-functional theory, plane waves, and pseudopotentials
-
-  (both norm-conserving and ultrasoft).
-
-  '
-icon: icon.png
 name: QuantumESPRESSO
+category: Chemistry
+description: Quantum ESPRESSO is an integrated suite of computer codes for electronic-structure calculations and materials modeling at the nanoscale.
+homepage: https://www.quantum-espresso.org
+icon: icon.jpg

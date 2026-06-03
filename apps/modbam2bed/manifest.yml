@@ -4,4 +4,3 @@ category: Biology
 description: A program to aggregate modified base counts stored in a modified-base
   BAM file to a bedMethyl file.
 homepage: https://github.com/epi2me-labs/modbam2bed
-icon: icon.png

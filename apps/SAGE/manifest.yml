@@ -1,7 +1,5 @@
----
 name: SAGE
 category: Biology
-description: |
-  Ppackage containing programs for use in the genetic analysis of
-  family, pedigree and individual data.
+description: Ppackage containing programs for use in the genetic analysis of family, pedigree and individual data.
 homepage: http://darwin.cwru.edu/sage/
+icon: icon.gif

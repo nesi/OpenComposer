@@ -1,6 +1,4 @@
----
 name: RepeatScout
 category: Biology
-description: De novo identification of repeat families in large genomes
+description: De novo identification of repeat families in large genomes.
 homepage: http://bix.ucsd.edu/repeatscout/
-icon: icon.png

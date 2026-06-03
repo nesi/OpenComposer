@@ -1,7 +1,5 @@
+name: Trimmomatic
 category: Biology
-description: "Trimmomatic performs a variety of useful trimming tasks for illumina\
-  \ \n paired-end and single ended data.The selection of trimming steps and their\
-  \ associated \n parameters are supplied on the command line.\n"
+description: Trimmomatic performs a variety of useful trimming tasks for illumina paired-end and single ended data.The selection of trimming steps and their associated parameters are supplied on the command line.
 homepage: http://www.usadellab.org/cms/?page=trimmomatic
 icon: icon.jpg
-name: Trimmomatic

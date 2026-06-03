@@ -1,9 +1,5 @@
----
 name: BEDTools
 category: Biology
-description: |
-  The BEDTools utilities allow one to address common genomics tasks such as finding feature overlaps
-   and computing coverage. The utilities are largely based on four widely-used file formats: BED, GFF/GTF, VCF,
-   and SAM/BAM.
+description: The BEDTools utilities allow one to address common genomics tasks such as finding feature overlaps and computing coverage.
 homepage: https://github.com/arq5x/bedtools2
-icon: icon.jpg
+icon: icon.png

@@ -1,6 +1,4 @@
----
 name: QUAST
 category: Biology
-description: Evaluates genome assemblies
+description: Evaluates genome assemblies.
 homepage: http://quast.sourceforge.net/quast
-icon: icon.jpg

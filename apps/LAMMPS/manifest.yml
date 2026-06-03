@@ -1,7 +1,5 @@
-category: Chemistry
-description: 'This application generates a job script for LAMMPS.
-homepage: http://lammps.sandia.gov/
-
-  '
-icon: icon.png
 name: LAMMPS
+category: Chemistry
+description: This application generates a job script for LAMMPS.
+homepage: http://lammps.sandia.gov/
+icon: icon.png

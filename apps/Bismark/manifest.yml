@@ -1,10 +1,5 @@
-category: Biology
-description: 'A tool to map bisulfite converted sequence reads and
-homepage: http://www.bioinformatics.babraham.ac.uk/projects/bismark/
-
-  determine cytosine methylation states
-
-  '
-icon: icon.jpg
 name: Bismark
+category: Biology
+description: A tool to map bisulfite converted sequence reads and determine cytosine methylation states.
 homepage: http://www.bioinformatics.babraham.ac.uk/projects/bismark/
+icon: icon.png

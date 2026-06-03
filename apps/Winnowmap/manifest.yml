@@ -1,8 +1,4 @@
----
 name: Winnowmap
 category: Biology
-description: |
-  Winnowmap is a long-read mapping algorithm, and a result of our exploration
-   into superior minimizer sampling techniques.
+description: Winnowmap is a long-read mapping algorithm, and a result of our exploration into superior minimizer sampling techniques.
 homepage: https://github.com/marbl/Winnowmap
-icon: icon.png

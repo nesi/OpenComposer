@@ -1,5 +1,4 @@
-category: Biology
-description: Yet another k-mer analyzer
-homepage: https://github.com/lh3/minimap2
-icon: icon.png
 name: yak
+category: Biology
+description: Yet another k-mer analyzer.
+homepage: https://github.com/lh3/minimap2

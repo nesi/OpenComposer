@@ -4,4 +4,3 @@ category: Biology
 description: Perl script for optimising the three primary parameter options of the
   Velvet de novo sequence assembler.
 homepage: http://bioinformatics.net.au/software.velvetoptimiser.shtml
-icon: icon.png

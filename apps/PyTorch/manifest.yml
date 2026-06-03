@@ -1,8 +1,5 @@
----
 name: PyTorch
 category: Others
-description: |
-  Tensors and Dynamic neural networks in Python with strong GPU acceleration.
-  PyTorch is a deep learning framework that puts Python first.
+description: Tensors and Dynamic neural networks in Python with strong GPU acceleration.
 homepage: https://pytorch.org/
 icon: icon.png

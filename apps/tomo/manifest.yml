@@ -1,8 +1,5 @@
----
 name: tomo
 category: Earth Science
-description: |
-  This code computes 2D Travel Time Tomography using the Reversible Jump
-  algorithm with a Voronoi cell parameterisation.
+description: This code computes 2D Travel Time Tomography using the Reversible Jump algorithm with a Voronoi cell parameterisation.
 homepage: https://iearth.edu.au/codes/rj-TOMO/
 icon: icon.png

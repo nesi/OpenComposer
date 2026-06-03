@@ -1,6 +1,4 @@
----
 name: pgge
 category: Biology
-description: pangenome graph evaluator
+description: Pangenome graph evaluator.
 homepage: https://github.com/pangenome/pgge
-icon: icon.png

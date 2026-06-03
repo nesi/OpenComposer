@@ -1,5 +1,4 @@
 category: Biology
 description: 'Searches for and removes remnant adapter sequences from High-Throughput Sequencing data.'
 homepage: https://github.com/%/(github_account)s/adapterremoval
-icon: icon.png
 name: AdapterRemoval

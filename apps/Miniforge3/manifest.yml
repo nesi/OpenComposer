@@ -3,4 +3,4 @@ name: Miniforge3
 category: Others
 description: Community-led recipes, infrastructure and distributions for conda.
 homepage: https://conda-forge.org
-icon: icon.png
+icon: icon.svg

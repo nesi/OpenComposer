@@ -1,5 +1,4 @@
-category: Biology
-description: faster and more accurate reimplementation of BUSCO.
-homepage: https://github.com/huangnengCSU/minibusco
-icon: icon.jpg
 name: miniBUSCO
+category: Biology
+description: Faster and more accurate reimplementation of BUSCO.
+homepage: https://github.com/huangnengCSU/minibusco

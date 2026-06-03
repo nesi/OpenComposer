@@ -1,6 +1,3 @@
----
 name: GPU Job Script (Slurm)
 category: Application
-icon: Slurm_logo.svg
-description: |
-  This application generates an arbitrary job script in Slurm.
+description: This application generates an arbitrary job script in Slurm.

@@ -1,13 +1,5 @@
-category: Earth Science
-description: "GDAL is a translator library for raster geospatial data formats that\
-  \ is released under an X/MIT style\n Open Source license by the Open Source Geospatial\
-  \ Foundation. As a library, it presents a single abstract data model\n to the calling\
-  \ application for all supported formats. It also comes with a variety of useful\
-  \ command-line utilities for\n data translation and processing.\n NOTE: The GDAL\
-  \ IO cache by default uses 5% of total memory. This seems not necessary. This module\
-  \ sets GDAL_CACHEMAX=256 (256MB), \n which should have no performance impact. Feel\
-  \ free to change if necessary, using 'export GDAL_CACHEMAX=xxx' (in your job script)\
-  \ \n after loading the GDAL module.\n"
-homepage: http://www.gdal.org/
-icon: icon.png
 name: GDAL
+category: Earth Science
+description: GDAL is a translator library for raster geospatial data formats that is released under an X/MIT style Open Source license by the Open Source Geospatial Foundation.
+homepage: http://www.gdal.org/
+icon: icon.webp

@@ -1,6 +1,4 @@
-category: Biology
-description: Tool for evaluating RNA-Seq assemblies using reference genome and gene
-  database
-homepage: https://cab.spbu.ru/software/rnaquast/
-icon: icon.png
 name: rnaQUAST
+category: Biology
+description: Tool for evaluating RNA-Seq assemblies using reference genome and gene database.
+homepage: https://cab.spbu.ru/software/rnaquast/

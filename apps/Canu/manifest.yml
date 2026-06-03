@@ -3,4 +3,3 @@ name: Canu
 category: Biology
 description: Sequence assembler designed for high-noise single-molecule sequencing.
 homepage: https://canu.readthedocs.io
-icon: icon.png

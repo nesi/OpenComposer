@@ -1,10 +1,4 @@
----
 name: samblaster
 category: Biology
-description: "samblaster is a fast and flexible program for marking duplicates in
-  read-id grouped paired-end SAM files. \nIt can also optionally output discordant
-  read pairs and/or split read mappings to separate SAM files, and/or unmapped/clipped
-  \nreads to a separate FASTQ file. When marking duplicates, samblaster will require
-  approximately 20MB of memory per 1M read pairs.\n"
+description: Samblaster is a fast and flexible program for marking duplicates in read-id grouped paired-end SAM files.
 homepage: http://github.com/GregoryFaust/samblaster
-icon: icon.png

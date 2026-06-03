@@ -1,8 +1,5 @@
----
 name: EukRep-EukCC
 category: Biology
-description: |
-  Completeness and contamination estimator for metagenomic assembled microbial eukaryotic genomes.
-  Also condatains smetana, carveme and memote .
+description: Completeness and contamination estimator for metagenomic assembled microbial eukaryotic genomes.
 homepage: https://www.repeatmasker.org/
 icon: icon.png

@@ -1,6 +1,5 @@
----
 name: SUNDIALS
 category: Mathematics
-description: "SUNDIALS: SUite of Nonlinear and DIfferential/ALgebraic Equation Solvers"
+description: 'SUNDIALS: SUite of Nonlinear and DIfferential/ALgebraic Equation Solvers.'
 homepage: http://computation.llnl.gov/projects/sundials
-icon: icon.jpg
+icon: icon.png

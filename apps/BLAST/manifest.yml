@@ -1,6 +1,5 @@
+name: BLAST
 category: Biology
-description: "Basic Local Alignment Search Tool (BLAST) for comparing biological sequences.\
-  \ Loads both the BLAST tool and the BLASTDB sequence databases.\n"
+description: Basic Local Alignment Search Tool (BLAST) for comparing biological sequences.
 homepage: http://blast.ncbi.nlm.nih.gov/
 icon: icon.png
-name: BLAST

@@ -1,5 +1,4 @@
-category: Others
-description: Rapid haploid variant calling and core genome alignment
-homepage: https://github.com/tseemann/snippy
-icon: icon.jpg
 name: snippy
+category: Others
+description: Rapid haploid variant calling and core genome alignment.
+homepage: https://github.com/tseemann/snippy

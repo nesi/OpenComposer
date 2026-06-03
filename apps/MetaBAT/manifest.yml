@@ -1,6 +1,5 @@
----
 name: MetaBAT
 category: Biology
-description: An efficient tool for accurately reconstructing single genomes from complex microbial communities
+description: An efficient tool for accurately reconstructing single genomes from complex microbial communities.
 homepage: https://bitbucket.org/berkeleylab/metabat
 icon: icon.jpg

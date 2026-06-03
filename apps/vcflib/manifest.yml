@@ -1,9 +1,4 @@
----
 name: vcflib
 category: Biology
-description: |
-  vcflib provides methods to manipulate and interpret sequence variation as it can be
-   described by VCF. The Variant Call Format (VCF) is a flat-file, tab-delimited textual format intended
-   to concisely describe reference-indexed genetic variations between individuals.
+description: Vcflib provides methods to manipulate and interpret sequence variation as it can be described by VCF.
 homepage: https://github.com/vcflib/vcflib
-icon: icon.png

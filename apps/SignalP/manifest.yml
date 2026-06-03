@@ -1,8 +1,4 @@
----
 name: SignalP
 category: Biology
-description: |
-  SignalP predicts the presence  and  location of signal peptide  cleavage sites
-  in  amino acid  sequences  from  different organisms
+description: SignalP predicts the presence and location of signal peptide cleavage sites in amino acid sequences from different organisms.
 homepage: https://services.healthtech.dtu.dk/software.php
-icon: icon.jpg

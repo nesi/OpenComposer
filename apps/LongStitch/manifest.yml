@@ -1,5 +1,5 @@
+name: LongStitch
 category: Biology
-description: A genome assembly correction and scaffolding pipeline using long reads
+description: A genome assembly correction and scaffolding pipeline using long reads.
 homepage: https://github.com/bcgsc/LongStitch
 icon: icon.png
-name: LongStitch

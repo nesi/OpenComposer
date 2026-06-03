@@ -2,5 +2,4 @@ category: Biology
 description: Highly parallel construction, indexing and querying of colored and compacted
   de Bruijn graphs.
 homepage: https://github.com/pmelsted/bifrost
-icon: icon.jpg
 name: Bifrost

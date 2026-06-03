@@ -1,5 +1,4 @@
-category: Biology
-description: Tool for automated alignment trimming in large-scale phylogenetic analyses
-homepage: https://github.com/scapella/trimal
-icon: icon.jpg
 name: trimAl
+category: Biology
+description: Tool for automated alignment trimming in large-scale phylogenetic analyses.
+homepage: https://github.com/scapella/trimal

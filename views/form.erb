@@ -44,7 +44,7 @@
               <% if _is_bi_fa %>
                 <i class="<%= ERB::Util.h(@manifest['icon']) %>" style="font-size:4rem; line-height:1;"></i>
               <% else %>
-                <img src="<%= ERB::Util.h(_icon_src.to_s) %>" alt="" style="max-height:80px; max-width:120px; width:auto; height:auto; object-fit:contain;">
+                <img src="<%= ERB::Util.h(_icon_src.to_s) %>" alt="" style="height:64px; width:auto; max-width:120px; object-fit:contain;">
               <% end %>
             </div>
           <% end %>

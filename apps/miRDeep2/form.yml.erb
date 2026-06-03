@@ -16,7 +16,7 @@ end
 
 base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
-  module purge
+  module -q purge
   module load #{mirdeep2_module}
 APP_SCRIPT
 %>

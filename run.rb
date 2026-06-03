@@ -177,9 +177,10 @@ def create_conf
   conf["history_action_color"]    ||= "#DC3545"
   conf["highlight_theme"]         ||= "vs"
   conf["directive_color"]         ||= "#D73A49"
-  conf["show_home_directory"] = conf.fetch("show_home_directory", true)
-  conf["show_shell_access"]   = conf.fetch("show_shell_access",   true)
-  conf["show_open_ondemand"]  = conf.fetch("show_open_ondemand",  true)
+  conf["show_home_directory"]   = conf.fetch("show_home_directory",   true)
+  conf["show_shell_access"]     = conf.fetch("show_shell_access",     true)
+  conf["show_open_ondemand"]    = conf.fetch("show_open_ondemand",    true)
+  conf["open_ondemand_label"]   = conf.fetch("open_ondemand_label",   "Open OnDemand")
 
   # Set the values for "clusters:" and "history_db"
   if conf.key?("clusters")
@@ -486,6 +487,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
   @ood_logo_path = URI.join(@my_ood_url, @script_name + "/", "ood.png")
   @current_path  = File.join(@script_name, @dir_name)
+  _modules_list  = fetch_modules_list(@conf["data_dir"])
+  @gpu_names     = _modules_list.filter_map { |k, v| k.downcase if Array(v["domains"]).include?("gpu") }
   @all_manifests = create_all_manifests(@apps_dir).sort_by { |m| [m.category&.downcase == "others" ? 1 : 0, (m.category || "").downcase, m.name.downcase] }
   @manifests     = @all_manifests.reject(&:hidden)
   @manifests_w_category, @manifests_wo_category = @manifests.partition(&:category)

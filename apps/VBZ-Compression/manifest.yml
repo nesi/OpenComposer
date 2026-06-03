@@ -1,4 +1,5 @@
 category: Biology
 description: VBZ compression HDF5 plugin for nanopolish
+homepage: https://github.com/nanoporetech/vbz_compression
 icon: icon.png
 name: VBZ-Compression

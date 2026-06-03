@@ -1,5 +1,6 @@
 category: Others
 description: pixi is a cross-platform, multi-language package manager and workflow
   tool built on the foundation of the conda ecosystem
+homepage: https://github.com/prefix-dev/pixi
 icon: icon.png
 name: pixi

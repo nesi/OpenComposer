@@ -1,5 +1,6 @@
 category: Biology
 description: accurate, fast nucleotide identity calculation for MAGs, genomes, and
   databases
+homepage: https://github.com/bluenote-1577/skani
 icon: icon.png
 name: skani

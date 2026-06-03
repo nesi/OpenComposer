@@ -2,4 +2,5 @@
 name: ACTC
 category: Others
 description: ACTC converts independent triangles into triangle strips or fans.
+homepage: https://sourceforge.net/projects/actc
 icon: icon.png

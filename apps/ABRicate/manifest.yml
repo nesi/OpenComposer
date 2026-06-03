@@ -2,4 +2,5 @@
 name: ABRicate
 category: Biology
 description: Mass screening of contigs for antimicrobial and virulence genes
-icon: icon.jpg
+homepage: https://github.com/tseemann/abricate
+icon: icon.png

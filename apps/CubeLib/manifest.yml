@@ -2,4 +2,5 @@
 name: CubeLib
 category: Others
 description: Cube general purpose C++ library component and command-line tools.
+homepage: https://www.scalasca.org/software/cube-4.x/download.html
 icon: icon.png

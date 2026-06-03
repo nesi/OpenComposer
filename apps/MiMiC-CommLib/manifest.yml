@@ -1,5 +1,6 @@
 category: Chemistry
 description: "The MiMiC communication library (MCL) enables communication between\
   \ external programs \n coupled through the MiMiC framework.\n"
+homepage: https://gitlab.com/MiMiC-projects
 icon: icon.png
 name: MiMiC-CommLib

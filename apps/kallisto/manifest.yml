@@ -2,5 +2,6 @@ category: Biology
 description: "kallisto is a program for quantifying abundances of transcripts from\
   \ RNA-Seq data, or more generally\n of target sequences using high-throughput sequencing\
   \ reads.\n"
+homepage: http://pachterlab.github.io/kallisto/
 icon: icon.jpg
 name: kallisto

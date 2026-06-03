@@ -2,5 +2,6 @@ category: Biology
 description: "Samtools is a suite of programs for interacting with high-throughput\
   \ sequencing data.\n SAMtools - Reading/writing/editing/indexing/viewing SAM/BAM/CRAM\
   \ format\n"
+homepage: http://www.htslib.org/
 icon: icon.png
 name: SAMtools

@@ -2,4 +2,5 @@
 name: pyani
 category: Biology
 description: Whole-genome classification using Average Nucleotide Identity
+homepage: https://github.com/widdowquinn/pyani
 icon: icon.jpg

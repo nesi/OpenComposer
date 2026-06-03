@@ -2,4 +2,5 @@
 name: CRABS
 category: Biology
 description: Creating Reference databases for Amplicon-Based Sequencing.
+homepage: https://github.com/gjeunen/reference_database_creator
 icon: icon.png

@@ -2,4 +2,5 @@
 name: slow5-dorado
 category: Others
 description: Fork of nanopore's Dorado which supports S/BLOW5.
+homepage: https://github.com/hiruna72/slow5-dorado
 icon: icon.jpg

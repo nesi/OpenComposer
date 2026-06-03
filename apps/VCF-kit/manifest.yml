@@ -1,5 +1,6 @@
 category: Biology
 description: "VCF-kit is a command-line based collection of utilities for performing\
   \ analysis on\n Variant Call Format (VCF) files.\n"
+homepage: https://github.com/AndersenLab/VCF-kit
 icon: icon.png
 name: VCF-kit

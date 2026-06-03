@@ -2,4 +2,5 @@
 name: GlimmerHMM
 category: Biology
 description: Gene finder based on a Generalized Hidden Markov Model.
+homepage: https://ccb.jhu.edu/software/glimmerhmm
 icon: icon.png

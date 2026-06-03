@@ -1,5 +1,6 @@
 category: Others
 description: 'Snappy is a compression/decompression library. It does not aim
+homepage: https://github.com/google/snappy
 
   for maximum compression, or compatibility with any other compression library;
 

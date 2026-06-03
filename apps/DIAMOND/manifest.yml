@@ -1,4 +1,5 @@
 category: Biology
 description: Sequence aligner for protein and translated DNA searches
+homepage: https://github.com/bbuchfink/diamond
 icon: icon.png
 name: DIAMOND

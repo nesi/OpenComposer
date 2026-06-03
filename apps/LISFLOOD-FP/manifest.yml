@@ -17,3 +17,4 @@ description: |
   flows, shock waves, or flows over very smooth surfaces. The DG2/FV1 solvers are
   parallelised for the multi-core CPU architecture, but do not integrate with the
   subgrid channel model nor with the CPU-specific optimisations.
+homepage: https://www.seamlesswave.com/LISFLOOD8.0.html

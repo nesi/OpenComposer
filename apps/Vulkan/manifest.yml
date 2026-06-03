@@ -2,4 +2,5 @@
 name: Vulkan
 category: Others
 description: Vulkan headers, ICDs, and tools
+homepage: https://github.com/KhronosGroup
 icon: icon.png

@@ -7,6 +7,7 @@ description: |
   provides several advantages over matrix/block-based formats such as MAF, such as
   improved scalability and the ability to perform queries with respect to an
   arbitrary reference or subtree.
+homepage: https://github.com/ComparativeGenomicsToolkit/hal
 
   This package includes the HAL API and several analysis and conversion tools
   which are described below. HAL files are presently stored in either HDF5 or mmap

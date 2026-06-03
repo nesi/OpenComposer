@@ -1,4 +1,5 @@
 category: Biology
 description: Sequence-to-graph mapper and graph generator
+homepage: https://github.com/lh3/minigraph
 icon: icon.png
 name: minigraph

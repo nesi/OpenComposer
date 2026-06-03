@@ -4,5 +4,6 @@ description: Subversion is an open source version control system. Subversion exi
   control system characterized by its reliability as a safe haven for valuable data;
   the simplicity of its model and usage; and its ability to support the needs of a
   wide variety of users and projects, from individuals to large-scale enterprise operations.
+homepage: https://subversion.apache.org
 icon: icon.png
 name: Subversion

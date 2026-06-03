@@ -3,4 +3,5 @@ name: miniprot
 category: Biology
 description: Aligns a protein sequence against a genome with affine gap penalty, splicing
   and frameshift..
+homepage: https://github.com/lh3/miniprot
 icon: icon.png

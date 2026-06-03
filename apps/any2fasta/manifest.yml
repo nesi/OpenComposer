@@ -2,4 +2,5 @@
 name: any2fasta
 category: Biology
 description: Convert various sequence formats to FASTA
+homepage: https://github.com/tseemann/any2fasta
 icon: icon.jpg

@@ -7,4 +7,5 @@ description: |
    necessary when the read length of the sequencing machine
    is longer than the molecule that is sequenced, for
    example when sequencing microRNAs.
+homepage: https://opensource.scilifelab.se/projects/cutadapt/
 icon: icon.png

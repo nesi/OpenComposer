@@ -1,5 +1,6 @@
 category: Biology
 description: 'Bio++ is a set of C++ libraries for Bioinformatics, including sequence
+homepage: https://github.com/BioPP/bpp-core
 
   analysis, phylogenetics, molecular evolution and population genetics. Bio++ is
 

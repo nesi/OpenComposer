@@ -2,5 +2,6 @@ category: Biology
 description: "Prodigal (Prokaryotic Dynamic Programming Genefinding Algorithm) \n\
   \   is a microbial (bacterial and archaeal) gene finding program developed \n  \
   \ at Oak Ridge National Laboratory and the University of Tennessee.\n"
+homepage: http://prodigal.ornl.gov/
 icon: icon.jpg
 name: prodigal

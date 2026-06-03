@@ -3,4 +3,5 @@ name: abritamr
 category: Biology
 description: AMR gene detection pipeline that runs AMRFinderPlus on a single (or list
   ) of given isolates
-icon: icon.png
+homepage: https://github.com/MDU-PHL/abritamr
+icon: icon.jpg

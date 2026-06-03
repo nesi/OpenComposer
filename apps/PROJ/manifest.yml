@@ -1,5 +1,6 @@
 category: Earth Science
 description: "Program proj is a standard Unix filter function which converts \ngeographic\
   \ longitude and latitude coordinates into cartesian coordinates\n"
+homepage: http://trac.osgeo.org/proj/
 icon: icon.png
 name: PROJ

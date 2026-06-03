@@ -9,4 +9,5 @@ description: "The EIGENSOFT package combines functionality from our population g
   variation in frequency across ancestral \npopulations,  minimizing spurious associations
   while maximizing power to detect true associations. The EIGENSOFT \npackage has
   a built-in plotting script and supports multiple file formats and quantitative phenotypes.\n"
+homepage: http://www.hsph.harvard.edu/alkes-price/software/
 icon: icon.png

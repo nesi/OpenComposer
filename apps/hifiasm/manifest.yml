@@ -2,4 +2,5 @@
 name: hifiasm
 category: Biology
 description: 'Hifiasm: a haplotype-resolved assembler for accurate Hifi reads.'
+homepage: https://github.com/chhylp123/hifiasm
 icon: icon.png

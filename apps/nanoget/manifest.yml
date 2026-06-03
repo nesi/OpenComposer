@@ -3,4 +3,5 @@ name: nanoget
 category: Biology
 description: Functions to extract information from Oxford Nanopore sequencing data
   and alignments
+homepage: https://github.com/wdecoster/nanoget
 icon: icon.jpg

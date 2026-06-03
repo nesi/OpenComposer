@@ -2,4 +2,5 @@
 name: Spark
 category: Others
 description: Spark is Hadoop MapReduce done in memory
+homepage: http://spark.apache.org
 icon: icon.png

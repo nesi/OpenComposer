@@ -4,4 +4,5 @@ category: Others
 description: |
   Command line tools for Linux to support programmers in developing high
    performance multi threaded programs.
+homepage: https://github.com/RRZE-HPC/likwid
 icon: icon.png

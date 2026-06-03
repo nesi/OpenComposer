@@ -4,4 +4,5 @@ category: Biology
 description: |
   Bioconductor provides tools for the analysis and comprehension
    of high-throughput genomic data.
+homepage: https://bioconductor.org
 icon: icon.png

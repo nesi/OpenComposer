@@ -3,4 +3,5 @@ name: patchelf
 category: Others
 description: PatchELF is a small utility to modify the dynamic linker and RPATH of
   ELF executables.
+homepage: https://github.com/NixOS/patchelf
 icon: icon.png

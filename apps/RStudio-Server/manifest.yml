@@ -2,4 +2,5 @@
 name: RStudio-Server
 category: Others
 description: RStudio-Server for OpenOnDemand.
+homepage: https://www.rstudio.com/
 icon: icon.png

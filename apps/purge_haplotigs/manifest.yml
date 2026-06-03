@@ -2,4 +2,5 @@
 name: purge_haplotigs
 category: Biology
 description: Pipeline to help with curating heterozygous diploid genome assemblies
+homepage: https://bitbucket.org/mroachawri/purge_haplotigs/src/master/
 icon: icon.png

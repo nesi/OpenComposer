@@ -1,4 +1,5 @@
 category: Biology
 description: Fully automated metagenomics pipeline, from reads to bins.
+homepage: https://github.com/jtamames/SqueezeMeta
 icon: icon.jpg
 name: SqueezeMeta

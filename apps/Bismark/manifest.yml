@@ -1,5 +1,6 @@
 category: Biology
 description: 'A tool to map bisulfite converted sequence reads and
+homepage: http://www.bioinformatics.babraham.ac.uk/projects/bismark/
 
   determine cytosine methylation states
 

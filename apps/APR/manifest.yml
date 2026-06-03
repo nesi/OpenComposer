@@ -2,3 +2,4 @@
 name: APR
 category: Others
 description: Apache Portable Runtime (APR) libraries.
+homepage: http://apr.apache.org/

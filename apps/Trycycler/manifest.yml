@@ -2,4 +2,5 @@
 name: Trycycler
 category: Biology
 description: Tool for generating consensus long-read assemblies for bacterial genomes.
+homepage: https://github.com/rrwick/Trycycler
 icon: icon.jpg

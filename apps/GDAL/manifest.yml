@@ -8,5 +8,6 @@ description: "GDAL is a translator library for raster geospatial data formats th
   \ sets GDAL_CACHEMAX=256 (256MB), \n which should have no performance impact. Feel\
   \ free to change if necessary, using 'export GDAL_CACHEMAX=xxx' (in your job script)\
   \ \n after loading the GDAL module.\n"
+homepage: http://www.gdal.org/
 icon: icon.png
 name: GDAL

@@ -3,4 +3,5 @@ name: arpack-ng
 category: Others
 description: ARPACK is a collection of Fortran77 subroutines designed to solve large
   scale eigenvalue problems.
+homepage: https://github.com/opencollab/arpack-ng
 icon: icon.png

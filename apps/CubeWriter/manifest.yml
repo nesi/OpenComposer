@@ -2,4 +2,5 @@
 name: CubeWriter
 category: Others
 description: Cube high-performance C writer library component.
+homepage: https://www.scalasca.org/software/cube-4.x/download.html
 icon: icon.png

@@ -2,4 +2,5 @@
 name: lighttpd
 category: Others
 description: A web server.
+homepage: https://www.lighttpd.net/
 icon: icon.png

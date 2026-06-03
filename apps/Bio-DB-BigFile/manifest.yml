@@ -2,4 +2,5 @@
 name: Bio-DB-BigFile
 category: Biology
 description: Read BigWig and BigBed genome feature databases
+homepage: https://metacpan.org/release/Bio-BigFile
 icon: icon.png

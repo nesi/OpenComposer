@@ -2,3 +2,4 @@
 name: libdrm
 category: Others
 description: Direct Rendering Manager runtime library.
+homepage: https://dri.freedesktop.org

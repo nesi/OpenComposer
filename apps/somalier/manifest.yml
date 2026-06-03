@@ -1,5 +1,6 @@
 category: Biology
 description: "extract informative sites, evaluate relatedness, and \nperform quality-control\
   \ on BAM/CRAM/BCF/VCF/GVCF\n"
+homepage: https://github.com/brentp/somalier
 icon: icon.jpg
 name: somalier

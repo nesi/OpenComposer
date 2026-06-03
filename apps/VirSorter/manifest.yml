@@ -1,4 +1,5 @@
 category: Biology
 description: 'VirSorter: mining viral signal from microbial genomic data.'
+homepage: https://github.com/jiarong/VirSorter2
 icon: icon.png
 name: VirSorter

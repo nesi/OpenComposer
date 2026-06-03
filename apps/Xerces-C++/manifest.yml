@@ -1,5 +1,6 @@
 category: Others
 description: 'Xerces-C++ is a validating XML parser written in a portable
+homepage: https://xerces.apache.org/xerces-c/
 
   subset of C++. Xerces-C++ makes it easy to give your application the ability to
 

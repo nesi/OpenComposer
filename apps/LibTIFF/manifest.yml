@@ -2,4 +2,5 @@
 name: LibTIFF
 category: Visualisation
 description: 'tiff: Library and tools for reading and writing TIFF data files'
+homepage: https://libtiff.gitlab.io/libtiff/
 icon: icon.png

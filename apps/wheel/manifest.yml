@@ -2,4 +2,5 @@
 name: wheel
 category: Others
 description: A built-package format for Python.
+homepage: https://pypi.python.org/pypi/wheel
 icon: icon.jpg

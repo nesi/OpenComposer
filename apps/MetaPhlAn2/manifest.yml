@@ -6,3 +6,4 @@ description: |
    communities (Bacteria, Archaea, Eukaryotes and Viruses) from metagenomic shotgun sequencing
    data (i.e. not 16S) with species-level. With the newly added StrainPhlAn module, it is now
    possible to perform accurate strain-level microbial profiling.
+homepage: https://bitbucket.org/%(bitbucket_account)s/%(namelower)s/

@@ -2,4 +2,5 @@
 name: yacrd
 category: Biology
 description: Chimeric Read Detector for long reads
+homepage: https://github.com/natir/yacrd
 icon: icon.jpg

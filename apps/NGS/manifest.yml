@@ -4,4 +4,5 @@ category: Biology
 description: |
   NGS is a new, domain-specific API for accessing reads, alignments and pileups produced from
    Next Generation Sequencing.
+homepage: https://github.com/ncbi/ngs
 icon: icon.png

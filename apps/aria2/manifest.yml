@@ -2,4 +2,5 @@
 name: aria2
 category: Others
 description: aria2 is a lightweight multi-protocol & multi-source command-line download utility.
+homepage: https://aria2.github.io
 icon: icon.png

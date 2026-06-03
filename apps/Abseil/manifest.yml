@@ -1,7 +1,0 @@
----
-name: Abseil
-category: Others
-description: |
-  Collection of C++ library code designed to augment the
-  C++ standard library.
-icon: icon.jpg

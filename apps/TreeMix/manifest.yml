@@ -4,4 +4,5 @@ category: Biology
 description: |
   TreeMix is a method for inferring the patterns of population splits and mixtures in the history of a
    set of populations.
+homepage: http://bitbucket.org/nygcresearch/treemix
 icon: icon.png

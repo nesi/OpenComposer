@@ -5,4 +5,5 @@ description: "Aggregate results from bioinformatics analyses across many samples
   a single \n report.\n MultiQC searches a given directory for analysis logs and compiles
   a HTML report. It's a general\n use tool, perfect for summarising the output from
   numerous bioinformatics tools.\n"
+homepage: http://multiqc.info
 icon: icon.png

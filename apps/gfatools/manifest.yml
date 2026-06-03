@@ -2,4 +2,5 @@
 name: gfatools
 category: Biology
 description: Tools for manipulating sequence graphs in the GFA and rGFA formats
+homepage: https://github.com/lh3/gfatools
 icon: icon.png

@@ -2,4 +2,5 @@
 name: GTK+
 category: Others
 description: GTK+ is the primary library used to construct user interfaces in GNOME.
+homepage: https://developer.gnome.org/gtk3/stable/
 icon: icon.png

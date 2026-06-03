@@ -1,5 +1,6 @@
 category: Biology
 description: 'A robust and fast clustering method for amplicon-based studies.
+homepage: https://github.com/torognes/swarm
 
   The purpose of swarm is to provide a novel clustering algorithm that handles massive
   sets of amplicons. Results of traditional clustering algorithms are strongly input-order

@@ -3,4 +3,5 @@ name: Foldseek
 category: Biology
 description: "Foldseek enables fast and sensitive comparisons of large protein structure
   sets, \nsupporting monomer and multimer searches, as well as clustering.\n"
+homepage: https://github.com/steineggerlab/foldseek
 icon: icon.png

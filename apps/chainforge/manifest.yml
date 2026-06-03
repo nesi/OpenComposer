@@ -2,4 +2,5 @@
 name: chainforge
 category: Others
 description: Nvidia and AMD GPU utility for SeisSol.
+homepage: https://github.com/SeisSol/chainforge/tree/v0.0.3
 icon: icon.png

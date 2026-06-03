@@ -2,4 +2,5 @@
 name: Monocle3
 category: Biology
 description: An analysis toolkit for single-cell RNA-seq.
+homepage: https://cole-trapnell-lab.github.io/monocle3/
 icon: icon.png

@@ -2,4 +2,5 @@
 name: LINKS
 category: Biology
 description: Alignment-free scaffolding of genome assembly drafts with long reads
+homepage: http://www.bcgsc.ca/bioinfo/software/links
 icon: icon.png

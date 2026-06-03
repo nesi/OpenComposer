@@ -2,4 +2,5 @@
 name: GD
 category: Visualisation
 description: Interface to Gd Graphics Library
+homepage: https://github.com/lstein/Perl-GD
 icon: icon.png

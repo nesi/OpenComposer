@@ -7,4 +7,5 @@ description: |
   Performs chimera detection, clustering, full-length and prefix dereplication, rereplication, masking, 
   all-vs-all pairwise global alignment, exact and global alignment searching, shuffling, subsampling 
   and sorting. It also supports FASTQ file analysis, filtering, conversion and merging of paired-end reads.
+homepage: https://github.com/torognes/vsearch
 icon: icon.jpg

@@ -1,5 +1,6 @@
 category: Biology
 description: Detects in-sample contamination in mtDNA or WGS sequencing studies by
   analyzing the mitchondrial content
+homepage: https://github.com/genepi/haplocheck
 icon: icon.png
 name: haplocheck

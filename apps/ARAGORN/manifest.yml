@@ -2,4 +2,5 @@
 name: ARAGORN
 category: Others
 description: a program to detect tRNA genes and tmRNA genes in nucleotide sequences
+homepage: https://www.trna.se/ARAGORN/
 icon: icon.png

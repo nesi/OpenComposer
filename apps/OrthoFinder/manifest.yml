@@ -1,5 +1,6 @@
 category: Biology
 description: OrthoFinder is a fast, accurate and comprehensive platform for comparative
   genomics
+homepage: https://github.com/OrthoFinder/OrthoFinder
 icon: icon.png
 name: OrthoFinder

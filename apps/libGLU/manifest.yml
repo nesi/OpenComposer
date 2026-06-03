@@ -2,4 +2,5 @@
 name: libGLU
 category: Others
 description: The OpenGL Utility Library (GLU) is a computer graphics library for OpenGL.
+homepage: ftp://ftp.freedesktop.org/pub/mesa/glu/
 icon: icon.gif

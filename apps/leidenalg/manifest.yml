@@ -1,5 +1,6 @@
 category: Others
 description: 'Implementation of the Leiden algorithm for various quality
+homepage: https://github.com/vtraag/leidenalg
 
   functions to be used with igraph in Python.
 

@@ -2,4 +2,5 @@
 name: libcircle
 category: Others
 description: API for distributing embarrassingly parallel workloads using self-stabilization.
+homepage: https://github.com/hpc/libcircle/
 icon: icon.png

@@ -3,4 +3,5 @@ name: NCO
 category: Others
 description: manipulates and analyzes data stored in netCDF-accessible formats, including
   DAP, HDF4, and HDF5
+homepage: http://nco.sourceforge.net
 icon: icon.png

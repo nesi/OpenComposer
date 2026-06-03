@@ -3,5 +3,6 @@ description: "Apache Ant is a Java library and command-line tool whose mission i
   \ to drive processes described in\n build files as targets and extension points\
   \ dependent upon each other. The main known usage of Ant is the build of\n Java\
   \ applications.\n"
+homepage: http://ant.apache.org/
 icon: icon.png
 name: ant

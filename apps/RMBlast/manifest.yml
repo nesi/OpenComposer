@@ -6,4 +6,5 @@ description: |
   Support for custom matrices ( without KA-Statistics ).
   Support for cross_match-like complexity adjusted scoring. Cross_match is Phil Green's seeded smith-waterman search algorithm.
   Support for cross_match-like masklevel filtering..
+homepage: http://www.repeatmasker.org/RMBlast.html
 icon: icon.png

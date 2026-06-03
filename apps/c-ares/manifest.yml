@@ -2,4 +2,5 @@
 name: c-ares
 category: Others
 description: c-ares is a C library for asynchronous DNS requests (including name resolves)
+homepage: https://c-ares.org/
 icon: icon.jpg

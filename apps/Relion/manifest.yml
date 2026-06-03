@@ -5,4 +5,5 @@ description: "RELION (for REgularised LIkelihood OptimisatioN, pronounce rely-on
   \n    is a stand-alone computer program that employs an empirical Bayesian \n    approach
   to refinement of (multiple) 3D reconstructions or 2D class \n    averages in electron
   cryo-microscopy (cryo-EM).\n"
+homepage: http://www2.mrc-lmb.cam.ac.uk/relion/index.php/Main_Page
 icon: icon.png

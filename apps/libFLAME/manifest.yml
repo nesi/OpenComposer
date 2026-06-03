@@ -1,5 +1,6 @@
 category: Others
 description: 'libFLAME is a portable library for dense matrix computations,
+homepage: https://developer.amd.com/amd-cpu-libraries/blas-library/#libflame
 
   providing much of the functionality present in LAPACK.
 

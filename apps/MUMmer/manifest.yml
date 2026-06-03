@@ -4,4 +4,5 @@ category: Biology
 description: |
   MUMmer is a system for rapidly aligning entire genomes,
    whether in complete or draft form. AMOS makes use of it.
+homepage: http://mummer.sourceforge.net/
 icon: icon.jpg

@@ -2,4 +2,5 @@
 name: impalajit
 category: Others
 description: A lightweight JIT compiler for flexible data access in simulation applications
+homepage: https://github.com/uphoffc/ImpalaJIT
 icon: icon.jpg

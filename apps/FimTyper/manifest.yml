@@ -3,4 +3,5 @@ name: FimTyper
 category: Biology
 description: Identifies the FimH type in total or partial sequenced isolates of E.
   coli..
+homepage: https://bitbucket.org/genomicepidemiology/fimtyper
 icon: icon.png

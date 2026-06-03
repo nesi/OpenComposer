@@ -3,5 +3,6 @@ description: "Variant Effect Predictor (VEP) determines the effect of your\n var
   \ (SNPs, insertions, deletions, CNVs or structural variants) on genes,\n transcripts,\
   \ and protein sequence, as well as regulatory regions.\n Includes EnsEMBL-XS, which\
   \ provides pre-compiled replacements for frequently\n used routines in VEP.\n"
+homepage: https://www.ensembl.org/info/docs/tools/vep
 icon: icon.png
 name: VEP

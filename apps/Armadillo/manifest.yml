@@ -2,4 +2,5 @@
 name: Armadillo
 category: Mathematics
 description: C++ linear algebra library (matrix maths) aiming towards a good balance between speed and ease of use.
+homepage: http://arma.sourceforge.net/
 icon: icon.jpg

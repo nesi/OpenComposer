@@ -4,4 +4,5 @@ category: Biology
 description: |
   SATe-enabled Phylogenetic Placement - addresses the problem of phylogenetic
   placement of short reads into reference alignments and trees.
+homepage: https://github.com/smirarab/sepp
 icon: icon.jpg

@@ -6,4 +6,5 @@ description: "samblaster is a fast and flexible program for marking duplicates i
   read pairs and/or split read mappings to separate SAM files, and/or unmapped/clipped
   \nreads to a separate FASTQ file. When marking duplicates, samblaster will require
   approximately 20MB of memory per 1M read pairs.\n"
+homepage: http://github.com/GregoryFaust/samblaster
 icon: icon.png

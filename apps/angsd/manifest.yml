@@ -2,4 +2,5 @@
 name: angsd
 category: Biology
 description: Program for analysing NGS data.
+homepage: http://www.popgen.dk/angsd
 icon: icon.png

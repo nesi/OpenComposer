@@ -3,4 +3,5 @@ name: LTR_retriever
 category: Biology
 description: Highly accurate and sensitive program for identification of LTR retrotransposons;
   The LTR Assembly Index (LAI) is also included in this package.
+homepage: https://github.com/oushujun/LTR_retriever
 icon: icon.jpg

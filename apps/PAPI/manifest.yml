@@ -7,4 +7,5 @@ description: |
    software engineers to see, in near real time, the relation between software performance and processor events.
    In addition Component PAPI provides access to a collection of components
    that expose performance measurement opportunites across the hardware and software stack.
+homepage: http://icl.cs.utk.edu/projects/papi/
 icon: icon.png

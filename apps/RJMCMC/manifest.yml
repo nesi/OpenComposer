@@ -3,4 +3,5 @@ name: RJMCMC
 category: Others
 description: This library provides routines for running Reversible Jump Monte-Carlo
   Markov chains for 1-D and 2-D spatial regression problems.
+homepage: https://iearth.edu.au/codes/rj-MCMC/
 icon: icon.png

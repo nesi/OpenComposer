@@ -4,3 +4,4 @@ category: Others
 description: |
   Argtable is an ANSI C library for parsing GNU style
    command line options with a minimum of fuss.
+homepage: http://argtable.sourceforge.net/

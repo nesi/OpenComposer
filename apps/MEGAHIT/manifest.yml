@@ -1,5 +1,6 @@
 category: Biology
 description: "An ultra-fast single-node solution for large and complex\n metagenomics\
   \ assembly via succinct de Bruijn graph\n"
+homepage: https://github.com/voutcn/megahit
 icon: icon.jpg
 name: MEGAHIT

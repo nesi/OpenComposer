@@ -2,4 +2,5 @@
 name: Ragout
 category: Biology
 description: Tool for chromosome assembly using multiple references.
+homepage: http://fenderglass.github.io/Ragout/
 icon: icon.jpg

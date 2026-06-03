@@ -4,4 +4,5 @@ category: Others
 description: |
   Netscape Portable Runtime (NSPR) provides a platform-neutral API for system level
    and libc-like functions.
+homepage: https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSPR
 icon: icon.png

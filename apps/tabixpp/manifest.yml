@@ -2,4 +2,5 @@
 name: tabixpp
 category: Biology
 description: C++ wrapper to tabix indexer
+homepage: https://github.com/vcflib/tabixpp
 icon: icon.png

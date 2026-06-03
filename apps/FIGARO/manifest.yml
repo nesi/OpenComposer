@@ -3,4 +3,5 @@ name: FIGARO
 category: Biology
 description: An efficient and objective tool for optimizing microbiome rRNA gene trimming
   parameters.
+homepage: https://github.com/Zymo-Research/figaro
 icon: icon.png

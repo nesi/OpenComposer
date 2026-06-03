@@ -9,4 +9,5 @@ description: |
    form based upload, proxies, cookies, user+password authentication (Basic,
    Digest, NTLM, Negotiate, Kerberos), file transfer resume, http proxy tunneling
    and more.
+homepage: https://curl.haxx.se
 icon: icon.png

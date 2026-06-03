@@ -4,4 +4,5 @@ category: Biology
 description: |
   A suite of tools to conduct metabarcoding analyses targeting any group of organisms. Includes utilities 
   for preprocessing raw data and building your own custom reference database.
+homepage: https://murraycadzow.github.io/2021-obss-day4/index.html
 icon: icon.jpg

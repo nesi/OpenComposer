@@ -1,5 +1,6 @@
 category: Biology
 description: Implements a fast and approximate algorithm for computing local alignment
   boundaries between long DNA sequences
+homepage: https://github.com/marbl/merqury
 icon: icon.png
 name: MashMap

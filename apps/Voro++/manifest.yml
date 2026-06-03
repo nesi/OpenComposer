@@ -7,4 +7,5 @@ description: |
   computing the Voronoi cell for each particle individually. It is particularly well-suited for applications that
   rely on cell-based statistics, where features of Voronoi cells (eg. volume, centroid, number of faces) can be used
   to analyze a system of particles.
+homepage: http://math.lbl.gov/voro++/
 icon: icon.png

@@ -2,5 +2,6 @@ category: Biology
 description: "Pipeline for predicting and scoring hints (in the form of introns, start\
   \ and\n stop codons) in the genome of interest by mapping and spliced aligning predicted\
   \ genes to a database of\n reference protein sequences.\n"
+homepage: https://github.com/gatech-genemark/ProtHint
 icon: icon.png
 name: ProtHint

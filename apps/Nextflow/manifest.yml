@@ -1,5 +1,6 @@
 category: Workflow Management
 description: "Nextflow is a reactive workflow framework and a programming DSL\n that\
   \ eases writing computational pipelines with complex data\n"
+homepage: https://www.nextflow.io/
 icon: icon.png
 name: Nextflow

@@ -1,5 +1,6 @@
 category: Mathematics
 description: 'muParser is an extensible high performance math expression
+homepage: http://beltoforion.de/article.php?a=muparser
 
   parser library written in C++. It works by transforming a mathematical
 

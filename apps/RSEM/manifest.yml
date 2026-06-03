@@ -2,4 +2,5 @@
 name: RSEM
 category: Biology
 description: Estimates gene and isoform expression levels from RNA-Seq data
+homepage: http://deweylab.biostat.wisc.edu/rsem/
 icon: icon.png

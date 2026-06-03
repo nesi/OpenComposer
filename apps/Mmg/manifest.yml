@@ -9,3 +9,4 @@ description: |
   and isovalue discretization the mmg3d application and the libmmg3d library: adaptation and optimization
   of a tetrahedral mesh and implicit domain meshing the libmmg library gathering the libmmg2d,
   libmmgs and libmmg3d libraries.
+homepage: https://www.mmgtools.org/

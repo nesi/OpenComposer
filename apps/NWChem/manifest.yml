@@ -8,4 +8,5 @@ description: |
    NWChem software can handle: biomolecules, nanostructures, and solid-state; from quantum to classical, and all
    combinations; Gaussian basis functions or plane-waves; scaling from one to thousands of processors; properties
    and relativity.
+homepage: https://nwchemgit.github.io/
 icon: icon.png

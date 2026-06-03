@@ -1,5 +1,6 @@
 category: Biology
 description: "GenomeTools: A Comprehensive Software Library for Efficient Processing\
   \ of\n  Structured Genome Annotations.\n"
+homepage: http://genometools.org
 icon: icon.png
 name: genometools

@@ -3,4 +3,5 @@ name: snakemake
 category: Workflow Management
 description: The Snakemake workflow management system is a tool to create reproducible
   and scalable data analyses.
+homepage: https://snakemake.readthedocs.io
 icon: icon.png

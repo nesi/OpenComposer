@@ -3,4 +3,5 @@ name: REViewer
 category: Biology
 description: Tool for visualizing alignments of reads in regions containing tandem
   repeats
+homepage: https://github.com/Illumina/REViewer
 icon: icon.jpg

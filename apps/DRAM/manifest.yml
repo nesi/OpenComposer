@@ -2,4 +2,5 @@
 name: DRAM
 category: Biology
 description: Tool for annotating metagenomic assembled genomes and VirSorter identified viral contigs..
+homepage: https://pypi.org/project/DRAM-bio/
 icon: icon.jpg

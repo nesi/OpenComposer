@@ -2,4 +2,5 @@
 name: TMHMM
 category: Biology
 description: Prediction of transmembrane helices in proteins
+homepage: https://services.healthtech.dtu.dk/software.php
 icon: icon.png

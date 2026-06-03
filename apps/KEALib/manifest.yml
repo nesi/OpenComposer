@@ -10,3 +10,4 @@ description: |
   independent software library (libkea) provides complete access to the KEA image
   format and a GDAL driver allowing KEA images to be used from any GDAL supported
   software.
+homepage: http://www.kealib.org

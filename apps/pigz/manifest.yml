@@ -2,4 +2,5 @@
 name: pigz
 category: Others
 description: parallel implementation of gzip,
+homepage: http://zlib.net/pigz/
 icon: icon.png

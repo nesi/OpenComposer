@@ -1,5 +1,6 @@
 category: Biology
 description: "Hghly accurate statistical method that computes the abundance of \n\
   species in DNA sequences from a metagenomics sample.\n"
+homepage: https://ccb.jhu.edu/software/bracken/
 icon: icon.jpg
 name: Bracken

@@ -1,5 +1,6 @@
 category: Biology
 description: 'Minimap2 is a fast sequence mapping and alignment
+homepage: https://github.com/lh3/minimap2
 
   program that can find overlaps between long noisy reads, or map long
 

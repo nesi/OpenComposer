@@ -2,4 +2,5 @@
 name: ANSYS
 category: Engineering
 description: A bundle of computer-aided engineering software including Fluent and CFX.
+homepage: https://www.ansys.com
 icon: icon.jpg

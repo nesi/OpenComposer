@@ -3,5 +3,6 @@ description: "Node.js is a platform built on Chrome's JavaScript runtime\n for e
   \ building fast, scalable network applications. Node.js uses an\n event-driven,\
   \ non-blocking I/O model that makes it lightweight and efficient,\n perfect for\
   \ data-intensive real-time applications that run across distributed devices.\n"
+homepage: https://nodejs.org
 icon: icon.png
 name: nodejs

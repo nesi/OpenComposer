@@ -2,4 +2,5 @@
 name: PhyML
 category: Biology
 description: Phylogenetic estimation using Maximum Likelihood
+homepage: https://github.com/stephaneguindon/phyml
 icon: icon.jpg

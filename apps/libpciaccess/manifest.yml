@@ -2,4 +2,5 @@
 name: libpciaccess
 category: Others
 description: Generic PCI access library.
+homepage: https://cgit.freedesktop.org/xorg/lib/libpciaccess/
 icon: icon.png

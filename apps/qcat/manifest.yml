@@ -1,5 +1,6 @@
 category: Biology
 description: Command-line tool for demultiplexing Oxford Nanopore reads from FASTQ
   files
+homepage: https://github.com/nanoporetech/qcat/releases
 icon: icon.png
 name: qcat

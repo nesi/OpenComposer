@@ -3,4 +3,5 @@ name: KMC
 category: Biology
 description: Disk-based programm for counting k-mers from (possibly gzipped) FASTQ/FASTA
   files.
+homepage: http://sun.aei.polsl.pl/kmc
 icon: icon.png

@@ -2,4 +2,5 @@
 name: duplex-tools
 category: Biology
 description: Range of tools to support operations on Duplex Sequencing read pairs.
+homepage: https://github.com/nanoporetech/duplex-tools
 icon: icon.png

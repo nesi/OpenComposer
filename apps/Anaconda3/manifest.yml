@@ -10,4 +10,5 @@ description: "Built to complement the rich, open source Python community,\nthe A
   thread by default, avoiding accidental oversubscription\n           of cores. The
   number of threads can be increased for large problems, please\n           refer
   to the Intel MKL documentation for guidance.\n"
+homepage: https://www.continuum.io/anaconda-overview
 icon: icon.png

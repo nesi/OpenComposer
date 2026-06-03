@@ -2,4 +2,5 @@
 name: tRNAscan-SE
 category: Biology
 description: Transfer RNA detection
+homepage: https://github.com/UCSC-LoweLab/tRNAscan-SE
 icon: icon.png

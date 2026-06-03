@@ -2,4 +2,5 @@
 name: GStreamer
 category: Visualisation
 description: library for constructing graphs of media-handling components..
+homepage: https://gstreamer.freedesktop.org/
 icon: icon.png

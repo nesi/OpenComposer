@@ -4,4 +4,5 @@ category: Others
 description: |
   TurboVNC is a derivative of VNC (Virtual Network Computing) that is tuned to provide
    peak performance for 3D and video workloads.
+homepage: https://www.turbovnc.org
 icon: icon.png

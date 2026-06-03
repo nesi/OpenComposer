@@ -4,4 +4,5 @@ category: Others
 description: |
   C/C++ and Java libraries providing Unicode and Globalization
    support for software applications.
+homepage: https://icu-project.org/
 icon: icon.png

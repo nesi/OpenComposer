@@ -2,3 +2,4 @@
 name: ExaML
 category: Biology
 description: Exascale Maximum Likelihood for phylogenetic inference using MPI.
+homepage: https://sco.h-its.org/exelixis/web/software/examl/index.html

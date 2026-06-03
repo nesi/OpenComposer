@@ -6,5 +6,6 @@ description: "PLINK is a free, open-source whole genome association analysis too
   \ planning, generating genotype or CNV calls from raw data). \n Through integration\
   \ with gPLINK and Haploview, there is some support for the subsequent visualization,\
   \ \n annotation and storage of results.\n"
+homepage: https://www.cog-genomics.org/plink2
 icon: icon.png
 name: PLINK

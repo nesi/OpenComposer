@@ -1,5 +1,6 @@
 category: Biology
 description: Extracting Coding Sequence and Introns for Phylogenetics from High-Throughput
   Sequencing Reads Using Target Enrichment.
+homepage: https://github.com/mossmatters/HybPiper
 icon: icon.jpg
 name: HybPiper

@@ -1,5 +1,6 @@
 category: Biology
 description: Pipeline that screens for presence of genes of interest (GOI) in bacterial
   assemblies.
+homepage: https://github.com/shimbalama/screen_assembly
 icon: icon.jpg
 name: screen_assembly

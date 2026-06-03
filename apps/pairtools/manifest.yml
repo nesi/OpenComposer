@@ -2,4 +2,5 @@
 name: pairtools
 category: Biology
 description: CLI tools to process mapped Hi-C data
+homepage: https://github.com/open2c/pairtools
 icon: icon.png

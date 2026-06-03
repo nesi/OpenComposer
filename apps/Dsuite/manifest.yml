@@ -2,4 +2,5 @@
 name: Dsuite
 category: Biology
 description: Fast calculation of the ABBA-BABA statistics across many populations/species
+homepage: https://github.com/millanek/Dsuite
 icon: icon.png

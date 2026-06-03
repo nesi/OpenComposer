@@ -1,5 +1,6 @@
 category: Biology
 description: 'Ultrafast and memory-efficient tool for aligning
+homepage: http://bowtie-bio.sourceforge.net/bowtie2/index.shtml
 
   sequencing reads to long reference sequences.
 

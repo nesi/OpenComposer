@@ -1,4 +1,5 @@
 category: Others
 description: Reference implementation of OGC KML 2.2
+homepage: https://github.com/libkml/libkml
 icon: icon.png
 name: libKML

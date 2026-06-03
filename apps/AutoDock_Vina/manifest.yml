@@ -2,4 +2,5 @@
 name: AutoDock_Vina
 category: Others
 description: AutoDock Vina is an open-source program for doing molecular docking.
+homepage: http://vina.scripps.edu/index.html
 icon: icon.jpg

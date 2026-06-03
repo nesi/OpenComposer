@@ -4,4 +4,5 @@ category: Biology
 description: |
   SnpEff is a variant annotation and effect prediction tool. 
    It annotates and predicts the effects of genetic variants (such as amino acid changes).
+homepage: https://pcingola.github.io/SnpEff/
 icon: icon.png

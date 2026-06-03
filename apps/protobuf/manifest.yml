@@ -2,4 +2,5 @@
 name: protobuf
 category: Others
 description: Google Protocol Buffers.
+homepage: https://github.com/protocolbuffers/protobuf
 icon: icon.png

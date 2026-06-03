@@ -2,4 +2,5 @@
 name: datasets
 category: Biology
 description: Tool to gather data from across NCBI databases
+homepage: https://www.ncbi.nlm.nih.gov/datasets/docs/v2/download-and-install/
 icon: icon.png

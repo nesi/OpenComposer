@@ -2,4 +2,5 @@
 name: SIONlib
 category: Others
 description: Scalable I/O library for parallel access to task-local files.
+homepage: https://www.fz-juelich.de/ias/jsc/EN/Expertise/Support/Software/SIONlib/_node.html
 icon: icon.png

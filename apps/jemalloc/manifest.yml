@@ -1,5 +1,6 @@
 category: Others
 description: "A general purpose malloc(3) implementation that emphasizes fragmentation\
   \ avoidance and\n scalable concurrency support.\n"
+homepage: http://www.canonware.com/jemalloc
 icon: icon.jpg
 name: jemalloc

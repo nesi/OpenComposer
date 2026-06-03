@@ -3,4 +3,5 @@ name: SpectrA
 category: Others
 description: C++ library for large scale eigenvalue problems, built on top of Eigen,
   an open source linear algebra library.
+homepage: https://spectralib.org/
 icon: icon.png

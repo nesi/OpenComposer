@@ -4,4 +4,5 @@ category: Biology
 description: |
   Identify candidate loci under natural selection from genetic data,
    using differences in allele frequencies between populations.
+homepage: http://cmpg.unibe.ch/software/BayeScan/
 icon: icon.png

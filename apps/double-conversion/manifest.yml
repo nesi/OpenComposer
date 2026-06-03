@@ -1,5 +1,6 @@
 category: Others
 description: Efficient binary-decimal and decimal-binary conversion routines for IEEE
   doubles.
+homepage: https://github.com/google/double-conversion
 icon: icon.png
 name: double-conversion

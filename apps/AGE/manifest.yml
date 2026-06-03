@@ -2,4 +2,5 @@
 name: AGE
 category: Biology
 description: Alignment of sequences with structural variants.
+homepage: https://github.com/abyzovlab/AGE
 icon: icon.png

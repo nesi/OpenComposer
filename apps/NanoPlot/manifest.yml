@@ -2,4 +2,5 @@
 name: NanoPlot
 category: Biology
 description: Plotting suite for Oxford Nanopore sequencing data and alignments.
+homepage: https://github.com/wdecoster/NanoPlot
 icon: icon.jpg

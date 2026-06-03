@@ -4,4 +4,5 @@ category: Others
 description: |
   library supports both MCL, a cluster algorithm for graphs, and zoem, a
   macro/DSL language
+homepage: https://github.com/micans/cimfomfa
 icon: icon.png

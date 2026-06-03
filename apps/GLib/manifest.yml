@@ -2,4 +2,5 @@
 name: GLib
 category: Others
 description: GLib is one of the base libraries of the GTK+ project
+homepage: https://www.gtk.org/
 icon: icon.png

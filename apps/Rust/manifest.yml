@@ -1,5 +1,6 @@
 category: Language
 description: "Systems programming language that runs blazingly fast, prevents segfaults,\n\
   \ and guarantees thread safety.\n"
+homepage: https://www.rust-lang.org
 icon: icon.png
 name: Rust

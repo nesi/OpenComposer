@@ -3,5 +3,6 @@ description: "Clustal Omega is a multiple sequence alignment\n program for prote
   \ It produces biologically meaningful multiple\n sequence alignments of divergent\
   \ sequences. Evolutionary relationships\n can be seen via viewing Cladograms or\
   \ Phylograms\n"
+homepage: http://www.clustal.org/omega/
 icon: icon.png
 name: Clustal-Omega

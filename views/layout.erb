@@ -196,7 +196,7 @@
                 <a href="#" class="nav-link dropdown-toggle <%= active?("" != @dir_name && "history" != @dir_name && "nodes" != @dir_name) %>" data-bs-toggle="dropdown">
                   Application
                 </a>
-                <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>;">
+                <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>; max-height: 80vh; overflow-y: auto;">
                   <% @manifests_w_category.group_by(&:category).each do |category, manifests| %>
                     <li class="dropdown-header"><%= category %></li>
                     <% manifests.each do |m| %>

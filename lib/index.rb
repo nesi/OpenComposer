@@ -126,6 +126,12 @@ HTML
     HTML
   end
 
+  # Compact pill link for the small home format (no icon).
+  def output_small_app_link(dirname, name)
+    safe_nm = ERB::Util.h(name)
+    %(<a href="#{@script_name}/#{dirname}" class="btn btn-sm btn-outline-secondary py-0 px-2 oc-small-app-link">#{safe_nm}</a>)
+  end
+
   # Like output_thumbnail but resolves icons from generic_apps_dir and links to /_generic/{dirname}.
   def output_generic_thumbnail(dirname, name, icon, href_suffix = "")
     generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"

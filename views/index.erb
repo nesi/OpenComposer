@@ -1,3 +1,33 @@
+<% small_format = @conf['home_format'].to_s == 'small' %>
+
+<% if small_format %>
+<%# ── Small format: letter-grouped pills, no icons ───────────────────────── %>
+
+<% all_categorised = @manifests_w_category.group_by(&:category).to_a %>
+<% all_categorised << ["Application", @manifests_wo_category] if @manifests_wo_category.any? %>
+
+<% all_categorised.each.with_index do |(category, manifests), index| %>
+  <div class="mt-<%= index == 0 ? 0 : 3 %> mb-1 mx-1 px-3 py-1 fs-5 bg-gradient border-bottom"
+       style="background:<%= @conf['category_color'] %>; color:<%= @conf['category_text_color'] %>;">
+    <%= category %>
+  </div>
+  <div class="px-4 pb-2 pt-1">
+    <% manifests.group_by { |m| m['name'].to_s[0].upcase }.sort.each do |letter, apps| %>
+      <div class="d-flex align-items-baseline mb-1">
+        <span class="fw-bold me-2 text-muted" style="min-width:1.4em; font-size:0.75rem;"><%= letter %></span>
+        <div class="d-flex flex-wrap gap-1">
+          <% apps.each do |m| %>
+            <%= output_small_app_link(m['dirname'], m['name']) %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<% else %>
+<%# ── Big format: icon thumbnails (current layout) ───────────────────────── %>
+
 <% @manifests_w_category.group_by(&:category).each.with_index do |(category, manifests), index| %>
   <div class="mt-<%= index == 0 ? 0 : 3 %> mb-4 mx-1 px-3 py-1 fs-5 bg-gradient border-bottom"
        style="background:<%= @conf['category_color'] %>; color:<%= @conf['category_text_color'] %>;">
@@ -22,6 +52,9 @@
   </div>
 <% end %>
 
+<% end %>
+
+<%# ── My Templates (same for both formats) ──────────────────────────────── %>
 <div class="mt-3 mb-2 mx-1 px-3 py-1 fs-5 bg-gradient border-bottom d-flex justify-content-between align-items-center"
      style="background:<%= @conf['category_color'] %>; color:<%= @conf['category_text_color'] %>;">
   My Templates

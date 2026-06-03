@@ -1,17 +1,6 @@
 <%
   small_format = @conf['home_format'].to_s == 'small'
-  _search_apps = @all_manifests.map { |m|
-    { dirname: m.dirname, name: m.name, category: m.category,
-      description: m.description, hidden: m.hidden }
-  }.to_json.gsub('</', '<\/')
 %>
-
-<%# ── Search bar ──────────────────────────────────────────────────────────── %>
-<div class="px-3 pt-2 pb-1">
-  <input type="search" id="oc-search" class="form-control"
-         placeholder="Search all applications (including hidden)…" autocomplete="off">
-</div>
-<div id="oc-search-results" class="px-3 py-1" style="display:none;"></div>
 
 <div id="oc-app-list">
 <% if small_format %>
@@ -90,54 +79,6 @@
 <% end %>
 
 </div><%# /oc-app-list %>
-
-<script>
-(function() {
-  var ALL_APPS = <%= _search_apps %>;
-  var scriptName = '<%= @script_name %>';
-
-  function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  var input   = document.getElementById('oc-search');
-  var results = document.getElementById('oc-search-results');
-  var list    = document.getElementById('oc-app-list');
-
-  input.addEventListener('input', function() {
-    var q = this.value.trim().toLowerCase();
-    if (!q) {
-      results.style.display = 'none';
-      results.innerHTML = '';
-      list.style.display = '';
-      return;
-    }
-    list.style.display = 'none';
-    results.style.display = '';
-
-    var matches = ALL_APPS.filter(function(m) {
-      return (m.name        || '').toLowerCase().includes(q) ||
-             (m.category    || '').toLowerCase().includes(q) ||
-             (m.description || '').toLowerCase().includes(q);
-    });
-
-    if (!matches.length) {
-      results.innerHTML = '<p class="py-2 text-muted">No applications found.</p>';
-      return;
-    }
-
-    results.innerHTML = matches.map(function(m) {
-      var badges = '';
-      if (m.category) badges += '<span class="badge text-bg-secondary me-1">' + esc(m.category) + '</span>';
-      if (m.hidden)   badges += '<span class="badge text-bg-warning  me-1">Hidden</span>';
-      var desc = m.description ? '<div class="small text-muted">' + esc(m.description) + '</div>' : '';
-      return '<a href="' + scriptName + '/' + esc(m.dirname) + '" class="d-block text-decoration-none py-2 border-bottom">' +
-             '<div>' + badges + '<span class="fw-semibold">' + esc(m.name) + '</span></div>' +
-             desc + '</a>';
-    }).join('');
-  });
-})();
-</script>
 
 <div class="modal fade" id="modal-rename-template" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">

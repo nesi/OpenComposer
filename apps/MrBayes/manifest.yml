@@ -1,4 +1,5 @@
+name: MrBayes
 category: Biology
 description: MrBayes is a program for the Bayesian estimation of phylogeny.
 homepage: https://nbisweden.github.io/MrBayes/
-name: MrBayes
+hidden: true

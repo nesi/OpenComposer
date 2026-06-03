@@ -3,3 +3,4 @@ category: Biology
 description: MUSCLE is a program for creating multiple alignments of amino acid or nucleotide sequences.
 homepage: http://drive5.com/muscle/
 icon: icon.png
+hidden: true

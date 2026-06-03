@@ -1,6 +1,5 @@
----
 name: PILERCR
 category: Others
-description: PILER-CR is a program specifically designed for the identification and
-  analysis of CRISPR repeats.
+description: PILER-CR is a program specifically designed for the identification and analysis of CRISPR repeats.
 homepage: https://www.drive5.com/pilercr/
+hidden: true

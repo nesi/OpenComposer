@@ -3,3 +3,4 @@ category: Others
 description: Hypre is a library for solving large, sparse linear systems of equations on massively parallel computers.
 homepage: https://computation.llnl.gov/projects/hypre-scalable-linear-solvers-multigrid-methods
 icon: icon.png
+hidden: true

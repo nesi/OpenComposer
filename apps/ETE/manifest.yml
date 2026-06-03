@@ -3,3 +3,4 @@ category: Biology
 description: A Python framework for the analysis and visualization of phylogenetic trees.
 homepage: http://etetoolkit.org
 icon: icon.jpg
+hidden: true

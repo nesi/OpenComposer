@@ -3,3 +3,4 @@ category: Biology
 description: Fast genome and metagenome distance estimation using MinHash.
 homepage: http://mash.readthedocs.org
 icon: icon.webp
+hidden: true

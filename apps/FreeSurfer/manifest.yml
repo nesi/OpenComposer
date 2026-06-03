@@ -3,3 +3,4 @@ category: Biology
 description: FreeSurfer is a set of tools for analysis and visualization of structural and functional brain imaging data.
 homepage: https://surfer.nmr.mgh.harvard.edu/
 icon: icon.jpg
+hidden: true

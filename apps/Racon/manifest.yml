@@ -1,5 +1,5 @@
-category: Biology
-description: Ultrafast consensus module for raw de novo genome assembly of long uncorrected
-  reads.
-homepage: https://github.com/lbcb-sci/racon
 name: Racon
+category: Biology
+description: Ultrafast consensus module for raw de novo genome assembly of long uncorrected reads.
+homepage: https://github.com/lbcb-sci/racon
+hidden: true

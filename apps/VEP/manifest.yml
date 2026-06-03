@@ -2,3 +2,4 @@ name: VEP
 category: Biology
 description: Variant Effect Predictor (VEP) determines the effect of your variants (SNPs, insertions, deletions, CNVs or structural variants) on genes, transcripts, and protein sequence, as well as regulatory regions.
 homepage: https://www.ensembl.org/info/docs/tools/vep
+hidden: true

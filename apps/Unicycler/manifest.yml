@@ -3,3 +3,4 @@ category: Biology
 description: Assembly pipeline for bacterial genomes.
 homepage: https://github.com/rrwick/Unicycler
 icon: icon.png
+hidden: true

@@ -1,5 +1,5 @@
----
 name: nanoQC
 category: Biology
 description: Create fastQC-like plots for Oxford Nanopore sequencing data.
 homepage: https://pypi.org/project/nanoQC/
+hidden: true

@@ -2,3 +2,4 @@ name: MaSuRCA
 category: Biology
 description: MaSuRCA is whole genome assembly software.
 homepage: http://www.genome.umd.edu/masurca.html
+hidden: true

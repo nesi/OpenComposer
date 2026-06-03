@@ -3,3 +3,4 @@ category: Biology
 description: Efficient phylogenomic software by maximum likelihood.
 homepage: http://www.iqtree.org/
 icon: icon.png
+hidden: true

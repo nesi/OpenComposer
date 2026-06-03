@@ -2,3 +2,4 @@ name: tbl2asn
 category: Biology
 description: Command-line program that automates the creation of sequence records for submission to GenBank.
 homepage: https://www.ncbi.nlm.nih.gov/genbank/tbl2asn2/
+hidden: true

@@ -1,5 +1,5 @@
----
 name: WAAFLE
 category: Biology
 description: Workflow to Annotate Assemblies and Find LGT Events.
 homepage: http://huttenhower.sph.harvard.edu/waafle
+hidden: true

@@ -2,3 +2,4 @@ name: RMBlast
 category: Biology
 description: RMBlast supports RepeatMasker searches by adding a few necessary features to the stock NCBI blastn program.
 homepage: http://www.repeatmasker.org/RMBlast.html
+hidden: true

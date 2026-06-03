@@ -2,3 +2,4 @@ name: snpEff
 category: Biology
 description: SnpEff is a variant annotation and effect prediction tool.
 homepage: https://pcingola.github.io/SnpEff/
+hidden: true

@@ -3,3 +3,4 @@ category: Machine Learning
 description: An open-source software library for Machine Intelligence.
 homepage: https://www.tensorflow.org/
 icon: icon.png
+hidden: true

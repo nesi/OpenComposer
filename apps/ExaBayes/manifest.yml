@@ -1,6 +1,6 @@
----
 name: ExaBayes
 category: Biology
 description: Bayesian tree inference, particularly suitable for large-scale analyses.
 homepage: https://sco.h-its.org/exelixis/web/software/exabayes/
 icon: icon.png
+hidden: true

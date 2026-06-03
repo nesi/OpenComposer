@@ -3,3 +3,4 @@ category: Biology
 description: Python package and command line tool for CNV/CNA analysis from depth-of-coverage by mapped read.
 homepage: https://github.com/abyzovlab/CNVpytor
 icon: icon.png
+hidden: true

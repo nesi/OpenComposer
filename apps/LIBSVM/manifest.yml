@@ -3,3 +3,4 @@ category: Others
 description: LIBSVM is an integrated software for support vector classification, (C-SVC, nu-SVC), regression (epsilon-SVR, nu-SVR) and distribution estimation (one-class SVM).
 homepage: https://www.csie.ntu.edu.tw/~cjlin/libsvm/
 icon: icon.png
+hidden: true

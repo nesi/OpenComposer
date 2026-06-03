@@ -2,3 +2,4 @@ name: ctffind
 category: Biology
 description: Ctffind is a program for finding CTFs of electron micrographs.
 homepage: http://grigoriefflab.janelia.org/ctf
+hidden: true

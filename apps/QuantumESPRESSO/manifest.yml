@@ -3,3 +3,4 @@ category: Chemistry
 description: Quantum ESPRESSO is an integrated suite of computer codes for electronic-structure calculations and materials modeling at the nanoscale.
 homepage: https://www.quantum-espresso.org
 icon: icon.jpg
+hidden: true

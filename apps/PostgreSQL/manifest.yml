@@ -1,5 +1,6 @@
+name: PostgreSQL
 category: Others
 description: Object-relational database system.
 homepage: https://www.postgresql.org/
 icon: icon.png
-name: PostgreSQL
+hidden: true

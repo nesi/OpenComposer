@@ -3,3 +3,4 @@ category: Biology
 description: BEDOPS is an open-source command-line toolkit that performs highly efficient and scalable Boolean and other set operations, statistical calculations, archiving, conversion and other management of genomic data of arbitrary scale.
 homepage: https://github.com/bedops/bedops
 icon: icon.png
+hidden: true

@@ -2,3 +2,4 @@ name: NextPolish2
 category: Biology
 description: A fast and efficient genome polishing tool for long-read assembly.
 homepage: https://github.com/Nextomics/NextPolish2
+hidden: true

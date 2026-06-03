@@ -1,5 +1,5 @@
-category: Biology
-description: Manipulate variant calls in the Variant Call Format (VCF) and its binary
-  counterpart BCF.
-homepage: http://www.htslib.org
 name: BCFtools
+category: Biology
+description: Manipulate variant calls in the Variant Call Format (VCF) and its binary counterpart BCF.
+homepage: http://www.htslib.org
+hidden: true

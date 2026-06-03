@@ -3,3 +3,4 @@ category: Earth Science
 description: The Geographic Resources Analysis Support System - used for geospatial data management and analysis, image processing, graphics and maps production, spatial modeling, and visualization.
 homepage: http://grass.osgeo.org
 icon: icon.png
+hidden: true

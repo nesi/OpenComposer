@@ -3,3 +3,4 @@ category: Biology
 description: Porechop is a tool for finding and removing adapters from Oxford Nanopore reads.
 homepage: https://github.com/rrwick/Porechop
 icon: icon.png
+hidden: true

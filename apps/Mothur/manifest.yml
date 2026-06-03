@@ -3,3 +3,4 @@ category: Biology
 description: Mothur is a single piece of open-source, expandable software to fill the bioinformatics needs of the microbial ecology community.
 homepage: http://www.mothur.org/
 icon: icon.png
+hidden: true

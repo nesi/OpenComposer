@@ -1,5 +1,5 @@
----
 name: RepeatModeler
 category: Biology
 description: De novo transposable element (TE) family identification and modeling package.
 homepage: https://www.repeatmasker.org/
+hidden: true

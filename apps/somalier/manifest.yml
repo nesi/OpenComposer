@@ -2,3 +2,4 @@ name: somalier
 category: Biology
 description: Extract informative sites, evaluate relatedness, and perform quality-control on BAM/CRAM/BCF/VCF/GVCF.
 homepage: https://github.com/brentp/somalier
+hidden: true

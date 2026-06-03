@@ -2,3 +2,4 @@ name: ABySS
 category: Biology
 description: Assembly By Short Sequences - a de novo, parallel, paired-end sequence assembler.
 homepage: https://www.bcgsc.ca/platform/bioinfo/software/abyss
+hidden: true

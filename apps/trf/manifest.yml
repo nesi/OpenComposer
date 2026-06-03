@@ -1,5 +1,6 @@
+name: trf
 category: Biology
 description: Locates tandem repeats in DNA sequences.
 homepage: http://tandem.bu.edu/trf/trf.html
 icon: icon.png
-name: trf
+hidden: true

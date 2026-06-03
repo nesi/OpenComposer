@@ -1,5 +1,5 @@
----
 name: fastp
 category: Biology
 description: A tool designed to provide fast all-in-one preprocessing for FastQ files.
 homepage: https://github.com/OpenGene/fastp
+hidden: true

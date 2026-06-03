@@ -1,5 +1,5 @@
----
 name: sismonr
 category: Biology
 description: Simulation of In Silico Multi-Omic Networks R package.
 homepage: https://oliviaab.github.io/sismonr/
+hidden: true

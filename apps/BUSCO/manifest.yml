@@ -3,3 +3,4 @@ category: Biology
 description: Assessing genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs.
 homepage: http://busco.ezlab.org
 icon: icon.png
+hidden: true

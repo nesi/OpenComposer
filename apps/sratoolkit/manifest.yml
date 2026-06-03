@@ -2,3 +2,4 @@ name: sratoolkit
 category: Biology
 description: The SRA Toolkit, and the source-code SRA System Development Kit (SDK), will allow you to programmatically access data housed within SRA and convert it from the SRA format.
 homepage: https://trace.ncbi.nlm.nih.gov/Traces/sra/sra.cgi?view=software
+hidden: true

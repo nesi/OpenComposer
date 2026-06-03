@@ -3,3 +3,4 @@ category: Biology
 description: PAML is a package of programs for phylogenetic analyses of DNA or protein sequences using maximum likelihood.
 homepage: http://abacus.gene.ucl.ac.uk/software/paml.html
 icon: icon.svg
+hidden: true

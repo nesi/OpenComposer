@@ -2,3 +2,4 @@ name: snippy
 category: Others
 description: Rapid haploid variant calling and core genome alignment.
 homepage: https://github.com/tseemann/snippy
+hidden: true

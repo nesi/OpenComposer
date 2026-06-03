@@ -1,5 +1,5 @@
-category: Biology
-description: Automated whole-genome de-novo TE annotation and benchmarking the annotation
-  performance of TE libraries.
-homepage: https://github.com/oushujun/EDTA
 name: EDTA
+category: Biology
+description: Automated whole-genome de-novo TE annotation and benchmarking the annotation performance of TE libraries.
+homepage: https://github.com/oushujun/EDTA
+hidden: true

@@ -1,5 +1,5 @@
----
 name: Minimac3
 category: Biology
 description: Low memory and more computationally efficient implementation of the genotype imputation algorithms.
 homepage: https://genome.sph.umich.edu/wiki/Minimac3
+hidden: true

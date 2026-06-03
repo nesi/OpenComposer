@@ -3,3 +3,4 @@ category: Biology
 description: Prokaryotic Antiviral Defence LOCator.
 homepage: https://github.com/padlocbio/padloc
 icon: icon.png
+hidden: true

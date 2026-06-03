@@ -2,3 +2,4 @@ name: duphold
 category: Biology
 description: Uphold your DUP and DEL calls.
 homepage: https://github.com/brentp/duphold
+hidden: true

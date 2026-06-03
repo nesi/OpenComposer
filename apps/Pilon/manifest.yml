@@ -2,3 +2,4 @@ name: Pilon
 category: Biology
 description: Pilon is an automated genome assembly improvement and variant detection tool.
 homepage: https://github.com/broadinstitute/pilon
+hidden: true

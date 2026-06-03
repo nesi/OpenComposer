@@ -2,3 +2,4 @@ name: LASTZ
 category: Biology
 description: LASTZ is a program for aligning DNA sequences, a pairwise aligner.
 homepage: http://www.bx.psu.edu/~rsharris/lastz/
+hidden: true

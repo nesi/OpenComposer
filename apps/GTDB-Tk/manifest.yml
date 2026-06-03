@@ -1,6 +1,5 @@
----
 name: GTDB-Tk
 category: Biology
-description: A toolkit for assigning objective taxonomic classifications to bacterial
-  and archaeal genomes.
+description: A toolkit for assigning objective taxonomic classifications to bacterial and archaeal genomes.
 homepage: https://github.com/Ecogenomics/GTDBTk
+hidden: true

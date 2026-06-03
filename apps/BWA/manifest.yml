@@ -2,3 +2,4 @@ name: BWA
 category: Biology
 description: Burrows-Wheeler Aligner (BWA) is an efficient program that aligns relatively short nucleotide sequences against a long reference sequence such as the human genome.
 homepage: http://bio-bwa.sourceforge.net/
+hidden: true

@@ -1,7 +1,6 @@
----
 name: MCR
 category: Engineering
-description: The Matlab Compiler Runtime is required for running compiled MATLAB executables
-  without MATLAB itself.
+description: The Matlab Compiler Runtime is required for running compiled MATLAB executables without MATLAB itself.
 homepage: http://www.mathworks.com/products/compiler/mcr.html
 icon: icon.png
+hidden: true

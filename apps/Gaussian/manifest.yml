@@ -1,4 +1,5 @@
+name: Gaussian
 category: Chemistry
 description: Gaussian application.
 icon: icon.png
-name: Gaussian
+hidden: true

@@ -1,5 +1,5 @@
----
 name: kalign2
 category: Biology
 description: Kalign is a fast multiple sequence alignment program for biological sequences.
 homepage: https://github.com/TimoLassmann/kalign
+hidden: true

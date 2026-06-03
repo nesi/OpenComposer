@@ -1,5 +1,6 @@
+name: Nim
 category: Language
 description: Nim is a systems and applications programming language.
 homepage: https://nim-lang.org/
 icon: icon.png
-name: Nim
+hidden: true

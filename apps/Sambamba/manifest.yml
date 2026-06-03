@@ -3,3 +3,4 @@ category: Biology
 description: Tools for working with SAM/BAM data.
 homepage: https://lomereiter.github.io/sambamba/
 icon: icon.jpg
+hidden: true

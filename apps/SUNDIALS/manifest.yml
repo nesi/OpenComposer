@@ -3,3 +3,4 @@ category: Mathematics
 description: 'SUNDIALS: SUite of Nonlinear and DIfferential/ALgebraic Equation Solvers.'
 homepage: http://computation.llnl.gov/projects/sundials
 icon: icon.png
+hidden: true

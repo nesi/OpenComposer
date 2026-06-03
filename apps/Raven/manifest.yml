@@ -1,5 +1,5 @@
----
 name: Raven
 category: Biology
 description: De novo genome assembler for long uncorrected reads.
 homepage: https://mmseqs.com
+hidden: true

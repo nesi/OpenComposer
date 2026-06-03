@@ -3,3 +3,4 @@ category: Biology
 description: Transcript Selector for BRAKER.
 homepage: https://github.com/Gaius-Augustus/TSEBRA
 icon: icon.png
+hidden: true

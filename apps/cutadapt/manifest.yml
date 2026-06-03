@@ -2,3 +2,4 @@ name: cutadapt
 category: Biology
 description: Cutadapt removes adapter sequences from high-throughput sequencing data.
 homepage: https://opensource.scilifelab.se/projects/cutadapt/
+hidden: true

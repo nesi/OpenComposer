@@ -2,3 +2,4 @@ name: Trinity
 category: Biology
 description: Trinity represents a novel method for the efficient and robust de novo reconstruction of transcriptomes from RNA-Seq data.
 homepage: http://trinityrnaseq.github.io
+hidden: true

@@ -1,5 +1,5 @@
----
 name: FileSender
 category: Others
 description: Send large files quickly and securely using REANNZ FileSender.
 homepage: https://www.reannz.co.nz/products-and-services/filesender/
+hidden: true

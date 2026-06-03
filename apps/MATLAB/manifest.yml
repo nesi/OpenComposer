@@ -1,5 +1,6 @@
+name: MATLAB
 category: Engineering
 description: A high-level language and interactive environment for numerical computing.
 homepage: http://www.mathworks.com/products/matlab
 icon: icon.png
-name: MATLAB
+hidden: true

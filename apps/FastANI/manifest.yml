@@ -2,3 +2,4 @@ name: FastANI
 category: Biology
 description: Tool for fast alignment-free computation of whole-genome Average Nucleotide Identity (ANI).
 homepage: http://www.iodbc.org/
+hidden: true

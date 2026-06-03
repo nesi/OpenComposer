@@ -3,3 +3,4 @@ category: Biology
 description: Infernal ('INFERence of RNA ALignment') is for searching DNA sequence databases for RNA structure and sequence similarities.
 homepage: http://eddylab.org/infernal/
 icon: icon.png
+hidden: true

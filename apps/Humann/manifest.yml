@@ -1,5 +1,5 @@
----
 name: Humann
 category: Biology
 description: Pipeline for efficiently and accurately determining the coverage and abundance of microbial pathways in a community from metagenomic data.
 homepage: https://huttenhower.sph.harvard.edu/humann
+hidden: true

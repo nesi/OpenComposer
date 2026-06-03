@@ -3,3 +3,4 @@ category: Biology
 description: The Genome Analysis Toolkit or GATK is a software package developed at the Broad Institute to analyse next-generation resequencing data.
 homepage: http://www.broadinstitute.org/gatk/
 icon: icon.png
+hidden: true

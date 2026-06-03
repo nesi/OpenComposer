@@ -2,3 +2,4 @@ name: FDS
 category: Engineering
 description: Fire Dynamics Simulator (FDS) is a large-eddy simulation (LES) code for low-speed flows, with an emphasis on smoke and heat transport from fires.
 homepage: https://pages.nist.gov/fds-smv/
+hidden: true

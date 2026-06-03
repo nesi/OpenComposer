@@ -1,5 +1,6 @@
+name: panaroo
 category: Biology
 description: A pangenome analysis pipeline.
 homepage: https://gtonkinhill.github.io/panaroo/
 icon: icon.png
-name: panaroo
+hidden: true

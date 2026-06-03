@@ -3,3 +3,4 @@ category: Biology
 description: Population assignment using large numbers of densely sampled genomes, including both SNP chips and sequence dat.
 homepage: https://people.maths.bris.ac.uk/~madjl/finestructure/finestructure.html
 icon: icon.gif
+hidden: true

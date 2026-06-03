@@ -2,3 +2,4 @@ name: GeneMark-ES
 category: Biology
 description: Eukaryotic gene prediction suite with automatic training.
 homepage: http://exon.gatech.edu/GeneMark/gmes_instructions.html
+hidden: true

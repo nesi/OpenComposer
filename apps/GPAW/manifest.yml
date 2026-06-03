@@ -3,3 +3,4 @@ category: Chemistry
 description: GPAW is a density-functional theory (DFT) Python code based on the projector-augmented wave (PAW) method and the atomic simulation environment (ASE).
 homepage: https://wiki.fysik.dtu.dk/gpaw/
 icon: icon.svg
+hidden: true

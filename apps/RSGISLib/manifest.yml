@@ -2,3 +2,4 @@ name: RSGISLib
 category: Earth Science
 description: The Remote Sensing and GIS software library (RSGISLib) is a collection of tools for processing remote sensing and GIS datasets.
 homepage: http://www.rsgislib.org
+hidden: true

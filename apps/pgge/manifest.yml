@@ -2,3 +2,4 @@ name: pgge
 category: Biology
 description: Pangenome graph evaluator.
 homepage: https://github.com/pangenome/pgge
+hidden: true

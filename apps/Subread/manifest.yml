@@ -3,3 +3,4 @@ category: Biology
 description: High performance read alignment, quantification and mutation discovery.
 homepage: http://subread.sourceforge.net/
 icon: icon.png
+hidden: true

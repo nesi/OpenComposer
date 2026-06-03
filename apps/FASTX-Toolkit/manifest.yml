@@ -1,5 +1,5 @@
----
 name: FASTX-Toolkit
 category: Biology
 description: Tools for Short-Reads FASTA/FASTQ files preprocessing.
 homepage: http://hannonlab.cshl.edu/fastx_toolkit/
+hidden: true

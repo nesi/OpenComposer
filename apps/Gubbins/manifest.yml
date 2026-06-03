@@ -2,3 +2,4 @@ name: Gubbins
 category: Biology
 description: Genealogies Unbiased By recomBinations In Nucleotide Sequences.
 homepage: https://sanger-pathogens.github.io/gubbins/
+hidden: true

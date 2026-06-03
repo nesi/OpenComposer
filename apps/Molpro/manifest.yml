@@ -1,6 +1,6 @@
----
 name: Molpro
 category: Chemistry
 description: Molpro is a complete system of ab initio programs for molecular electronic structure calculations.
 homepage: https://molpro.net
 icon: icon.png
+hidden: true

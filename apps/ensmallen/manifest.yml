@@ -3,3 +3,4 @@ category: Mathematics
 description: C++ header-only library for numerical optimization.
 homepage: https://github.com/mlpack/ensmallen
 icon: icon.svg
+hidden: true

@@ -2,3 +2,4 @@ name: chewBBACA
 category: Biology
 description: A complete suite for gene-by-gene schema creation and strain identification.
 homepage: https://github.com/B-UMMI/chewBBACA
+hidden: true

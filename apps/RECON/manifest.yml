@@ -2,3 +2,4 @@ name: RECON
 category: Biology
 description: De novo identification and classification of repeat sequence families from genomic sequences.
 homepage: http://eddylab.org/software/recon/
+hidden: true

@@ -1,4 +1,5 @@
+name: prokka
 category: Biology
 description: Prokka is a software tool for the rapid annotation of prokaryotic genomes.
 homepage: http://www.vicbioinformatics.com/software.prokka.shtml
-name: prokka
+hidden: true

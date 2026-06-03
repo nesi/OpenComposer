@@ -1,5 +1,5 @@
----
 name: Mashtree
 category: Biology
 description: Create a tree using Mash distances.
 homepage: https://github.com/lskatz/mashtree
+hidden: true

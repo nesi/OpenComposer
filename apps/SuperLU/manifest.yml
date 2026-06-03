@@ -1,6 +1,6 @@
----
 name: SuperLU
 category: Others
 description: Solution of large, sparse, nonsymmetric systems of linear equations.
 homepage: http://crd-legacy.lbl.gov/~xiaoye/SuperLU/
 icon: icon.png
+hidden: true

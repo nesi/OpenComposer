@@ -3,3 +3,4 @@ category: Others
 description: ANTs extracts information from complex datasets that include imaging.
 homepage: https://stnava.github.io/ANTs/
 icon: icon.png
+hidden: true

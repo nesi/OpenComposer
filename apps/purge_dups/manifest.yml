@@ -2,3 +2,4 @@ name: purge_dups
 category: Biology
 description: Purge haplotigs and overlaps in an assembly based on read depth.
 homepage: https://github.com/dfguan/purge_dups
+hidden: true

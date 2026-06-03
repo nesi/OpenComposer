@@ -1,6 +1,5 @@
----
 name: RAxML
 category: Biology
-description: RAxML search algorithm for maximum likelihood based inference of phylogenetic
-  trees.
+description: RAxML search algorithm for maximum likelihood based inference of phylogenetic trees.
 homepage: https://github.com/stamatak/standard-RAxML
+hidden: true

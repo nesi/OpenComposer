@@ -3,3 +3,4 @@ category: Climate Science
 description: PDAL is Point Data Abstraction Library.
 homepage: https://pdal.io/
 icon: icon.webp
+hidden: true

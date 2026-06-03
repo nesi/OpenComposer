@@ -2,3 +2,4 @@ name: ORCA
 category: Chemistry
 description: ORCA is a flexible, efficient and easy-to-use general purpose tool for quantum chemistry with specific emphasis on spectroscopic properties of open-shell molecules.
 homepage: https://orcaforum.kofo.mpg.de
+hidden: true

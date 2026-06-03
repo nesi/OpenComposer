@@ -2,3 +2,4 @@ name: NanoComp
 category: Biology
 description: Comparing runs of Oxford Nanopore sequencing data and alignments.
 homepage: https://github.com/wdecoster/NanoComp
+hidden: true

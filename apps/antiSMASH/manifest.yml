@@ -3,3 +3,4 @@ category: Biology
 description: AntiSMASH allows the rapid genome-wide identification, annotation and analysis of secondary metabolite biosynthesis gene clusters in bacterial and fungal genomes.
 homepage: https://github.com/antismash/antismash
 icon: icon.png
+hidden: true

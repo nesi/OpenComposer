@@ -2,3 +2,4 @@ name: fastStructure
 category: Biology
 description: FastStructure is an algorithm for inferring population structure from large SNP genotype data.
 homepage: https://rajanil.github.io/fastStructure/
+hidden: true

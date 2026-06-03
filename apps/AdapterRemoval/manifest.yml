@@ -1,4 +1,5 @@
-category: Biology
-description: 'Searches for and removes remnant adapter sequences from High-Throughput Sequencing data.'
-homepage: https://github.com/%/(github_account)s/adapterremoval
 name: AdapterRemoval
+category: Biology
+description: Searches for and removes remnant adapter sequences from High-Throughput Sequencing data.
+homepage: https://github.com/%/(github_account)s/adapterremoval
+hidden: true

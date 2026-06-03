@@ -1,4 +1,5 @@
+name: Beagle
 category: Biology
 description: Package for phasing genotypes and for imputing ungenotyped markers.
 homepage: https://faculty.washington.edu/browning/beagle/beagle.html
-name: Beagle
+hidden: true

@@ -2,3 +2,4 @@ name: MetalWalls
 category: Others
 description: MetalWalls (MW) is a molecular dynamics code dedicated to the modelling of electrochemical systems.
 homepage: https://gitlab.com/ampere2/metalwalls
+hidden: true

@@ -3,3 +3,4 @@ category: Language
 description: Java Platform, Standard Edition (Java SE) lets you develop and deploy Java applications on desktops and servers.
 homepage: http://java.com/
 icon: icon.png
+hidden: true

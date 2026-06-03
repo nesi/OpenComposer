@@ -3,3 +3,4 @@ category: Others
 description: Simple DirectMedia Layer, a cross-platform multimedia library.
 homepage: http://www.libsdl.org/
 icon: icon.png
+hidden: true

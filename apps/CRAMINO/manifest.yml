@@ -2,3 +2,4 @@ name: CRAMINO
 category: Biology
 description: A tool for quick quality assessment of cram and bam files, intended for long read sequencing.
 homepage: https://github.com/wdecoster/cramino
+hidden: true

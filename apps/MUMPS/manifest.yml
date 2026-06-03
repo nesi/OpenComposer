@@ -2,3 +2,4 @@ name: MUMPS
 category: Mathematics
 description: A parallel sparse direct solver.
 homepage: https://graal.ens-lyon.fr/MUMPS/
+hidden: true

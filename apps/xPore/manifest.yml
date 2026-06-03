@@ -3,3 +3,4 @@ category: Biology
 description: A Python package for identification and quantification of differential RNA modifications from direct RNA sequencing.
 homepage: https://github.com/GoekeLab/xpore
 icon: icon.png
+hidden: true

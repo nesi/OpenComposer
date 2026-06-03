@@ -3,3 +3,4 @@ category: Biology
 description: Completeness and contamination estimator for metagenomic assembled microbial eukaryotic genomes.
 homepage: https://www.repeatmasker.org/
 icon: icon.png
+hidden: true

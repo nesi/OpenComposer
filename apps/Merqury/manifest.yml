@@ -3,3 +3,4 @@ category: Biology
 description: Evaluate genome assemblies with k-mers and more.
 homepage: https://github.com/marbl/merqury
 icon: icon.png
+hidden: true

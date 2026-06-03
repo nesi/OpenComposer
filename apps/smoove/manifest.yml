@@ -2,3 +2,4 @@ name: smoove
 category: Biology
 description: Simplifies and speeds calling and genotyping SVs for short reads.
 homepage: https://github.com/bcgsc/LongStitch
+hidden: true

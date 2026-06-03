@@ -3,3 +3,4 @@ category: Chemistry
 description: CP2K is a freely available (GPL) program, written in Fortran 95, to perform atomistic and molecular simulations of solid state, liquid, molecular and biological systems.
 homepage: https://www.cp2k.org/
 icon: icon.png
+hidden: true

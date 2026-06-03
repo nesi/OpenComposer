@@ -2,3 +2,4 @@ name: Faiss
 category: Mathematics
 description: Faiss is a library for efficient similarity search and clustering of dense vectors.
 homepage: https://github.com/facebookresearch/faiss
+hidden: true

@@ -2,3 +2,4 @@ name: deepTools
 category: Biology
 description: DeepTools is a suite of python tools particularly developed for the efficient analysis of high-throughput sequencing data, such as ChIP-seq, RNA-seq or MNase-seq.
 homepage: http://deeptools.readthedocs.org/
+hidden: true

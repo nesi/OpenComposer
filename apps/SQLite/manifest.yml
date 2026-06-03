@@ -3,3 +3,4 @@ category: Others
 description: 'SQLite: SQL Database Engine in a C Library.'
 homepage: https://www.sqlite.org/
 icon: icon.jpg
+hidden: true

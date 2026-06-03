@@ -3,3 +3,4 @@ category: Biology
 description: Variation graph data structures, interchange formats, alignment, genotyping, and variant calling methods.
 homepage: https://github.com/vgteam/vg
 icon: icon.png
+hidden: true

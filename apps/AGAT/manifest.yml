@@ -1,5 +1,5 @@
----
 name: AGAT
 category: Biology
 description: Suite of tools to handle gene annotations in any GTF/GFF format.
 homepage: https://github.com/NBISweden/AGAT
+hidden: true

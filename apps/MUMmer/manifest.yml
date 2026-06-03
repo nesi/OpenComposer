@@ -2,3 +2,4 @@ name: MUMmer
 category: Biology
 description: MUMmer is a system for rapidly aligning entire genomes, whether in complete or draft form.
 homepage: http://mummer.sourceforge.net/
+hidden: true

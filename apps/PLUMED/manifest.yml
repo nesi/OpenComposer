@@ -3,3 +3,4 @@ category: Biology
 description: PLUMED is an open source library for free energy calculations in molecular systems which works together with some of the most popular molecular dynamics engines.
 homepage: http://www.plumed-code.org
 icon: icon.png
+hidden: true

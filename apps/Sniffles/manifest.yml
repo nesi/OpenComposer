@@ -1,4 +1,5 @@
+name: Sniffles
 category: Biology
 description: A fast structural variant caller for long-read sequencing.
 homepage: https://github.com/fritzsedlazeck/Sniffles
-name: Sniffles
+hidden: true

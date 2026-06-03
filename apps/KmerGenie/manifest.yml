@@ -1,5 +1,5 @@
----
 name: KmerGenie
 category: Biology
 description: KmerGenie estimates the best k-mer length for genome de novo assembly.
 homepage: http://kmergenie.bx.psu.edu/
+hidden: true

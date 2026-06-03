@@ -2,3 +2,4 @@ name: maf_stream
 category: Biology
 description: Collection of utilities to manipulate multiple alignments in the Multiple Alignment Format.
 homepage: https://github.com/joelarmstrong/maf_stream
+hidden: true

@@ -2,3 +2,4 @@ name: bioawk
 category: Biology
 description: An extension to awk, adding the support of several common biological data formats.
 homepage: https://github.com/lh3/bioawk
+hidden: true

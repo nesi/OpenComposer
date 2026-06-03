@@ -3,3 +3,4 @@ category: Chemistry
 description: GPUMD stands for Graphics Processing Units Molecular Dynamics.
 homepage: https://gpumd.org/
 icon: icon.png
+hidden: true

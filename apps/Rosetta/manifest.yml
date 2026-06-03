@@ -3,3 +3,4 @@ category: Biology
 description: Rosetta is the premier software suite for modeling macromolecular structures.
 homepage: https://www.rosettacommons.org
 icon: icon.png
+hidden: true

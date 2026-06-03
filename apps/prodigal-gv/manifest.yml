@@ -2,3 +2,4 @@ name: prodigal-gv
 category: Biology
 description: A fork of Prodigal meant to improve gene calling for giant viruses and viruses that use alternative genetic codes.
 homepage: https://github.com/apcamargo/prodigal-gv
+hidden: true

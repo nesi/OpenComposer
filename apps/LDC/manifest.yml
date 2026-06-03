@@ -3,3 +3,4 @@ category: Language
 description: D programming language compiler.
 homepage: http://wiki.dlang.org/LDC
 icon: icon.png
+hidden: true

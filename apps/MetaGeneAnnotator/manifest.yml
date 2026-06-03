@@ -1,5 +1,5 @@
----
 name: MetaGeneAnnotator
 category: Biology
 description: MetaGeneAnnotator is a gene-finding program for prokaryote and phage.
 homepage: http://metagene.nig.ac.jp/
+hidden: true

@@ -3,3 +3,4 @@ category: Biology
 description: The BEDTools utilities allow one to address common genomics tasks such as finding feature overlaps and computing coverage.
 homepage: https://github.com/arq5x/bedtools2
 icon: icon.png
+hidden: true

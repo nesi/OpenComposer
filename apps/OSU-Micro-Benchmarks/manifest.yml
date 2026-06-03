@@ -3,3 +3,4 @@ category: Others
 description: OSU Micro-Benchmarks.
 homepage: https://mvapich.cse.ohio-state.edu/benchmarks/
 icon: icon.png
+hidden: true

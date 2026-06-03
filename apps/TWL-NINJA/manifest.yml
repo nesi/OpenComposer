@@ -1,4 +1,5 @@
+name: TWL-NINJA
 category: Biology
 description: Nearly Infinite Neighbor Joining Application.
 homepage: https://github.com/TravisWheelerLab/NINJA
-name: TWL-NINJA
+hidden: true

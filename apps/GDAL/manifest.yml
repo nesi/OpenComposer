@@ -3,3 +3,4 @@ category: Earth Science
 description: GDAL is a translator library for raster geospatial data formats that is released under an X/MIT style Open Source license by the Open Source Geospatial Foundation.
 homepage: http://www.gdal.org/
 icon: icon.webp
+hidden: true

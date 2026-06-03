@@ -2,3 +2,4 @@ name: muParser
 category: Mathematics
 description: MuParser is an extensible high performance math expression parser library written in C++.
 homepage: http://beltoforion.de/article.php?a=muparser
+hidden: true

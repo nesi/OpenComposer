@@ -3,3 +3,4 @@ category: Biology
 description: A genetic algorithm for docking flexible ligands into protein binding sites.
 homepage: https://www.ccdc.cam.ac.uk/solutions/csd-discovery/Components/Gold/
 icon: icon.png
+hidden: true

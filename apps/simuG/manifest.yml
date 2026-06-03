@@ -3,3 +3,4 @@ category: Biology
 description: A general-purpose genome simulator.
 homepage: https://github.com/yjx1217/simuG
 icon: icon.png
+hidden: true

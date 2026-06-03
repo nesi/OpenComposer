@@ -3,3 +3,4 @@ category: Language
 description: 'NASM: General-purpose x86 assembler.'
 homepage: https://www.nasm.us/
 icon: icon.svg.png
+hidden: true

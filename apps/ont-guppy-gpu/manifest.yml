@@ -3,3 +3,4 @@ category: Biology
 description: Data processing toolkit that contains the Oxford Nanopore Technologies' basecalling algorithms, and several bioinformatic post-processing features.
 homepage: https://nanoporetech.com/products/minit
 icon: icon.png
+hidden: true

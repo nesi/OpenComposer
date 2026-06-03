@@ -1,6 +1,6 @@
----
 name: ollama
 category: Others
 description: Get up and running with large language models.
 homepage: https://ollama.com/
 icon: icon.png
+hidden: true

@@ -2,3 +2,4 @@ name: LISFLOOD-FP
 category: Others
 description: The LISFLOOD-FP is a raster-based hydrodynamic model originally developed by the University of Bristol.
 homepage: https://www.seamlesswave.com/LISFLOOD8.0.html
+hidden: true

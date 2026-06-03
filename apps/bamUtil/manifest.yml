@@ -2,3 +2,4 @@ name: bamUtil
 category: Biology
 description: Repository that contains several programs that perform operations on SAM/BAM files.
 homepage: http://genome.sph.umich.edu/wiki/BamUtil
+hidden: true

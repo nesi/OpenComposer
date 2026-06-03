@@ -2,3 +2,4 @@ name: Roary
 category: Biology
 description: Rapid large-scale prokaryote pan genome analysis.
 homepage: https://github.com/sanger-pathogens/Roary
+hidden: true

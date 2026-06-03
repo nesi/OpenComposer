@@ -2,3 +2,4 @@ name: miRDeep2
 category: Biology
 description: Completely overhauled tool which discovers microRNA genes by analyzing sequenced RNAs.
 homepage: https://github.com/rajewsky-lab/mirdeep2
+hidden: true

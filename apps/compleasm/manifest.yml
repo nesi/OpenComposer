@@ -2,3 +2,4 @@ name: compleasm
 category: Biology
 description: Faster and more accurate reimplementation of BUSCO.
 homepage: https://github.com/huangnengCSU/compleasm
+hidden: true

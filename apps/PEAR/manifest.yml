@@ -1,5 +1,5 @@
----
 name: PEAR
 category: Biology
 description: Memory-efficient,fully parallelized and highly accurate pair-end read merger.
 homepage: https://cme.h-its.org/exelixis/web/software/pear/
+hidden: true

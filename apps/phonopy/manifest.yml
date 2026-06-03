@@ -1,5 +1,5 @@
-category: Chemistry
-description: Phonopy is an open source package of phonon calculations based on the
-  supercell approach.
-homepage: https://phonopy.github.io/phonopy/
 name: phonopy
+category: Chemistry
+description: Phonopy is an open source package of phonon calculations based on the supercell approach.
+homepage: https://phonopy.github.io/phonopy/
+hidden: true

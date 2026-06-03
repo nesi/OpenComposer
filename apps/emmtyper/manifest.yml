@@ -2,3 +2,4 @@ name: emmtyper
 category: Biology
 description: Tool for emm-typing of Streptococcus pyogenes using a de novo or complete assembly.
 homepage: https://github.com/MDU-PHL/abritamr
+hidden: true

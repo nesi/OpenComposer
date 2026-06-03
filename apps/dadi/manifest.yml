@@ -2,3 +2,4 @@ name: dadi
 category: Biology
 description: Diffusion Approximation for Demographic Inference.
 homepage: https://github.com/MDU-PHL/abritamr
+hidden: true

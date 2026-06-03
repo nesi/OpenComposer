@@ -2,3 +2,4 @@ name: BOLT-LMM
 category: Biology
 description: The BOLT-LMM algorithm computes statistics for testing association between phenotype and genotypes using a linear mixed model (LMM) [1].
 homepage: https://storage.googleapis.com/broad-alkesgroup-public/BOLT-LMM/BOLT-LMM_manual.html
+hidden: true

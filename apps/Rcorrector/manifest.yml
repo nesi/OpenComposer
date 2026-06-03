@@ -2,3 +2,4 @@ name: Rcorrector
 category: Biology
 description: Kmer-based error correction method for RNA-seq data.
 homepage: https://github.com/mourisl/Rcorrector
+hidden: true

@@ -1,5 +1,5 @@
----
 name: TransDecoder
 category: Biology
 description: TransDecoder identifies candidate coding regions within transcript sequences.
 homepage: https://github.com/TransDecoder/TransDecoder/wiki
+hidden: true

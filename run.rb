@@ -83,7 +83,7 @@ SCHEDULER_TO_GENERIC_APP ||= {
 }.freeze
 
 # Structure of manifest
-Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps, :homepage)
+Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps, :homepage, :hidden)
 
 # Create a YAML or ERB file object. Give priority to ERB.
 # If the file does not exist, return nil.
@@ -219,10 +219,10 @@ def create_manifest(app_path)
   halt 500, "In #{File.join(app_path, "manifest.yml")}, related_app: is deprecated." if manifest&.key?("related_app")
 
   dirname = File.basename(app_path)
-  return Manifest.new(dirname, dirname, nil, nil, nil, nil, nil) if manifest.nil?
+  return Manifest.new(dirname, dirname, nil, nil, nil, nil, nil, false) if manifest.nil?
 
   manifest["name"] ||= dirname
-  return Manifest.new(dirname, manifest["name"], manifest["category"], manifest["description"], manifest["icon"], manifest["related_apps"], manifest["homepage"])
+  return Manifest.new(dirname, manifest["name"], manifest["category"], manifest["description"], manifest["icon"], manifest["related_apps"], manifest["homepage"], manifest.fetch("hidden", false))
 end
 
 # Create an array of manifest objects for all applications.
@@ -486,7 +486,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
   @ood_logo_path = URI.join(@my_ood_url, @script_name + "/", "ood.png")
   @current_path  = File.join(@script_name, @dir_name)
-  @manifests     = create_all_manifests(@apps_dir).sort_by { |m| [m.category&.downcase == "others" ? 1 : 0, (m.category || "").downcase, m.name.downcase] }
+  @all_manifests = create_all_manifests(@apps_dir).sort_by { |m| [m.category&.downcase == "others" ? 1 : 0, (m.category || "").downcase, m.name.downcase] }
+  @manifests     = @all_manifests.reject(&:hidden)
   @manifests_w_category, @manifests_wo_category = @manifests.partition(&:category)
 
   case @dir_name
@@ -603,7 +604,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       @app_base_path = File.join(generic_apps_dir, @dir_name.sub(/\A_generic\//, ""))
       @manifest      = create_manifest(@app_base_path)
     else
-      @manifest      = @manifests.find { |m| "#{m.dirname}" == @dir_name }
+      @manifest      = @all_manifests.find { |m| "#{m.dirname}" == @dir_name }
       @app_base_path = File.join(@apps_dir, @dir_name)
     end
 

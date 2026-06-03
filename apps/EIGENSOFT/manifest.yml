@@ -2,3 +2,4 @@ name: EIGENSOFT
 category: Biology
 description: The EIGENSOFT package combines functionality from our population genetics methods (Patterson et al. 2006) and our EIGENSTRAT stratification correction method (Price et al. 2006).
 homepage: http://www.hsph.harvard.edu/alkes-price/software/
+hidden: true

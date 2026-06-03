@@ -63,9 +63,9 @@ helpers do
         File.exist?(local) ? File.join(@script_name, tp) : nil
       end
       url_path ? "<img src=\"#{ERB::Util.h(url_path)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">" :
-                 "<img src=\"#{URI.join(url, 'app_default.svg')}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
+                 "<img src=\"#{ERB::Util.h(URI.join(url, 'app_default.svg').to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     else
-      "<img src=\"#{URI.join(url, 'app_default.svg')}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
+      "<img src=\"#{ERB::Util.h(URI.join(url, 'app_default.svg').to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     end
 
     <<~HTML
@@ -113,7 +113,7 @@ helpers do
 HTML
     width = @conf['thumbnail_width']
     if is_bi_or_fa_icon
-      html << "<i class=\"#{icon}\" style=\"font-size: #{width}px; width: #{width}px; height: 100px; line-height: 1;\"></i>"
+      html << "<i class=\"#{ERB::Util.h(icon)}\" style=\"font-size: #{width}px; width: #{width}px; height: 100px; line-height: 1;\"></i>"
     else
       html << "<img src=\"#{icon_path}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{name}\">"
     end

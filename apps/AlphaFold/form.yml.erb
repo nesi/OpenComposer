@@ -36,17 +36,19 @@ base['form'].each do |k, v|
       'widget'  => 'select',
       'label'   => 'AlphaFold Module',
       'options' => af_options,
-      'value'   => af_options.first[0]
+      'value'   => af_options.first ? af_options.first[0] : ""
     }
     new_form['alphafold2db_module'] = {
-      'widget' => 'module_load',
-      'module' => 'AlphaFold2DB',
-      'label'  => 'AlphaFold2 Database Module'
+      'widget'  => 'select',
+      'label'   => 'AlphaFold Database Module',
+      'options' => af2db_versions.map { |v| ["AlphaFold2DB/#{v}", "AlphaFold2DB/#{v}"] },
+      'value'   => af2db_versions.first ? "AlphaFold2DB/#{af2db_versions.first}" : ""
     }
     new_form['alphafold3db_module'] = {
-      'widget' => 'module_load',
-      'module' => 'AlphaFold3DB',
-      'label'  => 'AlphaFold3 Database Module'
+      'widget'  => 'select',
+      'label'   => 'AlphaFold Database Module',
+      'options' => af3db_versions.map { |v| ["AlphaFold3DB/#{v}", "AlphaFold3DB/#{v}"] },
+      'value'   => af3db_versions.first ? "AlphaFold3DB/#{af3db_versions.first}" : ""
     }
   end
   new_form[k] = v
@@ -76,9 +78,9 @@ base['script'] = <<~'SCRIPT'
   module purge
   module load #{alphafold_module}
   if [[ "#{alphafold_module}" == AlphaFold/2* ]]; then
-    module load #{alphafold2db_module}
+    [[ -n "#{alphafold2db_module}" ]] && module load #{alphafold2db_module}
   else
-    module load #{alphafold3db_module}
+    [[ -n "#{alphafold3db_module}" ]] && module load #{alphafold3db_module}
   fi
 
 SCRIPT

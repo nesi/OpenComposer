@@ -192,7 +192,7 @@
               </li>
               <li class="nav-item dropdown">
                 <a href="#" class="nav-link dropdown-toggle <%= active?("" != @dir_name && "history" != @dir_name && "nodes" != @dir_name) %>" data-bs-toggle="dropdown">
-                  Application
+                  Applications
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>; max-height: 80vh; overflow-y: auto;">
                   <% @manifests_w_category.group_by(&:category).each do |category, manifests| %>
@@ -215,6 +215,10 @@
                   <% end %>
                 </ul>
               </li>
+              <li class="nav-item me-1">
+                <input type="search" id="oc-search" class="form-control form-control-sm"
+                       placeholder="Search apps…" autocomplete="off" style="width:180px;">
+              </li>
               <li class="nav-item">
                 <a href="<%= @script_name %>/history" class="nav-link <%= active?("history" == @dir_name) %>">History</a>
               </li>
@@ -224,10 +228,6 @@
             </ul>
 
             <ul class="navbar-nav ms-auto">
-              <li class="nav-item me-2">
-                <input type="search" id="oc-search" class="form-control form-control-sm"
-                       placeholder="Search apps…" autocomplete="off" style="width:180px;">
-              </li>
               <% if @conf["show_home_directory"] %>
                 <li class="nav-item">
                   <a target="_blank" href="<%= @my_ood_url %>/pun/sys/dashboard/files" class="nav-link py-0">

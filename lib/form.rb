@@ -624,6 +624,102 @@ helpers do
     return !value['required'].is_a?(Array) && value['required'].to_s == "true" ? "  ocForm.validateCheckboxForSubmit('#{key}');" : ""
   end
 
+  # Output a two_module_widget: a single <select> that switches its module list based on a driver widget.
+  def output_two_module_widget_html(key, value, script_content, submit_content, app_name, dir_name)
+    html  = output_label_with_span_tag(key, value)
+    html += "<select tabindex=\"#{@table_index}\" id=\"#{key}\" name=\"#{key}\" class=\"form-select\" "
+
+    script_flag = references_key_or_has_flag?(key, nil, script_content, app_name, dir_name)
+    submit_flag = references_key_or_has_flag?(key, nil, submit_content, app_name, dir_name)
+    type = if script_flag && submit_flag then 'both'
+           elsif script_flag             then 'script'
+           elsif submit_flag             then 'submit'
+           end
+
+    if type
+      html += "onfocus=\"ocForm.storePreviousValue('#{key}')\" " \
+              "onchange=\"ocForm.confirmOverwrite('#{type}', '#{key}', function(){ocForm.updateArea('#{type}', '#{key}');})\""
+      html += " style=\"background-color: #{@conf["submit_color"]};\"" if type == 'submit'
+    else
+      html += "onchange=\"ocForm.execDynamicWidget('#{key}')\" "
+      html += "style=\"background-color: #{@conf["non_script_color"]};\""
+    end
+    html += ">\n"
+    html += "<option value=\"\" data-value=\"\">Loading\xe2\x80\xa6</option>\n"
+    html += "</select>\n"
+    @table_index += 1
+    html + output_help(key, value)
+  end
+
+  # JavaScript to initialise a two_module_widget: watches a driver widget and re-fetches
+  # the module version list whenever the driver's selected value changes prefix group.
+  def output_two_module_widget_js(key, value)
+    driver  = value['driver'].to_s
+    modules = value['modules'] || []
+    sn      = @script_name.to_s
+
+    mod_map_js = modules.map { |m|
+      "{prefix: #{m['prefix'].to_s.to_json}, module: #{m['module'].to_s.to_json}}"
+    }.join(", ")
+
+    <<~JS
+      (function() {
+        var sel    = document.getElementById(#{key.to_json});
+        var driver = document.getElementById(#{driver.to_json});
+        if (!sel) return;
+        var modMap = [#{mod_map_js}];
+        var sn     = #{sn.to_json};
+        var lastModule = null;
+
+        function moduleForValue(val) {
+          for (var i = 0; i < modMap.length; i++) {
+            if (String(val).startsWith(modMap[i].prefix)) return modMap[i].module;
+          }
+          return modMap.length > 0 ? modMap[modMap.length - 1].module : '';
+        }
+
+        function loadModules(moduleName) {
+          if (!moduleName || moduleName === lastModule) return;
+          lastModule = moduleName;
+          var urlParams = new URLSearchParams(window.location.search);
+          var cluster = urlParams.get('_cluster_name') || '';
+          fetch(sn + '/_module_avail?module=' + encodeURIComponent(moduleName) + '&cluster=' + encodeURIComponent(cluster))
+            .then(function(r) { return r.json(); })
+            .then(function(mods) {
+              sel.innerHTML = '';
+              if (!mods.length) {
+                var opt = document.createElement('option');
+                opt.value = ''; opt.dataset.value = ''; opt.textContent = 'No modules found';
+                sel.appendChild(opt); return;
+              }
+              mods.forEach(function(m) {
+                var opt = document.createElement('option');
+                opt.value = m; opt.dataset.value = m; opt.textContent = m;
+                sel.appendChild(opt);
+              });
+              if (sel.selectedIndex === -1) sel.selectedIndex = 0;
+              sel.dispatchEvent(new Event('change'));
+            })
+            .catch(function() {
+              sel.innerHTML = '<option value="" data-value="">Error loading modules</option>';
+            });
+        }
+
+        function updateFromDriver() {
+          if (!driver) return;
+          var idx = driver.selectedIndex;
+          var driverVal = (idx >= 0 && driver.options[idx] && driver.options[idx].dataset.value)
+                          ? driver.options[idx].dataset.value
+                          : (driver.value || '');
+          loadModules(moduleForValue(driverVal));
+        }
+
+        updateFromDriver();
+        if (driver) driver.addEventListener('change', updateFromDriver);
+      })();
+    JS
+  end
+
   # Output a path widget.
   def output_path_html(key, value, script_content, submit_content, app_name, dir_name)
     favorites = value['favorites'] ? value['favorites'].select { |path| File.exist?(path) } : []
@@ -1117,6 +1213,9 @@ HTML
       when 'module_load'
         @js["once"] += output_module_load_js(key, value)
         html += output_module_load_html(key, value, script_content, submit_content, app_name, dir_name)
+      when 'two_module_widget'
+        @js["once"] += output_two_module_widget_js(key, value)
+        html += output_two_module_widget_html(key, value, script_content, submit_content, app_name, dir_name)
       end
 
       html += "</div>\n"

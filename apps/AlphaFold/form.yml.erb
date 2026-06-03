@@ -21,11 +21,6 @@ end
 
 af_options = af_versions.map { |v| full = "AlphaFold/#{v}"; [full, full] }
 
-# Combined DB options: AF3DB first (newest AlphaFold is v3), then AF2DB.
-# Labels make it clear which DB pairs with which AlphaFold major version.
-afdb_options = af3db_versions.map { |v| ["AlphaFold3DB/#{v}  (for AlphaFold v3)", "AlphaFold3DB/#{v}"] } +
-               af2db_versions.map { |v| ["AlphaFold2DB/#{v}  (for AlphaFold v2)", "AlphaFold2DB/#{v}"] }
-
 new_form = {}
 base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
@@ -36,10 +31,13 @@ base['form'].each do |k, v|
       'value'   => af_options.first ? af_options.first[0] : ""
     }
     new_form['alphafold_db_module'] = {
-      'widget'  => 'select',
+      'widget'  => 'two_module_widget',
       'label'   => 'AlphaFold Database Module',
-      'options' => afdb_options,
-      'value'   => afdb_options.first ? afdb_options.first[1] : ""
+      'driver'  => 'alphafold_module',
+      'modules' => [
+        {'prefix' => 'AlphaFold/2.', 'module' => 'AlphaFold2DB'},
+        {'prefix' => 'AlphaFold/3.', 'module' => 'AlphaFold3DB'}
+      ]
     }
   end
   new_form[k] = v

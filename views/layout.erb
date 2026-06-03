@@ -261,8 +261,8 @@
               <% if @conf["show_open_ondemand"] %>
                 <li class="nav-item">
                   <a target="_blank" href="<%= @my_ood_url %>" class="nav-link py-0">
-                    <i class="bi bi-terminal-fill" style="font-size: 20px; display: inline-block; vertical-align: middle;" aria-hidden="true"></i>
-                    <span class="d-none d-lg-inline ms-1" style="display: inline-block; vertical-align: middle;"><%= ERB::Util.h(@conf["open_ondemand_label"]) %></span>
+                    <img src="<%= @script_name %>/ood.png" alt="" style="height: 20px; display: inline-block; vertical-align: middle; filter: brightness(0);" aria-hidden="true">
+                    <span class="ms-1" style="display: inline-block; vertical-align: middle;"><%= ERB::Util.h(@conf["open_ondemand_label"]) %></span>
                   </a>
                 </li>
               <% end %>

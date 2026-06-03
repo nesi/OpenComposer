@@ -19,15 +19,12 @@ else
   af3db_versions = ["2024-12"]
 end
 
-# Build select options: v2.x shows AF2DB and hides AF3DB, v3.x does the reverse.
-af_options = af_versions.map do |v|
-  full = "AlphaFold/#{v}"
-  if v.start_with?("2.")
-    [full, full, "show-alphafold2db_module", "hide-alphafold3db_module"]
-  else
-    [full, full, "show-alphafold3db_module", "hide-alphafold2db_module"]
-  end
-end
+af_options = af_versions.map { |v| full = "AlphaFold/#{v}"; [full, full] }
+
+# Combined DB options: AF3DB first (newest AlphaFold is v3), then AF2DB.
+# Labels make it clear which DB pairs with which AlphaFold major version.
+afdb_options = af3db_versions.map { |v| ["AlphaFold3DB/#{v}  (for AlphaFold v3)", "AlphaFold3DB/#{v}"] } +
+               af2db_versions.map { |v| ["AlphaFold2DB/#{v}  (for AlphaFold v2)", "AlphaFold2DB/#{v}"] }
 
 new_form = {}
 base['form'].each do |k, v|
@@ -38,17 +35,11 @@ base['form'].each do |k, v|
       'options' => af_options,
       'value'   => af_options.first ? af_options.first[0] : ""
     }
-    new_form['alphafold2db_module'] = {
+    new_form['alphafold_db_module'] = {
       'widget'  => 'select',
       'label'   => 'AlphaFold Database Module',
-      'options' => af2db_versions.map { |v| ["AlphaFold2DB/#{v}", "AlphaFold2DB/#{v}"] },
-      'value'   => af2db_versions.first ? "AlphaFold2DB/#{af2db_versions.first}" : ""
-    }
-    new_form['alphafold3db_module'] = {
-      'widget'  => 'select',
-      'label'   => 'AlphaFold Database Module',
-      'options' => af3db_versions.map { |v| ["AlphaFold3DB/#{v}", "AlphaFold3DB/#{v}"] },
-      'value'   => af3db_versions.first ? "AlphaFold3DB/#{af3db_versions.first}" : ""
+      'options' => afdb_options,
+      'value'   => afdb_options.first ? afdb_options.first[1] : ""
     }
   end
   new_form[k] = v
@@ -77,11 +68,7 @@ base['script'] = <<~'SCRIPT'
 
   module purge
   module load #{alphafold_module}
-  if [[ "#{alphafold_module}" == AlphaFold/2* ]]; then
-    [[ -n "#{alphafold2db_module}" ]] && module load #{alphafold2db_module}
-  else
-    [[ -n "#{alphafold3db_module}" ]] && module load #{alphafold3db_module}
-  fi
+  module load #{alphafold_db_module}
 
 SCRIPT
 -%>

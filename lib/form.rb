@@ -1181,7 +1181,7 @@ HTML
     return "" unless body&.key?("form")
 
     @js ||= { "init_dw" => "", "exec_dw" => "", "script" => "", "once" => "", "submit" => "", "script_patterns" => "" }
-    form = body["form"].merge({OC_SCRIPT_CONTENT => {"widget" => "textarea"}})
+    form = (body["form"] || {}).merge({OC_SCRIPT_CONTENT => {"widget" => "textarea"}})
     obj = form.merge(header)
     script_content = body["script"].is_a?(Hash) ? body.dig("script", "content") : body["script"]
     submit_content = body["submit"].is_a?(Hash) ? body.dig("submit", "content") : body["submit"]
@@ -1253,7 +1253,7 @@ HTML
 
     html = ""
     header = header.merge({OC_SCRIPT_CONTENT => {"widget" => "textarea"}})
-    obj    = header.merge(body["form"])
+    obj    = header.merge(body["form"] || {})
     header.each do |key, value|
       next if key == OC_SCRIPT_CONTENT
       indent = add_indent_style(value)

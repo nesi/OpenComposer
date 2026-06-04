@@ -1001,6 +1001,17 @@ HTML
             js += "    ocForm.disableWidget('#{k.chomp(action[:num].to_s)}', #{action[:num]}, '#{action[:widget]}', \"#{action[:value]}\", #{action[:size]});\n"
           end
         end
+        unless is_disable
+          js += "  } else {\n"
+          actions_by_key[k].each do |action|
+            if action[:num] == "null"
+              js += "    ocForm.enableWidget('#{k}', #{action[:num]}, '#{action[:widget]}', #{action[:size]});\n"
+              js += "    ocForm.showWidget('#{k}', '#{action[:widget]}', #{action[:size]});\n"
+            else
+              js += "    ocForm.enableWidget('#{k.chomp(action[:num].to_s)}', #{action[:num]}, '#{action[:widget]}', #{action[:size]});\n"
+            end
+          end
+        end
         js += "  }\n"
       end
     end

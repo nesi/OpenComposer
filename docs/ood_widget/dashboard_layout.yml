@@ -1,0 +1,15 @@
+# Add this to /etc/ood/config/ondemand.d/opencomposer_widget.yml
+# (or merge into an existing ondemand.d yml file)
+#
+# The widget file goes to:
+#   /etc/ood/config/apps/dashboard/views/widgets/_opencomposer.html.erb
+#
+# After copying both files, restart the OOD web server:
+#   Help → Restart Web Server  (in the OOD UI)
+
+dashboard_layout:
+  rows:
+    - columns:
+        - width: 12
+          widgets:
+            - opencomposer

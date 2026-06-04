@@ -4,3 +4,4 @@ description: The Snakemake workflow management system is a tool to create reprod
 homepage: https://snakemake.readthedocs.io
 icon: icon.png
 hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/Snakemake/

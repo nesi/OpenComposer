@@ -4,3 +4,4 @@ description: Basic Local Alignment Search Tool (BLAST) for comparing biological 
 homepage: http://blast.ncbi.nlm.nih.gov/
 icon: icon.png
 hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/BLAST/

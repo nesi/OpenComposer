@@ -90,11 +90,44 @@
       }
       #<%= OC_SCRIPT_CONTENT %>_editor:focus-within #<%= OC_SCRIPT_CONTENT %>_highlight_container,
       #<%= SUBMIT_CONTENT %>_editor:focus-within #<%= SUBMIT_CONTENT %>_highlight_container {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        border-color: #00B9E4;
+        box-shadow: 0 0 0 0.25rem rgba(0, 185, 228, 0.25);
       }
+      /* ── REANNZ brand ── */
       body {
         min-width: 768px;
+        font-family: "Calibri Light", Calibri, "Gill Sans MT", "Gill Sans", Arial, sans-serif;
+        font-weight: 300;
+        color: #191919;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: "Calibri Bold", Calibri, "Gill Sans MT", "Gill Sans", Arial, sans-serif;
+        font-weight: 700;
+        color: #001C36;
+      }
+      a { color: #00B9E4; }
+      a:hover { color: #001C36; }
+      .btn-primary {
+        background-color: #00B9E4;
+        border-color: #00B9E4;
+        color: #fff;
+        border-radius: 4px;
+      }
+      .btn-primary:hover, .btn-primary:focus {
+        background-color: #001C36;
+        border-color: #001C36;
+        color: #fff;
+      }
+      .form-control:focus, .form-select:focus {
+        border-color: #00B9E4;
+        box-shadow: 0 0 0 0.25rem rgba(0, 185, 228, 0.25);
+      }
+      .form-check-input:checked {
+        background-color: #00B9E4;
+        border-color: #00B9E4;
+      }
+      .form-check-input:focus {
+        box-shadow: 0 0 0 0.25rem rgba(0, 185, 228, 0.25);
       }
       #_form_container {
         display: flex;
@@ -130,7 +163,7 @@
       }
 
       .history-sort-link {
-        color: rgba(70, 48, 32, 0.82);
+        color: #C3C8C8;
         display: block;
         font-size: 0.62rem;
         font-weight: 700;
@@ -149,11 +182,11 @@
       }
 
       .history-sort-link:hover {
-        color: #b85400;
+        color: #00B9E4;
       }
 
       .history-sort-link.history-sort-active {
-        color: #d11f1f;
+        color: #001C36;
       }
 
       .history-modal-match-cell {
@@ -192,7 +225,7 @@
               </li>
               <li class="nav-item dropdown">
                 <a href="#" class="nav-link dropdown-toggle <%= active?("" != @dir_name && "history" != @dir_name && "nodes" != @dir_name) %>" data-bs-toggle="dropdown">
-                  Applications
+                  <%= ERB::Util.h(@conf.fetch("navbar_apps_label", "Applications")) %>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>; max-height: 80vh; overflow-y: auto;">
                   <% @manifests_w_category.group_by(&:category).each do |category, manifests| %>
@@ -260,7 +293,7 @@
               <% end %>
               <% if @conf["show_open_ondemand"] %>
                 <li class="nav-item">
-                  <a target="_blank" href="<%= @my_ood_url %>" class="nav-link py-0">
+                  <a target="_blank" href="<%= @open_ondemand_url %>" class="nav-link py-0">
                     <i class="bi bi-grid-fill" style="font-size: 20px; display: inline-block; vertical-align: middle;" aria-hidden="true"></i>
                     <span class="ms-1" style="display: inline-block; vertical-align: middle;"><%= ERB::Util.h(@conf["open_ondemand_label"]) %></span>
                   </a>
@@ -271,7 +304,7 @@
         </div>
       </nav>
 
-      <div id="oc-search-results" style="display:none; background:#fff; border-bottom:1px solid #dee2e6; max-height:60vh; overflow-y:auto;"></div>
+      <div id="oc-search-results" style="display:none; background:#F3F4F4; border-bottom:1px solid #C3C8C8; max-height:60vh; overflow-y:auto;"></div>
 
       <div style="flex: 1;">
         <%= yield %>

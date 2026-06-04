@@ -471,7 +471,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   @conf          = create_conf
   @apps_dir      = @conf["apps_dir"]
   @version       = VERSION
-  @my_ood_url    = request.base_url
+  @my_ood_url        = request.base_url
+  @open_ondemand_url = @conf.fetch("open_ondemand_url", @my_ood_url)
   @script_name   = request.script_name
   @dir_name      = request.path_info.sub(/^\//, '')
   @cluster_name  = if @conf.key?("clusters")

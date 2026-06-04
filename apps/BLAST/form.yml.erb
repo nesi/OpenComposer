@@ -34,6 +34,13 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   #BLASTAPP=blastx
   #DB=nr
 
+  # Uncomment this section out if you 
+  # want to keep the database in RAM
+  # See https://docs.nesi.org.nz/Software/Available_Applications/BLAST for 
+  # information about this.
+  #cp $BLASTDB/{$DB,taxdb}.* $TMPDIR/ 
+  #export BLASTDB=$TMPDIR
+
   $BLASTAPP $BLASTOPTS -db $DB -query $QUERIES -outfmt "$FORMAT" \
       -out $QUERIES.$DB.$BLASTAPP -num_threads $SLURM_CPUS_PER_TASK
 APP_SCRIPT

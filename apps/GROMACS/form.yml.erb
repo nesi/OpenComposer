@@ -10,6 +10,25 @@ base['form'].each do |k, v|
       'module' => "GROMACS",
       'label'  => "GROMACS Module"
     }
+    new_form['gromacs_parallelism'] = {
+      'widget'  => 'radio',
+      'label'   => 'Parallelism',
+      'value'   => 'multi',
+      'options' => [
+        ['Multi Node (Hybrid)', 'multi', 'disable-gromacs_run_shared', 'enable-gromacs_run_multi', 'enable-number_of_nodes'],
+        ['Shared Memory',       'shared', 'disable-gromacs_run_multi',  'enable-gromacs_run_shared', 'disable-number_of_nodes']
+      ]
+    }
+    new_form['gromacs_run_shared'] = {
+      'widget' => 'text',
+      'label'  => 'Run Command',
+      'value'  => 'srun gmx mdrun -ntomp ${SLURM_CPUS_PER_TASK} -s input.tpr -o trajectory.trr -c struct.gro -e energies.edr'
+    }
+    new_form['gromacs_run_multi'] = {
+      'widget' => 'text',
+      'label'  => 'Run Command',
+      'value'  => 'srun gmx_mpi mdrun_mpi -ntomp ${SLURM_CPUS_PER_TASK} -nomp ${SLURM_NNODES} -s input.tpr -o trajectory.trr -c struct.gro -e energies.edr'
+    }
   end
   new_form[k] = v
 end
@@ -19,9 +38,8 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{gromacs_module}
 
-  # Note: In version 2021.5 and older use `gmx_serial` instead of `gmx`
-
-  srun gmx mdrun -s input.tpr -o trajectory.trr -c struct.gro -e energies.edr
+  #{gromacs_run_shared}
+  #{gromacs_run_multi}
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

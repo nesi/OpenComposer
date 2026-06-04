@@ -2,6 +2,25 @@
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
 base = YAML.load_file(base_path)
 
+# Switching partition resets GPU state, so always disable dorado_gpu_args on partition change.
+# The active GPU widget's exec_dw re-enables it if the user picks a GPU.
+base['form']['partition']['options'] = base['form']['partition']['options'].map do |opt|
+  [*opt, 'disable-dorado_gpu_args']
+end
+
+# Disable dorado_gpu_args when GPU type is None; keep it enabled when a GPU is chosen.
+['gpu_any', 'gpu_genoa', 'gpu_milan'].each do |gpu_field|
+  next unless base['form'][gpu_field]
+  base['form'][gpu_field]['options'] = base['form'][gpu_field]['options'].map do |opt|
+    label, value, *rest = opt
+    if value.to_s.empty?
+      [label, value, *rest, 'disable-dorado_gpu_args']
+    else
+      [label, value, *rest, 'enable-dorado_gpu_args']
+    end
+  end
+end
+
 new_form = {}
 base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
@@ -9,6 +28,11 @@ base['form'].each do |k, v|
       'widget' => 'module_load',
       'module' => 'Dorado',
       'label'  => 'Dorado Module'
+    }
+    new_form['dorado_gpu_args'] = {
+      'widget' => 'text',
+      'label'  => 'Device',
+      'value'  => '--device cuda:all'
     }
   end
   new_form[k] = v
@@ -21,7 +45,7 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
 
   dorado download --model dna_r10.4.1_e8.2_400bps_hac@v4.1.0
 
-  DORADO_ARGS="${SLURM_GPUS_PER_NODE:+--device cuda:all}"
+  DORADO_ARGS="#{dorado_gpu_args}"
   dorado basecaller $DORADO_ARGS dna_r10.4.1_e8.2_400bps_hac@v4.1.0 pod5s/ > calls.bam
 APP_SCRIPT
 %>

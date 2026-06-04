@@ -22,7 +22,8 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{lammps_module}
 
-  srun lmp -in lj.in -sf omp
+  # See https://docs.nesi.org.nz/Software/Available_Applications/LAMMPS/#examples for how to set up 
+  # your LAMMPS scripts.
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

@@ -2,6 +2,24 @@
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
 base = YAML.load_file(base_path)
 
+# Switching partition resets GPU state, so disable cuda_module and matlab_gpu_flag on partition change.
+base['form']['partition']['options'] = base['form']['partition']['options'].map do |opt|
+  [*opt, 'disable-cuda_module', 'disable-matlab_gpu_flag']
+end
+
+# Disable cuda_module and matlab_gpu_flag when GPU type is None; enable when a GPU is chosen.
+['gpu_any', 'gpu_genoa', 'gpu_milan'].each do |gpu_field|
+  next unless base['form'][gpu_field]
+  base['form'][gpu_field]['options'] = base['form'][gpu_field]['options'].map do |opt|
+    label, value, *rest = opt
+    if value.to_s.empty?
+      [label, value, *rest, 'disable-cuda_module', 'disable-matlab_gpu_flag']
+    else
+      [label, value, *rest, 'enable-cuda_module', 'enable-matlab_gpu_flag']
+    end
+  end
+end
+
 new_form = {}
 base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
@@ -9,6 +27,16 @@ base['form'].each do |k, v|
       'widget' => 'module_load',
       'module' => "MATLAB",
       'label'  => "MATLAB Module"
+    }
+    new_form['cuda_module'] = {
+      'widget' => 'module_load',
+      'module' => "CUDA",
+      'label'  => "CUDA Module"
+    }
+    new_form['matlab_gpu_flag'] = {
+      'widget' => 'text',
+      'label'  => 'MATLAB GPU Flag',
+      'value'  => '-batch "gpuDevice()"'
     }
   end
   new_form[k] = v
@@ -18,9 +46,10 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{matlab_module}
+  module load #{cuda_module}
 
   # Run the MATLAB script MATLAB_job.m
-  matlab -nodisplay < MATLAB_job.m
+  matlab :#{matlab_gpu_flag} -nodisplay < MATLAB_job.m
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

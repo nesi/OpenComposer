@@ -83,7 +83,7 @@ SCHEDULER_TO_GENERIC_APP ||= {
 }.freeze
 
 # Structure of manifest
-Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps, :homepage, :hidden)
+Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps, :homepage, :hidden, :documentation)
 
 # Create a YAML or ERB file object. Give priority to ERB.
 # If the file does not exist, return nil.
@@ -220,10 +220,10 @@ def create_manifest(app_path)
   halt 500, "In #{File.join(app_path, "manifest.yml")}, related_app: is deprecated." if manifest&.key?("related_app")
 
   dirname = File.basename(app_path)
-  return Manifest.new(dirname, dirname, nil, nil, nil, nil, nil, false) if manifest.nil?
+  return Manifest.new(dirname, dirname, nil, nil, nil, nil, nil, false, nil) if manifest.nil?
 
   manifest["name"] ||= dirname
-  return Manifest.new(dirname, manifest["name"], manifest["category"], manifest["description"], manifest["icon"], manifest["related_apps"], manifest["homepage"], manifest.fetch("hidden", false))
+  return Manifest.new(dirname, manifest["name"], manifest["category"], manifest["description"], manifest["icon"], manifest["related_apps"], manifest["homepage"], manifest.fetch("hidden", false), manifest["documentation"])
 end
 
 # Create an array of manifest objects for all applications.

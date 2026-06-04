@@ -310,12 +310,16 @@
         <%= yield %>
       </div>
 
-      <footer class="footer py-1 mx-1 <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>;">
-        <div class="row align-items-center" style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
-          <div class="col text-start"></div> <!-- An empty column to center the middle text -->
-          <div class="col text-center"><%= @conf['footer'] %></div>
-          <div class="col text-end small mx-3">Open Composer version: <%= @version %></div>
+      <footer class="footer d-flex justify-content-between align-items-center m-0 <%= @conf.fetch('footer_padding', 'p-3') %> <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>;">
+        <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
+          <% if @conf['footer_ood_logo'] != false %>
+            <a href="https://openondemand.org/" target="_blank">
+              <img src="<%= @script_name %>/OpenOnDemand_powered_by_invert.svg" alt="Powered by Open OnDemand" style="height:<%= @conf.fetch('footer_logo_height', '40px') %>; vertical-align: middle;">
+            </a>
+          <% end %>
         </div>
+        <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;"><%= @conf['footer'] %></div>
+        <div class="small" style="color:<%= @conf['footer_text_color'] %>;">Open Composer version: <%= @version %></div>
       </footer>
     </div>
 

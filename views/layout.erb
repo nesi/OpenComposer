@@ -310,11 +310,11 @@
         <%= yield %>
       </div>
 
-      <footer class="footer d-flex justify-content-between align-items-center m-0 <%= @conf.fetch('footer_padding', 'p-3') %> <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>;">
+      <footer class="footer d-flex justify-content-between align-items-center m-0 <%= @conf.fetch('footer_padding', 'p-3') %> <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>; margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important; margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important;">
         <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
           <% if @conf['footer_ood_logo'] != false %>
             <a href="https://openondemand.org/" target="_blank">
-              <img src="<%= @script_name %>/OpenOnDemand_powered_by_invert.svg" alt="Powered by Open OnDemand" style="height:<%= @conf.fetch('footer_logo_height', '40px') %>; vertical-align: middle;">
+              <img src="<%= @script_name %>/OpenOnDemand_powered_by_invert.svg" alt="Powered by Open OnDemand" style="height:<%= @conf.fetch('footer_logo_height', '45px') %>; vertical-align: middle;">
             </a>
           <% end %>
         </div>

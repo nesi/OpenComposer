@@ -19,8 +19,14 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{snpeff_module}
 
+  # To use snpEff, you need to setup a one-off configuration file
+  # Follow https://docs.nesi.org.nz/Software/Available_Applications/snpEff/#configuration-file 
+  # to set this up.
+
+  # bring up help menu
   java -jar $EBROOTSNPEFF/snpEff.jar -h
 
+  # run snpEff
   java -jar $EBROOTSNPEFF/snpEff.jar -c /nesi/project/<project_id>/my_snpEff.config <other flags>
 APP_SCRIPT
 %>

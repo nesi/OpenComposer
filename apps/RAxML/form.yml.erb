@@ -19,6 +19,9 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{raxml_module}
 
+  # See https://docs.nesi.org.nz/Software/Available_Applications/RAxML/#parallel-versions
+  # for other parallel versions of RAxML
+  # 
   srun raxmlHPC-PTHREADS-AVX -T $SLURM_CPUS_PER_TASK -m GTRCAT -s aln.fasta -n tree.out
 APP_SCRIPT
 %>

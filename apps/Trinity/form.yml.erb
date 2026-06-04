@@ -10,6 +10,26 @@ base['form'].each do |k, v|
       'module' => "Trinity",
       'label'  => "Trinity Module"
     }
+    new_form['trinity_phase'] = {
+      'widget'    => 'radio',
+      'label'     => 'Phase',
+      'value'     => '1',
+      'direction' => 'horizontal',
+      'options'   => [
+        ['Phase 1', '1', 'disable-trinity_phase2_cmd', 'enable-trinity_phase1_cmd'],
+        ['Phase 2', '2', 'disable-trinity_phase1_cmd', 'enable-trinity_phase2_cmd']
+      ]
+    }
+    new_form['trinity_phase1_cmd'] = {
+      'widget' => 'text',
+      'label'  => 'Trinity Command',
+      'value'  => 'srun Trinity --no_distributed_trinity_exec --CPU ${SLURM_CPUS_PER_TASK} --max_memory 200G [your_other_trinity_options]'
+    }
+    new_form['trinity_phase2_cmd'] = {
+      'widget' => 'text',
+      'label'  => 'Trinity Command',
+      'value'  => 'srun Trinity --CPU ${SLURM_CPUS_PER_TASK} --max_memory 20G --grid_exec "hpc_cmds_GridRunner.pl --grid_conf ${SLURM_SUBMIT_DIR}/SLURM.conf -c" [your_other_trinity_options]'
+    }
   end
   new_form[k] = v
 end
@@ -19,9 +39,8 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{trinity_module}
 
-  srun Trinity --no_distributed_trinity_exec \
-    --CPU ${SLURM_CPUS_PER_TASK} --max_memory 200G \
-    [your_other_trinity_options]
+  #{trinity_phase1_cmd}
+  #{trinity_phase2_cmd}
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

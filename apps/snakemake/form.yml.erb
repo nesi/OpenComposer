@@ -19,6 +19,7 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{snakemake_module}
 
+  # launch snakemake workflow
   snakemake -pr --keep-going -j $SLURM_CPUS_PER_TASK all
 APP_SCRIPT
 %>

@@ -18,6 +18,13 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{virsorter_module}
+
+  virsorter run \
+      --seqfile test.fasta \
+      --jobs ${SLURM_CPUS_PER_TASK:-2} \
+      --rm-tmpdir \
+      all \
+      --config LOCAL_SCRATCH=${TMPDIR:-/tmp}
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

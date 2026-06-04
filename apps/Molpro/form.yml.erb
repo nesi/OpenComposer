@@ -18,6 +18,8 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{molpro_module}
+
+  molpro Molpro_job.inp
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

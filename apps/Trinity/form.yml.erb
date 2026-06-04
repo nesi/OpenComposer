@@ -18,6 +18,10 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{trinity_module}
+
+  srun Trinity --no_distributed_trinity_exec \
+    --CPU ${SLURM_CPUS_PER_TASK} --max_memory 200G \
+    [your_other_trinity_options]
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

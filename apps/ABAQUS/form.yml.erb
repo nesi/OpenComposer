@@ -18,6 +18,8 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{abaqus_module}
+
+  abaqus job="example" cpus=${SLURM_CPUS_PER_TASK} verbose=2 interactive
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

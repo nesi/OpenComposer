@@ -18,6 +18,9 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{ansys_module}
+
+  JOURNAL_FILE=/share/test/ansys/fluent/wing.in
+  fluent 3ddp -g -i ${JOURNAL_FILE}
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

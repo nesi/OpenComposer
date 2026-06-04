@@ -18,6 +18,10 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{r_module}
+
+  echo "Executing R ..."
+  srun Rscript MySerialRJob.R
+  echo "R finished."
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

@@ -18,6 +18,12 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{orca_module}
+
+  # ORCA under MPI requires that it be called via its full absolute path
+  orca_exe=$(which orca)
+
+  # Don't use "srun" as ORCA does that itself when launching its MPI process.
+  ${orca_exe} MyInput.inp
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

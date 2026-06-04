@@ -18,6 +18,8 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{maker_module}
+
+  srun maker -q
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

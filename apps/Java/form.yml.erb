@@ -18,6 +18,11 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{java_module}
+
+  # The following line is needed in case your Java application
+  # is called indirectly
+  export _JAVA_OPTIONS=-Djava.io.tmpdir=${TMPDIR}
+  java -Xmx3g -Djava.io.tmpdir=${TMPDIR} -jar /path/to/foo.jar
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

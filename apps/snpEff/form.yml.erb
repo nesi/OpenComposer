@@ -18,6 +18,10 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{snpeff_module}
+
+  java -jar $EBROOTSNPEFF/snpEff.jar -h
+
+  java -jar $EBROOTSNPEFF/snpEff.jar -c /nesi/project/<project_id>/my_snpEff.config <other flags>
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

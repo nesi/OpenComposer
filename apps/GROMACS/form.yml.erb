@@ -18,6 +18,10 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{gromacs_module}
+
+  # Note: In version 2021.5 and older use `gmx_serial` instead of `gmx`
+
+  srun gmx mdrun -s input.tpr -o trajectory.trr -c struct.gro -e energies.edr
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

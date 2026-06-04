@@ -21,6 +21,8 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{lammps_module}
+
+  srun lmp -in lj.in -sf omp
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

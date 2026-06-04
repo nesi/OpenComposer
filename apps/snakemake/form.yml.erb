@@ -18,6 +18,8 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{snakemake_module}
+
+  snakemake -pr --keep-going -j $SLURM_CPUS_PER_TASK all
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

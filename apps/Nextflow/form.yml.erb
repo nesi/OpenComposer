@@ -18,6 +18,17 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{nextflow_module}
+
+  # load Nextflow and set environmental variables
+  export NXF_APPTAINER_CACHEDIR=/nesi/nobackup/nesi12345/apptainer_cache
+  export NXF_OFFLINE='true'
+  export NXF_PLUGINS_DIR=/nesi/project/nesi12345/.nextflow/plugins
+
+  # run nextflow
+  nextflow run NEXTFLOW_WORKFLOW \
+      -profile local,apptainer \
+      --outdir /nesi/project/nesi12345/NEXTFLOW_WORKFLOW/out \
+      -w /nesi/nobackup/nesi12345/NEXTFLOW_WORKFLOW/work
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

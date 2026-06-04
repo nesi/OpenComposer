@@ -18,6 +18,9 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{matlab_module}
+
+  # Run the MATLAB script MATLAB_job.m
+  matlab -nodisplay < MATLAB_job.m
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

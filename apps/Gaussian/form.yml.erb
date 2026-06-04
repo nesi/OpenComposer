@@ -18,6 +18,31 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{gaussian_module}
+
+  INPUT_FILE="H2O.gjf"
+
+  GAUSSIAN_MEM="$((${SLURM_MEM_PER_NODE} - 2048))"
+
+  export GAUSS_SCRDIR="/nesi/nobackup/${SLURM_JOB_ACCOUNT}/gaussian_job_${SLURM_JOB_ID}"
+  mkdir -p "${GAUSS_SCRDIR}"
+
+  cat << EOF > $INPUT_FILE
+  %CPU=$(taskset -cp $$ | awk -F':' '{print $2}')
+  %Mem=${GAUSSIAN_MEM}MB
+  %Chk=${INPUT_FILE}.chk
+
+  # HF/6-31G(d) Opt=ModRedun Test
+
+  water geo optimisation HF/6-31G(d)
+
+  0 1
+  H
+  O 1 0.95
+  H 2 0.95 1 109.0
+
+  EOF
+
+  srun g09 < "${INPUT_FILE}"
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

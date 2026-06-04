@@ -1,0 +1,6 @@
+name: OpenFOAM
+category: Engineering
+description: OpenFOAM is a free, open source CFD software package for computational fluid dynamics simulations.
+homepage: https://www.openfoam.com
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/OpenFOAM/

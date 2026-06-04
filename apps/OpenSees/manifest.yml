@@ -1,0 +1,6 @@
+name: OpenSees
+category: Engineering
+description: OpenSees is a software framework for simulating the seismic response of structural and geotechnical systems.
+homepage: https://opensees.berkeley.edu
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/OpenSees/

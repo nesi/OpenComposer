@@ -5,10 +5,10 @@ base = YAML.load_file(base_path)
 new_form = {}
 base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
-    new_form['molpro_module'] = {
+    new_form['opensees_module'] = {
       'widget' => 'module_load',
-      'module' => "Molpro",
-      'label'  => "Molpro Module"
+      'module' => "OpenSees",
+      'label'  => "OpenSees Module"
     }
   end
   new_form[k] = v
@@ -17,11 +17,13 @@ end
 base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
-  module load #{molpro_module}
+  module load #{opensees_module}
 
-  molpro Molpro_job.inp
-  # if you need to provide a licence file:
-  # molpro -k /path/to/licence.key Molpro_job.inp
+  # Single-process (OpenSees)
+  # OpenSees model.tcl
+
+  # Parallel (OpenSeesMP) — replace model.tcl with your script
+  srun OpenSeesMP model.tcl
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

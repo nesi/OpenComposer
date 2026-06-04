@@ -2,20 +2,6 @@
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
 base = YAML.load_file(base_path)
 
-# When the user picks a GPU type, auto-set the cuda_device select.
-# When they pick "None" (value ''), clear it so the DORADO_ARGS line is skipped.
-['gpu_any', 'gpu_genoa', 'gpu_milan'].each do |gpu_field|
-  next unless base['form'][gpu_field]
-  base['form'][gpu_field]['options'] = base['form'][gpu_field]['options'].map do |opt|
-    label, value, *rest = opt
-    if value.to_s.empty?
-      [label, value, *rest, {'set-value-cuda_device' => ''}]
-    else
-      [label, value, *rest, {'set-value-cuda_device' => '--device cuda:all'}]
-    end
-  end
-end
-
 new_form = {}
 base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
@@ -24,29 +10,18 @@ base['form'].each do |k, v|
       'module' => 'Dorado',
       'label'  => 'Dorado Module'
     }
-    new_form['cuda_device'] = {
-      'widget'  => 'select',
-      'label'   => 'Device',
-      'options' => [
-        ['(no GPU)', ''],
-        ['CUDA (cuda:all)', '--device cuda:all']
-      ]
-    }
   end
   new_form[k] = v
 end
 
 base['form']   = new_form
-# DORADO_ARGS line is skipped by the form system when cuda_device is empty (no GPU).
-# $DORADO_ARGS in the basecaller line has no #{} so it always appears; when
-# DORADO_ARGS is unset it expands to empty and dorado runs without a device flag.
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{dorado_module}
 
   dorado download --model dna_r10.4.1_e8.2_400bps_hac@v4.1.0
 
-  DORADO_ARGS="#{cuda_device}"
+  DORADO_ARGS="${SLURM_GPUS_PER_NODE:+--device cuda:all}"
   dorado basecaller $DORADO_ARGS dna_r10.4.1_e8.2_400bps_hac@v4.1.0 pod5s/ > calls.bam
 APP_SCRIPT
 %>

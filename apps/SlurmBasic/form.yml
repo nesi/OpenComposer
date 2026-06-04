@@ -70,7 +70,7 @@ form:
     widget: checkbox
     label:
     options:
-      - ["Show advanced option", "", show-testing, show-profiling, show-array, show-mail_option, enable-testing, enable-profiling, enable-array, enable-mail_option]
+      - ["Show advanced options", "", show-testing, show-profiling, show-array, show-mail_option, enable-testing, enable-profiling, enable-array, enable-mail_option]
 
   testing:
     widget: checkbox

@@ -215,7 +215,9 @@
             <ul class="navbar-nav">
               <% if @conf["navbar_logo"].to_s.strip.length > 0 %>
                 <li class="nav-item d-flex align-items-center px-2">
-                  <img src="<%= @script_name %>/<%= @conf["navbar_logo"] %>" alt="Logo" style="height: 30px; vertical-align: middle;">
+                  <a href="<%= @open_ondemand_url %>" target="_blank">
+                    <img src="<%= @script_name %>/<%= @conf["navbar_logo"] %>" alt="Logo" style="height: 30px; vertical-align: middle;">
+                  </a>
                 </li>
               <% end %>
               <li class="nav-item">
@@ -248,7 +250,7 @@
               </li>
               <li class="nav-item me-1 d-flex align-items-center">
                 <input type="search" id="oc-search" class="form-control form-control-sm"
-                       placeholder="Search apps…" autocomplete="off" style="width:180px;">
+                       placeholder="<%= ERB::Util.h(@conf.fetch("navbar_search_placeholder", "Search apps…")) %>" autocomplete="off" style="width:180px;">
               </li>
               <li class="nav-item">
                 <a href="<%= @script_name %>/history" class="nav-link <%= active?("history" == @dir_name) %>">History</a>
@@ -308,7 +310,7 @@
         <%= yield %>
       </div>
 
-      <footer class="footer py-1 bg-gradient mx-1 <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>;">
+      <footer class="footer py-1 mx-1 <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>;">
         <div class="row align-items-center" style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
           <div class="col text-start"></div> <!-- An empty column to center the middle text -->
           <div class="col text-center"><%= @conf['footer'] %></div>

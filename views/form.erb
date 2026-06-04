@@ -127,7 +127,7 @@
           </div>
         </div>
       </div>
-      <!-- Save / Save as Template Button -->
+      <!-- Save / Save as Custom Template Button -->
       <% if @template_slug %>
       <button type="button" class="btn <%= @new_template ? 'btn-primary' : 'btn-outline-secondary mt-2' %> d-block w-100"
               onclick="ocSaveTemplateOverwrite()">
@@ -136,19 +136,19 @@
       <% else %>
       <button type="button" class="btn <%= @new_template ? 'btn-primary' : 'btn-outline-secondary mt-2' %> d-block w-100"
               data-bs-toggle="modal" data-bs-target="#modal-save-template">
-        Save as Template
+        Save as Custom Template
       </button>
       <% end %>
     </div>
   </div>
 </form>
 
-<!-- Save as Template Modal -->
+<!-- Save as Custom Template Modal -->
 <div class="modal fade" id="modal-save-template" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Save as Template</h5>
+        <h5 class="modal-title">Save as Custom Template</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">

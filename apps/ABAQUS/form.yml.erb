@@ -9,7 +9,7 @@ end
 
 new_form = {}
 base['form'].each do |k, v|
-  if k == 'partition'
+  if k == 'time_days_hours_minutes'
     new_form['abaqus_module'] = {
       'widget' => 'module_load',
       'module' => 'ABAQUS',

@@ -189,15 +189,27 @@ clusters:
       <h3 id="history">2.3. history</h3>
       <p>
         The mandatory fields to be displayed on the history page are "Job ID", "Application", "Script Location", "Script Name", and "Status".
-        In addition to these, the <code>history</code> allows you to set additional fields to display.
-        If this setting is omitted, "Job Name", "Partition", and "Submission Time" are automatically set.
-        This is equivalent to the code shown below.
-        <code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, and <code>OC_HISTORY_SUBMISSION_TIME</code> are special variables that correspond to "Job Name", "Partition", and "Submission Time", respectively.
+        In addition to these, the <code>history</code> setting controls which extra fields appear.
+        If this setting is omitted, all five special variables are included by default.
+        The available special variables are:
+      </p>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Special variable</th><th>Displayed as</th></tr>
+        <tr><td><code>OC_HISTORY_JOB_NAME</code></td><td>Job Name</td></tr>
+        <tr><td><code>OC_HISTORY_PARTITION</code></td><td>Partition</td></tr>
+        <tr><td><code>OC_HISTORY_SUBMISSION_TIME</code></td><td>Submission Time</td></tr>
+        <tr><td><code>OC_HISTORY_START_TIME</code></td><td>Job start time (from the scheduler)</td></tr>
+        <tr><td><code>OC_HISTORY_END_TIME</code></td><td>Job end time (from the scheduler)</td></tr>
+      </table>
+      <p>
+        A typical configuration showing job name, start time, and end time with custom labels:
       </p>
       <pre>history:
   OC_HISTORY_JOB_NAME:
-  OC_HISTORY_PARTITION:
-  OC_HISTORY_SUBMISSION_TIME:</pre>
+  OC_HISTORY_START_TIME:
+    label: "Start Time"
+  OC_HISTORY_END_TIME:
+    label: "End Time"</pre>
       <img alt="history table" width="800" src="./img/history_page.png">
       <p>
   If you want to disable additional display fields, define an empty array.
@@ -297,7 +309,7 @@ $ RACK_ENV=development bundle exec rackup</pre>
         The files in <code>ood_integration/</code> enable an embedded mode where Open Composer runs inside an iframe within the OOD page — OOD's navigation bar and footer remain visible, and the user never leaves the OOD interface.
       </p>
       <p>
-        This requires Open OnDemand 4.x and administrator access to <code>/etc/ood/config/</code>.
+        This requires Open OnDemand 3.x or later and administrator access to <code>/etc/ood/config/</code>.
       </p>
 
       <h3>Step 1 — Install Open Composer as a sys app</h3>

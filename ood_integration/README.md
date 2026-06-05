@@ -13,7 +13,7 @@ When installed, clicking the **Open Composer** app tile in OOD opens it embedded
 
 ## Requirements
 
-- Open OnDemand 4.x (the initializer hook mechanism requires OOD 4.x)
+- Open OnDemand 3.x or later
 - Open Composer deployed as a sys app at `/var/www/ood/apps/sys/opencomposer/`
 - Administrator access to `/etc/ood/config/`
 

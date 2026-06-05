@@ -9,17 +9,11 @@
 ---
 form:
   account:
-<% if _accounts.any? %>
     widget: select
     label: Project
     options:
 <% _accounts.each do |a| %>
       - ["<%= a %>", "<%= a %>"]
-<% end %>
-<% else %>
-    widget: text
-    label: Project
-    help: Your Slurm account/project code (e.g. nesi12345).
 <% end %>
 
   partition:

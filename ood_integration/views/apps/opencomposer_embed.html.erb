@@ -1,0 +1,9 @@
+<div id="oc-container" style="position:fixed; left:0; right:0; bottom:0; overflow:hidden;">
+  <iframe id="oc-frame" src="/pun/sys/opencomposer/" style="width:100%; height:100%; border:none;"></iframe>
+</div>
+<script>
+  (function() {
+    var navbar = document.querySelector('nav.navbar');
+    document.getElementById('oc-container').style.top = (navbar ? navbar.offsetHeight : 56) + 'px';
+  })();
+</script>

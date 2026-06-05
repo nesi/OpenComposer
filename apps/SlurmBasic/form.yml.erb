@@ -11,9 +11,13 @@ form:
   account:
     widget: select
     label: Project
+<% if _accounts.empty? %>
+    options: []
+<% else %>
     options:
 <% _accounts.each do |a| %>
       - ["<%= a %>", "<%= a %>"]
+<% end %>
 <% end %>
 
   partition:

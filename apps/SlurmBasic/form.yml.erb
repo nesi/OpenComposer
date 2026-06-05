@@ -1,9 +1,26 @@
+<%
+  begin
+    _accounts = `sacctmgr -n -P show user #{ENV['USER']} withassoc format=Account 2>/dev/null`
+                .split("\n").map(&:strip).reject(&:empty?).uniq.sort
+  rescue
+    _accounts = []
+  end
+%>
 ---
 form:
   account:
+<% if _accounts.any? %>
+    widget: select
+    label: Project
+    options:
+<% _accounts.each do |a| %>
+      - ["<%= a %>", "<%= a %>"]
+<% end %>
+<% else %>
     widget: text
     label: Account
-    help: The NeSI project account to charge this job to (e.g. nesi12345).
+    help: Your Slurm account/project code (e.g. nesi12345).
+<% end %>
 
   partition:
     widget: select

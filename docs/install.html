@@ -43,49 +43,76 @@ $ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git</pre>
       <pre>$ cd OpenComposer
 $ sudo cp conf.yml.erb.app.example conf.yml.erb</pre>
 
+      <h4>Required</h4>
+      <p>The <code>apps_dir</code> and <code>scheduler</code> are required. The <code>scheduler</code> may alternatively be defined per-cluster inside <code>clusters</code>.</p>
       <table class="table" style="vertical-align: middle;">
         <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
         <tr><td>apps_dir</td><td>Application directory</td><td>(None)</td></tr>
         <tr><td>scheduler</td><td>Job scheduler (<code>slurm</code>, <code>pbspro</code>, <code>sge</code>, <code>fujitsu_tcs</code>)</td><td>(None)</td></tr>
-        <tr><td>clusters</td><td>Cluster properties</td><td>(None)</td></tr>
-        <tr><td>data_dir</td><td>Directory where submitted job information is stored</td><td><code>${HOME}/composer</code></td></tr>
-        <tr><td>generic_apps_dir</td><td>Directory containing hidden generic apps (e.g. a generic Slurm form) that are not shown in the main app listing but can be linked to directly</td><td><code>./generic_apps</code></td></tr>
-        <tr><td>external_reload_app</td><td>Subfolder inside <code>generic_apps_dir</code> to open when loading an external (non-OpenComposer) job from the History page</td><td><code>Slurm</code></td></tr>
+      </table>
+
+      <h4 class="mt-4">Cluster &amp; Job Scheduler</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>clusters</td><td>Cluster properties (see section 2.1)</td><td>(None)</td></tr>
         <tr><td>login_node</td><td>Hostname of the login node. Used for the Shell Access link in the navbar and to run <code>sacctmgr</code> via SSH when populating the Project dropdown in Slurm forms</td><td>(None)</td></tr>
         <tr><td>ssh_wrapper</td><td>Command for using the job scheduler of another node using SSH</td><td>(None)</td></tr>
         <tr><td>bin</td><td>PATH of commands of job scheduler</td><td>(None)</td></tr>
-        <tr><td>bin_overrides</td><td>PATH of each command of job scheduler</td><td>(None)</td></tr>
+        <tr><td>bin_overrides</td><td>PATH of each command of job scheduler (see section 2.2)</td><td>(None)</td></tr>
         <tr><td>sge_root</td><td>Directory for the Grid Engine root (<code>SGE_ROOT</code>)</td><td>(None)</td></tr>
-        <tr><td>history</td><td>Additional display fields on the history page</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code></td></tr>
+      </table>
+
+      <h4 class="mt-4">Data &amp; History</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>data_dir</td><td>Directory where submitted job information is stored</td><td><code>${HOME}/composer</code></td></tr>
+        <tr><td>generic_apps_dir</td><td>Directory containing hidden generic apps (e.g. a generic Slurm form) that are not shown in the main app listing but can be linked to directly</td><td><code>./generic_apps</code></td></tr>
+        <tr><td>external_reload_app</td><td>Subfolder inside <code>generic_apps_dir</code> to open when loading an external (non-OpenComposer) job from the History page</td><td><code>Slurm</code></td></tr>
+        <tr><td>history</td><td>Additional display fields on the history page (see section 2.3)</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code></td></tr>
         <tr><td>history_store_script</td><td>Whether to store the full batch script text in the history database. Set to <code>false</code> to always fetch it live via <code>sacct -B</code></td><td><code>true</code></td></tr>
-        <tr><td>footer</td><td>HTML content for the footer bar</td><td>(None)</td></tr>
-        <tr><td>home_format</td><td>Layout of the home page application grid. Set to <code>big</code> for large tiles (app icon + name) or <code>small</code> for compact list-style tiles</td><td><code>big</code></td></tr>
-        <tr><td>thumbnail_width</td><td>Width of thumbnails for each application on the home page</td><td>100</td></tr>
-        <tr><td>highlight_theme</td><td>The theme name for <a target="_blank" href="https://highlightjs.org/">highlight.js</a> used in the <code>script</code>/<code>submit</code> sections</td><td><code>vs</code></td></tr>
-        <tr><td>directive_color</td><td>The text color of scheduler directives in the <code>script</code>/<code>submit</code> sections</td><td style="background-color: #D73A49;">#D73A49</td></tr>
+      </table>
+
+      <h4 class="mt-4">Navigation Bar</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
         <tr><td>navbar_color</td><td>Background color of navigation bar</td><td rowspan="2" style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
         <tr><td>navbar_text_color</td><td>Text color of navigation bar</td></tr>
         <tr><td>navbar_logo</td><td>Filename of a custom logo image to display in the navigation bar (must be placed in <code>public/</code>)</td><td>(None)</td></tr>
         <tr><td>show_home_directory</td><td>Show the "Home Directory" link in the navigation bar (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
         <tr><td>show_shell_access</td><td>Show the "Shell Access" link in the navigation bar (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
         <tr><td>show_open_ondemand</td><td>Show the "Open OnDemand" link in the navigation bar (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
-        <tr><td>open_ondemand_url</td><td>URL for the "Open OnDemand" link in the navigation bar. Defaults to the root OOD dashboard URL</td><td>(None)</td></tr>
+        <tr><td>open_ondemand_url</td><td>URL for the "Open OnDemand" link in the navigation bar</td><td>(None)</td></tr>
         <tr><td>open_ondemand_label</td><td>Label text for the "Open OnDemand" navigation bar link</td><td><code>Open OnDemand</code></td></tr>
-        <tr><td>show_footer</td><td>Show or hide the footer bar (<code>true</code> or <code>false</code>). Set to <code>false</code> when embedding inside OOD so OOD's own footer is used</td><td><code>true</code></td></tr>
         <tr><td>show_navbar_apps</td><td>Show or hide the Applications/Templates dropdown in the navigation bar (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
         <tr><td>navbar_apps_label</td><td>Label for the Applications/Templates dropdown in the navigation bar</td><td><code>Applications</code></td></tr>
         <tr><td>navbar_search_placeholder</td><td>Placeholder text for the application search field inside the navbar dropdown</td><td><code>Search apps…</code></td></tr>
         <tr><td>dropdown_color</td><td>Background color of dropdown menus</td><td rowspan="2" style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
         <tr><td>dropdown_text_color</td><td>Text color of dropdown menus</td></tr>
-        <tr><td>footer_color</td><td>Background color of footer</td><td style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
-        <tr><td>footer_text_color</td><td>Text color of footer</td><td style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
+      </table>
+
+      <h4 class="mt-4">Footer</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>show_footer</td><td>Show or hide the footer bar (<code>true</code> or <code>false</code>). Set to <code>false</code> when embedding inside OOD so OOD's own footer is used</td><td><code>true</code></td></tr>
+        <tr><td>footer</td><td>HTML content for the footer bar</td><td>(None)</td></tr>
+        <tr><td>footer_color</td><td>Background color of footer</td><td rowspan="2" style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
+        <tr><td>footer_text_color</td><td>Text color of footer</td></tr>
         <tr><td>footer_padding</td><td>Bootstrap padding class applied to the footer bar (e.g. <code>p-1</code> through <code>p-5</code>)</td><td><code>p-3</code></td></tr>
         <tr><td>footer_ood_logo</td><td>Show the Open OnDemand logo in the footer (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
         <tr><td>footer_logo_height</td><td>Height of the Open OnDemand logo in the footer (CSS value, e.g. <code>50px</code>)</td><td><code>50px</code></td></tr>
-        <tr><td>category_color</td><td>Background color of the home page category headers</td><td style="color: white; background-color: #5522BB;">#5522BB</td></tr>
-        <tr><td>category_text_color</td><td>Text color of the home page category headers</td><td style="color: white; background-color: #5522BB;">#5522BB</td></tr>
-        <tr><td>description_color</td><td>Background color of the application description in the application page</td><td style="color: white; background-color: #5522BB;">#5522BB</td></tr>
-        <tr><td>description_text_color</td><td>Text color of the application description in the application page</td><td style="color: white; background-color: #5522BB;">#5522BB</td></tr>
+      </table>
+
+      <h4 class="mt-4">Appearance</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>home_format</td><td>Layout of the home page application grid. <code>big</code> for large tiles (icon + name) or <code>small</code> for compact list-style tiles</td><td><code>big</code></td></tr>
+        <tr><td>thumbnail_width</td><td>Width of thumbnails for each application on the home page</td><td>100</td></tr>
+        <tr><td>highlight_theme</td><td>Theme name for <a target="_blank" href="https://highlightjs.org/">highlight.js</a> used in the <code>script</code>/<code>submit</code> sections</td><td><code>vs</code></td></tr>
+        <tr><td>directive_color</td><td>Text color of scheduler directives in the <code>script</code>/<code>submit</code> sections</td><td style="background-color: #D73A49;">#D73A49</td></tr>
+        <tr><td>category_color</td><td>Background color of the home page category headers</td><td rowspan="2" style="color: white; background-color: #5522BB;">#5522BB</td></tr>
+        <tr><td>category_text_color</td><td>Text color of the home page category headers</td></tr>
+        <tr><td>description_color</td><td>Background color of the application description in the application page</td><td rowspan="2" style="color: white; background-color: #5522BB;">#5522BB</td></tr>
+        <tr><td>description_text_color</td><td>Text color of the application description in the application page</td></tr>
         <tr><td>form_color</td><td>Background color of the text area in the application page</td><td style="background-color: #BFCFE7;">#BFCFE7</td></tr>
         <tr><td>non_script_color</td><td>Background color of the form that does not affect the <code>script</code> section</td><td style="background-color: #FFE28A;">#FFE28A</td></tr>
         <tr><td>non_script_button_color</td><td>Background color of buttons that do not affect the <code>script</code> section</td><td style="background-color: #FFBF00;">#FFBF00</td></tr>
@@ -93,9 +120,6 @@ $ sudo cp conf.yml.erb.app.example conf.yml.erb</pre>
         <tr><td>submit_button_color</td><td>Background color of buttons that affect only the <code>submit</code> section</td><td style="background-color: #FFAAAA">#FFAAAA</td></tr>
         <tr><td>history_action_color</td><td>Background color of the "Cancel Job" and "Delete Info" action buttons on the history page</td><td style="color: white; background-color: #DC3545;">#DC3545</td></tr>
       </table>
-      <p>
-        The <code>apps_dir</code> and <code>scheduler</code> are required. However, the <code>scheduler</code> may be defined inside <code>clusters</code>.
-      </p>
 
       <h3 id="clusters">2.1. clusters</h3>
       <p>

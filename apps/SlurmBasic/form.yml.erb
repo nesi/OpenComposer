@@ -1,8 +1,6 @@
 <%
   begin
-    _login_node = (@conf&.fetch('login_node', nil) rescue nil)
-    _login_node = _login_node.is_a?(Hash) ? _login_node.values.compact.first : _login_node
-    _ssh_prefix = _login_node ? "ssh -o BatchMode=yes -o ConnectTimeout=10 #{_login_node}" : ""
+    _ssh_prefix = @login_node ? "ssh -o BatchMode=yes -o ConnectTimeout=10 #{@login_node}" : ""
     _accounts = `#{_ssh_prefix} sacctmgr -n -P show user #{ENV['USER']} withassoc format=Account 2>/dev/null`
                 .split("\n").map(&:strip).reject(&:empty?).uniq.sort
   rescue

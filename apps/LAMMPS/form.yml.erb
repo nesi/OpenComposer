@@ -3,7 +3,7 @@
 # immediately before time_days_hours_minutes so it works with any base template
 # (GPU or non-GPU) without needing to know which GPU widgets are present.
 slurm_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
-base = YAML.load_file(slurm_path)
+base = read_yaml(slurm_path)
 
 new_form = {}
 base['form'].each do |k, v|

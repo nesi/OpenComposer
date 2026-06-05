@@ -1,6 +1,6 @@
 <%
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
-base = YAML.load_file(base_path)
+base = read_yaml(base_path)
 
 # Remove the generic CPU and memory-toggle fields — replaced by mp_mode_type
 %w[cores_simple cores_advanced show_advanced_cpu_option show_memory_per_cpu_option].each do |k|

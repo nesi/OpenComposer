@@ -2,7 +2,7 @@
 require 'json'
 
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
-base = YAML.load_file(base_path)
+base = read_yaml(base_path)
 
 # Load AlphaFold/AlphaFold2DB/AlphaFold3DB version lists from the module-list
 # cache (~/.composer/.module-list-cache.json). Falls back to hard-coded defaults

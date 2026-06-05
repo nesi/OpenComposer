@@ -1,6 +1,6 @@
 <%
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
-base = YAML.load_file(base_path)
+base = read_yaml(base_path)
 
 # Switching partition resets GPU state, so disable cuda_module and matlab_gpu_flag on partition change.
 base['form']['partition']['options'] = base['form']['partition']['options'].map do |opt|

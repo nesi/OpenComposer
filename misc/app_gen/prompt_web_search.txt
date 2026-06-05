@@ -1,0 +1,22 @@
+Search the web for HPC cluster documentation for the application "<<<APP_NAME>>>".
+
+The target cluster is NeSI Mahuika (New Zealand eScience Infrastructure), which uses:
+- SLURM as the job scheduler
+- `srun` as the MPI launcher (preferred over mpirun)
+- Lmod for environment modules (`module load`)
+- Nodes with CPUs (Genoa/Milan) and optional GPUs (A100, H100, L4)
+
+<<<HOMEPAGE_SECTION>>>
+
+Search in this order, stopping when you have enough to fill the fields below:
+
+1. SLURM job scripts — look for scripts containing #SBATCH directives and a "module load <<<APP_NAME>>>" line. Prefer official HPC centre docs (e.g. NeSI, university clusters, national HPC facilities). Note whether commands are prefixed with `srun` or `mpirun`.
+2. MPI / OpenMP / GPU parallelism flags — identify the exact flags or environment variables used to control parallel execution (e.g. -np, --nthreads, OMP_NUM_THREADS, --gpu, -sf omp, -ntomp). Note if the app has separate MPI and non-MPI binaries (e.g. app vs app_mpi).
+3. General command-line usage — any documented invocation showing the typical command, input file flags, and output file flags.
+
+Return JSON with exactly these keys:
+  "docs": a single string containing all useful excerpts — preserve any code blocks, #SBATCH headers,
+           and command examples verbatim. Include the source URL as a comment above each excerpt.
+  "source": the single most authoritative URL found (empty string if none)
+
+If nothing relevant is found for HPC usage, return {"docs": "", "source": ""}

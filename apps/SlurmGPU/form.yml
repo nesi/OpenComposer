@@ -1,5 +1,10 @@
 ---
 form:
+  account:
+    widget: text
+    label: Account
+    help: The NeSI project account to charge this job to (e.g. nesi12345).
+
   partition:
     widget: select
     label: Partition
@@ -180,6 +185,7 @@ form:
 script: |
   #!/bin/bash -e
   #SBATCH --job-name=#{OC_JOB_NAME}
+  #SBATCH --account=#{account}
   #SBATCH --partition=#{partition}
   #SBATCH --ntasks=#{cores_simple}
   #SBATCH --ntasks=#{cores_advanced_1}

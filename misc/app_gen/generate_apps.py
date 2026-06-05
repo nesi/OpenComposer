@@ -7,7 +7,6 @@ import json
 import os
 import re
 import subprocess
-import sys
 import tempfile
 import traceback
 import urllib.error
@@ -102,9 +101,8 @@ class AppGenerator:
             icon_result = self._process_icon(app_dir,
                                              self._build_icon_prompt(app_name, module_entry, support_md))
 
-            if self.options.get("show"):
-                self._print_preview(app_name, module_name, support_doc_name, profile,
-                                    manifest_text, form_text, manifest_result, form_result, icon_result)
+            self._print_preview(app_name, module_name, support_doc_name, profile,
+                                manifest_text, form_text, manifest_result, form_result, icon_result)
 
             return {
                 "app": app_name,
@@ -424,8 +422,6 @@ def parse_args() -> dict:
                         help="Regenerate icon even when one already exists")
     parser.add_argument("--config", default=DEFAULT_CONFIG_PATH, metavar="PATH",
                         help=f"Config path (default: {DEFAULT_CONFIG_PATH})")
-    parser.add_argument("--show", action="store_true",
-                        help="Print generated content to stdout")
     parser.add_argument("--verbose", action="store_true",
                         help="Include tracebacks in error output")
     ns = parser.parse_args()

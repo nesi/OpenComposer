@@ -18,12 +18,6 @@ For each target app in `apps/<APP>`:
 4. Pass the support doc to Claude with a structured prompt to generate form fields, ERB parallelisation logic, and an icon.
 5. Write files, skipping any that were hand-edited (missing the `# AI generated` marker on line 1) unless `--force` is used.
 
-## Why it is safe
-
-- Default mode is **preview only**. Nothing is written unless `--write` is passed.
-- Hand-edited files (those missing the `# AI generated` marker) are never overwritten unless `--force` is used.
-- Icons are preserved unless `--force-icon` is passed.
-
 ## Data sources
 
 Configured in `misc/app_gen/config.yml`:
@@ -46,16 +40,10 @@ Edit these files to tune output quality without touching Python source.
 
 ## Commands
 
-Preview one app (no files written):
+Preview one app — prints generated content, writes nothing:
 
 ```bash
 python3 misc/app_gen/generate_apps.py --app GROMACS
-```
-
-Show generated content inline:
-
-```bash
-python3 misc/app_gen/generate_apps.py --app GROMACS --show
 ```
 
 Write files:
@@ -100,7 +88,7 @@ Expected JSON keys:
 
 ## Notes for iteration
 
-- Always preview before writing. Use `--show` to inspect generated content inline.
+- Always preview before writing — the default run prints generated content without touching any files.
 - Use `--force` to overwrite files that have been hand-edited.
 - To protect a specific app from any overwrite, remove the `# AI generated` marker from its `form.yml.erb` — the generator will then always skip it unless `--force` is passed.
-- Tune prompt quality by editing the `prompt_*.txt` templates. Re-run with `--show` to verify output before committing.
+- Tune prompt quality by editing the `prompt_*.txt` templates and re-running without `--write` to verify output before committing.

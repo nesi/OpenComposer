@@ -40,7 +40,11 @@
         <li class="nav-item"><a href="#check" class="nav-link">6. Check section</a></li>
         <li class="nav-item"><a href="#submit" class="nav-link">7. Submit section</a></li>
         <li class="nav-item"><a href="#header" class="nav-link">8. Header section</a></li>
-        <li class="nav-item"><a href="#supplement" class="nav-link">9. Supplement</a></li>
+        <li class="nav-item"><a href="#erb" class="nav-link">9. ERB and Dynamic Configuration</a></li>
+        <li class="nav-item ms-3"><a href="#erb-conf" class="nav-link">9.1. Accessing @conf</a></li>
+        <li class="nav-item ms-3"><a href="#erb-command" class="nav-link">9.2. Populating a dropdown from a shell command</a></li>
+        <li class="nav-item ms-3"><a href="#erb-read-yaml" class="nav-link">9.3. Inheriting a base form with read_yaml</a></li>
+        <li class="nav-item"><a href="#supplement" class="nav-link">10. Supplement</a></li>
       </ul>
     </nav>
 
@@ -71,9 +75,10 @@ related_apps:
   ImageJ:</pre>
       <ul>
   <li>name: Application name (If this key is omitted, the directory name is used instead)</li>
-  <li>category：Category name</li>
+  <li>category: Category name</li>
   <li>icon: Path to image file for icon. URL, <a target="_blank" href="https://icons.getbootstrap.com/">Bootstrap icon</a>, or <a target="_blank" href="https://fontawesome.com">Font Awesome icon</a> is also possible. For Bootstrap icons, write <code>icon: bi-airplane-fill</code>. For Font Awesome icons, write <code>icon: fa-solid fa-gear</code>.</li>
   <li>description: Description of the application</li>
+  <li>new_window: Whether clicking the app tile opens a new browser tab (<code>true</code>) or navigates in the same tab (<code>false</code>). Set to <code>false</code> when using OOD-integrated mode so Open Composer stays embedded in the OOD page.</li>
   <li>related_apps: Specify an application registered in Open OnDemand. The specified application is displayed on the history page. As with <code>icon:</code>, you can specify icon images, etc. If no image is specified, the image registered in Open OnDemand is used.</li>
       </ul>
 
@@ -934,7 +939,104 @@ queue:
     - [large]
 &lt;% end %&gt;</pre>
 
-      <h2 id="supplement">9. Supplement</h2>
+      <h2 id="erb">9. ERB and Dynamic Configuration</h2>
+      <p>
+        When a form file is named <code>form.yml.erb</code>, Open Composer processes it as Embedded Ruby (ERB) before parsing the YAML.
+        This lets you generate form content dynamically at page load time — for example, running a shell command to build the list of options for a dropdown, or reading values from the OpenComposer configuration.
+      </p>
+
+      <h3 id="erb-conf">9.1. Accessing @conf</h3>
+      <p>
+        The variable <code>@conf</code> is available inside <code>form.yml.erb</code> and contains the full OpenComposer configuration hash loaded from <code>conf.yml.erb</code>.
+        Use it to read site-specific settings such as the login node hostname.
+      </p>
+      <pre>&lt;%
+  login_node = @conf&.fetch('login_node', nil)
+%&gt;
+---
+form:
+  my_field:
+    widget: text
+    label: Login node is &lt;%= login_node %&gt;</pre>
+
+      <h3 id="erb-command">9.2. Populating a dropdown from a shell command</h3>
+      <p>
+        You can run a shell command inside ERB to populate a <code>select</code> widget's <code>options</code> list at page load time.
+        If the OOD web server does not have direct access to the job scheduler daemon, prefix the command with
+        <code>ssh</code> to the login node (read from <code>@conf['login_node']</code>).
+      </p>
+      <p>
+        The example below populates a "Project" dropdown from the user's Slurm associations by running <code>sacctmgr</code> via SSH.
+        It always renders a <code>select</code> widget — if no accounts are found the options list is empty rather than crashing.
+      </p>
+      <pre>&lt;%
+  begin
+    _login_node = (@conf&amp;.fetch('login_node', nil) rescue nil)
+    _login_node = _login_node.is_a?(Hash) ? _login_node.values.compact.first : _login_node
+    _ssh_prefix = _login_node ? "ssh -o BatchMode=yes -o ConnectTimeout=10 #{_login_node}" : ""
+    _accounts = `#{_ssh_prefix} sacctmgr -n -P show user #{ENV['USER']} withassoc format=Account 2&gt;/dev/null`
+                .split("\n").map(&amp;:strip).reject(&amp;:empty?).uniq.sort
+  rescue
+    _accounts = []
+  end
+%&gt;
+---
+form:
+  account:
+    widget: select
+    label: Project
+&lt;% if _accounts.empty? %&gt;
+    options: []
+&lt;% else %&gt;
+    options:
+&lt;% _accounts.each do |a| %&gt;
+      - ["&lt;%= a %&gt;", "&lt;%= a %&gt;"]
+&lt;% end %&gt;
+&lt;% end %&gt;
+
+script: |
+  #SBATCH --account=#{account}</pre>
+      <p>
+        Key points:
+      </p>
+      <ul>
+        <li>Wrap the shell command in a <code>begin/rescue</code> block so a failed command produces an empty list rather than a form error.</li>
+        <li>Use <code>options: []</code> (not omitting the key) when the list is empty — a missing <code>options</code> key parses as <code>nil</code> in YAML and causes a runtime error.</li>
+        <li><code>BatchMode=yes</code> prevents SSH from hanging waiting for a password; <code>ConnectTimeout=10</code> prevents the page from stalling if the login node is unreachable.</li>
+        <li>The Passenger web process runs as the logged-in OOD user, so their SSH key to the login node must already be set up.</li>
+      </ul>
+
+      <h3 id="erb-read-yaml">9.3. Inheriting a base form with read_yaml</h3>
+      <p>
+        Use the <code>read_yaml(path)</code> helper to load another form file (including <code>.erb</code> files) and then modify its content before emitting YAML.
+        This is how all the apps in the <code>apps/</code> directory inherit the common Slurm fields from <code>SlurmBasic</code> — they load the base form, inject application-specific fields, and append the module-load commands to the script.
+      </p>
+      <pre>&lt;%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+# Insert an application-specific field before the time widget
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['myapp_module'] = {
+      'widget' => 'module_load',
+      'module' => 'myapp',
+      'label'  => 'MyApp Module'
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\nmodule load #{myapp_module}\n"
+%&gt;
+&lt;%= base.to_yaml -%&gt;</pre>
+      <p>
+        <code>read_yaml</code> automatically finds and processes the <code>.erb</code> version of the file if it exists, so <code>SlurmBasic</code>'s ERB header (which populates the Project dropdown) is executed correctly when inherited.
+      </p>
+
+      <h2 id="supplement">10. Supplement</h2>
       <ul>
   <li>All the samples on this page are written in the Bash language, but you can use other shells as well. However, the <code>submit</code> section can only be written in the Bash language.</li>
   <li>Widget names can only contain alphanumeric characters and underscores. Numbers and underscores cannot start the name. Please also avoid using widget names that end with an underscore followed by a number (e.g., <code>nodes_1</code>). The same rule applies to the directory name in which the application is saved. However, when defining the <code>header</code> section in <code>form.yml</code>, the widget names beginning with underscores (e.g. <code>_script_location</code>) used in <code>lib/header.yml.erb</code> can be used.</li>

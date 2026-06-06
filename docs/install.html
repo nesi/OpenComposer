@@ -31,10 +31,18 @@
       <h2 id="install">1. Installation</h2>
       <p>
         Open Composer runs on <a target="_blank" href="https://openondemand.org/">Open OnDemand</a>. Save Open Composer in your Open OnDemand application directory: <code>/var/www/ood/apps/sys/</code>.
+        Applications installed here are automatically available to <strong>all users</strong> on the Open OnDemand instance without any per-user setup.
       </p>
       <pre>
 $ cd /var/www/ood/apps/sys/
-$ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git</pre>
+$ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git
+$ cd OpenComposer
+$ sudo cp misc/Gemfile .
+$ sudo bundle install</pre>
+      <p>
+        The <code>bundle install</code> step installs the Ruby gem dependencies required by Open Composer.
+        It must be run once after cloning (and again after any <code>git pull</code> that updates the <code>Gemfile</code>).
+      </p>
 
       <h2 id="setting">2. Setting</h2>
       <p>

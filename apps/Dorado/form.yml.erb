@@ -2,21 +2,16 @@
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
 base = read_yaml(base_path)
 
-# Switching partition resets GPU state, so always disable dorado_gpu_args on partition change.
-# The active GPU widget's exec_dw re-enables it if the user picks a GPU.
-base['form']['partition']['options'] = base['form']['partition']['options'].map do |opt|
-  [*opt, 'disable-dorado_gpu_args']
-end
-
-# Disable dorado_gpu_args when GPU type is None; keep it enabled when a GPU is chosen.
-['gpu_any', 'gpu_genoa', 'gpu_milan'].each do |gpu_field|
-  next unless base['form'][gpu_field]
-  base['form'][gpu_field]['options'] = base['form'][gpu_field]['options'].map do |opt|
+# Use hide- (not disable-) so getValue still works on the hidden field.
+# set-value programmatically switches between "" and "--device cuda:all "
+# without exposing any form widget to the user.
+if base['form']['gpu_any']
+  base['form']['gpu_any']['options'] = base['form']['gpu_any']['options'].map do |opt|
     label, value, *rest = opt
     if value.to_s.empty?
-      [label, value, *rest, 'disable-dorado_gpu_args']
+      [label, value, *rest, 'hide-dorado_gpu_args', {'set-value-dorado_gpu_args' => ''}]
     else
-      [label, value, *rest, 'enable-dorado_gpu_args']
+      [label, value, *rest, 'hide-dorado_gpu_args', {'set-value-dorado_gpu_args' => '--device cuda:all '}]
     end
   end
 end
@@ -31,8 +26,8 @@ base['form'].each do |k, v|
     }
     new_form['dorado_gpu_args'] = {
       'widget' => 'text',
-      'label'  => 'Device',
-      'value'  => '--device cuda:all'
+      'label'  => '',
+      'value'  => ''
     }
   end
   new_form[k] = v
@@ -43,10 +38,11 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{dorado_module}
 
-  dorado download --model dna_r10.4.1_e8.2_400bps_hac@v4.1.0
+  # This is the command you need to run if you need to download the dorado database for the first time. 
+  # dorado download --model dna_r10.4.1_e8.2_400bps_hac@v4.1.0
 
-  DORADO_ARGS="#{dorado_gpu_args}"
-  dorado basecaller $DORADO_ARGS dna_r10.4.1_e8.2_400bps_hac@v4.1.0 pod5s/ > calls.bam
+  # Main command to run
+  dorado basecaller #{:dorado_gpu_args}dna_r10.4.1_e8.2_400bps_hac@v4.1.0 pod5s/ > calls.bam
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

@@ -2,20 +2,26 @@
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
 base = read_yaml(base_path)
 
-# Switching partition resets GPU state, so disable cuda_module and matlab_gpu_flag on partition change.
+# Only disable cuda_module when switching back to the non-GPU "any" partition.
 base['form']['partition']['options'] = base['form']['partition']['options'].map do |opt|
-  [*opt, 'disable-cuda_module', 'disable-matlab_gpu_flag']
+  label, value, *rest = opt
+  if value.to_s.empty?
+    [label, value, *rest, 'disable-cuda_module']
+  else
+    [label, value, *rest]
+  end
 end
 
-# Disable cuda_module and matlab_gpu_flag when GPU type is None; enable when a GPU is chosen.
-['gpu_any', 'gpu_genoa', 'gpu_milan'].each do |gpu_field|
-  next unless base['form'][gpu_field]
-  base['form'][gpu_field]['options'] = base['form'][gpu_field]['options'].map do |opt|
+# Only hook cuda_module / matlab_gpu_batch visibility onto gpu_any (the primary GPU selector).
+# gpu_genoa and gpu_milan are set programmatically; their hidden "None" state
+# must not override the enable triggered by gpu_any.
+if base['form']['gpu_any']
+  base['form']['gpu_any']['options'] = base['form']['gpu_any']['options'].map do |opt|
     label, value, *rest = opt
     if value.to_s.empty?
-      [label, value, *rest, 'disable-cuda_module', 'disable-matlab_gpu_flag']
+      [label, value, *rest, 'disable-cuda_module', 'disable-matlab_gpu_batch']
     else
-      [label, value, *rest, 'enable-cuda_module', 'enable-matlab_gpu_flag']
+      [label, value, *rest, 'enable-cuda_module', 'enable-matlab_gpu_batch']
     end
   end
 end
@@ -33,15 +39,10 @@ base['form'].each do |k, v|
       'module' => "CUDA",
       'label'  => "CUDA Module"
     }
-    new_form['matlab_gpu_flag'] = {
-      'widget'    => 'radio',
-      'label'     => 'GPU Mode',
-      'value'     => '-nodisplay < MATLAB_job.m',
-      'direction' => 'horizontal',
-      'options'   => [
-        ['No GPU', '-nodisplay < MATLAB_job.m'],
-        ['GPU',    '-batch "gpuDevice()" -nodisplay < MATLAB_job.m']
-      ]
+    new_form['matlab_gpu_batch'] = {
+      'widget' => 'text',
+      'label'  => 'GPU Batch Flag',
+      'value'  => '-batch "gpuDevice()" '
     }
   end
   new_form[k] = v
@@ -54,7 +55,7 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module load #{cuda_module}
 
   # Run the MATLAB script MATLAB_job.m
-  matlab #{matlab_gpu_flag}
+  matlab #{:matlab_gpu_batch}-nodisplay < MATLAB_job.m
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

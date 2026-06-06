@@ -69,7 +69,7 @@ helpers do
     end
 
     <<~HTML
-      <div class="col text-center">
+      <div class="col text-center oc-tmpl-card" data-name="#{safe_nm.downcase}" data-desc="#{safe_dsc.downcase}">
         <div class="d-flex flex-column h-100 align-items-center position-relative">
           <div class="position-absolute top-0 end-0 d-flex gap-1" style="z-index:5;">
             <button type="button" class="btn btn-sm btn-link text-secondary p-0 lh-1"

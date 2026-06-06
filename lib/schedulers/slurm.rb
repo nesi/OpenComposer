@@ -411,6 +411,112 @@ class Slurm < Scheduler
     [{}, e.message]
   end
 
+  # Compute seff-style efficiency metrics using sacct --json.
+  def efficiency(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    sacct = get_command_path("sacct", bin, bin_overrides)
+    cmd   = [ssh_wrapper, sacct, "--json -j", job_id].compact.join(" ")
+    out, err, st = Open3.capture3(cmd)
+    return [nil, [out, err].join(" ")] unless st.success?
+
+    data      = JSON.parse(out)
+    jobs_list = data["jobs"] || []
+    return [nil, "Job not found."] if jobs_list.empty?
+
+    job   = jobs_list.first
+    state = Array(job.dig("state", "current")).join(" ")
+    ncpus = ex_tres_eff(job.dig("tres", "allocated") || [], "cpu", 0).to_i
+
+    if state.include?("RUNNING") || ncpus == 0 || ncpus >= 0xfffffff
+      return [{ "status" => "not_available", "state" => state }, nil]
+    end
+
+    ncores       = (ncpus + 1) / 2
+    walltime     = job.dig("time", "elapsed").to_i
+    timelimit    = job.dig("time", "limit", "number").to_i * 60
+    reqmem_kb    = ex_tres_eff(job.dig("tres", "allocated") || [], "mem", 0).to_f * 1024
+
+    tot_cpu_msec    = 0.0
+    mem_kb          = 0.0
+    best_step_total = []
+    (job["steps"] || []).each do |step|
+      total         = step.dig("tres", "requested", "total") || []
+      tot_cpu_msec += ex_tres_eff(total, "cpu", 0).to_f
+      lmem          = ex_tres_eff(total, "mem", 0).to_f / 1024
+      if lmem > mem_kb
+        mem_kb          = lmem
+        best_step_total = total
+      end
+    end
+
+    corewalltime = walltime * ncores
+    cpu_eff  = corewalltime > 0 ? (tot_cpu_msec / 1000.0 / corewalltime * 100).round(1) : 0.0
+    mem_eff  = reqmem_kb    > 0 ? (mem_kb / reqmem_kb * 100).round(1)                    : 0.0
+    wall_eff = timelimit    > 0 ? (walltime.to_f / timelimit * 100).round(1)              : 0.0
+
+    result = {
+      "status"    => "available",
+      "state"     => state,
+      "cluster"   => job["cluster"].to_s,
+      "cores"     => ncores.to_s,
+      "nodes"     => job["allocation_nodes"].to_s,
+      "Wall Time" => format("%.1f%%  %s of %s",              wall_eff, time2str_eff(walltime),                       time2str_eff(timelimit)),
+      "CPU"       => format("%.1f%%  %s of %s core-walltime", cpu_eff, time2str_eff((tot_cpu_msec / 1000).to_i), time2str_eff(corewalltime)),
+      "Memory"    => format("%.1f%%  %s of %s",              mem_eff,  kbytes2str_eff(mem_kb),                      kbytes2str_eff(reqmem_kb)),
+    }
+
+    # GPU metrics come from the step with the highest memory usage, not the job-level TRES.
+    gpu_util = ex_tres_eff(best_step_total, "gpuutil")
+    gpu_mem  = ex_tres_eff(best_step_total, "gpumem") # bytes
+
+    result["GPU Utilisation"] = format("%.0f%%", gpu_util) if gpu_util
+
+    if gpu_mem
+      a100_gb   = job["partition"] == "genoa" ? 40 : 80
+      allocated = job.dig("tres", "allocated") || []
+      alloc_gb  = [["l4", 23], ["a100", a100_gb], ["h100", 94]].sum do |kind, mem_gb|
+        ex_tres_eff(allocated, "gpu:#{kind}", 0).to_i * mem_gb
+      end
+      gpu_mem_kb = gpu_mem.to_f / 1024
+      if alloc_gb > 0
+        gpu_mem_eff = (gpu_mem.to_f / (alloc_gb * (1024.0**3)) * 100).round(1)
+        result["GPU Memory"] = format("%.1f%%  %s of %d GB", gpu_mem_eff, kbytes2str_eff(gpu_mem_kb), alloc_gb)
+      else
+        result["GPU Memory"] = kbytes2str_eff(gpu_mem_kb)
+      end
+    end
+
+    [result, nil]
+  rescue JSON::ParserError => e
+    [nil, "sacct --json not supported: #{e.message}"]
+  rescue Exception => e
+    [nil, e.message]
+  end
+
+  def ex_tres_eff(tres_array, name, default = nil, field = "count")
+    map = tres_array.each_with_object({}) do |m, h|
+      key = m["type"] == "gres" ? m["name"] : m["type"]
+      h[key] = m[field]
+    end
+    map.fetch(name, default)
+  end
+
+  def time2str_eff(seconds)
+    seconds = seconds.to_i
+    minutes, seconds = seconds.divmod(60)
+    hours,   minutes = minutes.divmod(60)
+    days,    hours   = hours.divmod(24)
+    prefix = days > 0 ? "#{days}-" : ""
+    prefix + format("%02d:%02d:%02d", hours, minutes, seconds)
+  end
+
+  def kbytes2str_eff(kbytes)
+    kbytes = kbytes.to_f
+    return "0.00 MB" if kbytes == 0
+    units = %w[kB MB GB TB PB EB]
+    exp   = [Math.log(kbytes.abs) / Math.log(1024), units.size - 1].min.to_i
+    format("%.2f %s", kbytes / (1024.0**exp), units[exp])
+  end
+
   private
 
   # Expand a bracket-range job ID into individual task IDs.

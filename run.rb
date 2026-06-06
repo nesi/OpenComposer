@@ -975,6 +975,31 @@ rescue Exception => e
   { "error" => e.message }.to_json
 end
 
+get "/history/job_efficiency" do
+  content_type :json
+
+  job_id = (params["job_id"] || "").strip
+  return { "error" => "No job ID specified" }.to_json if job_id.empty?
+
+  conf         = create_conf
+  cluster_name = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
+  scheduler    = conf.key?("clusters") ? create_scheduler(conf)[cluster_name] : create_scheduler(conf)
+  bin          = conf.key?("clusters") ? conf["bin"][cluster_name]           : conf["bin"]
+  bin_overrides= conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
+  ssh_wrapper  = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]   : conf["ssh_wrapper"]
+
+  unless scheduler.respond_to?(:efficiency)
+    next({ "error" => "Efficiency not supported by this scheduler." }.to_json)
+  end
+
+  result, error = scheduler.efficiency(job_id, bin, bin_overrides, ssh_wrapper)
+  if error
+    { "error" => error }.to_json
+  else
+    (result || {}).to_json
+  end
+end
+
 post "/history/cancel_one" do
   conf         = create_conf
   job_id       = params["jobId"].to_s.strip

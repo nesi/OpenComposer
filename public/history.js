@@ -408,10 +408,45 @@ ocHistory.loadJobScript = function(modalEl) {
     });
 };
 
+// Load efficiency data for a terminal job (completed/failed/cancelled).
+ocHistory.loadJobEfficiency = function(modalEl) {
+  const tbody = document.getElementById(modalEl.id + 'EffBody');
+  if (!tbody || tbody.dataset.loaded === 'true') return;
+
+  const body    = modalEl.querySelector('.modal-body[data-job-id]');
+  if (!body) return;
+  const jobId   = body.dataset.jobId;
+  const cluster = body.dataset.cluster;
+  const base    = window.location.pathname.replace(/\/history$/, '');
+  let url = `${base}/history/job_efficiency?job_id=${encodeURIComponent(jobId)}`;
+  if (cluster) url += `&cluster=${encodeURIComponent(cluster)}`;
+
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      tbody.dataset.loaded = 'true';
+      if (data.error || data.status === 'not_available') {
+        tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>';
+        return;
+      }
+      const skip = new Set(['status', 'state']);
+      const rows = Object.entries(data)
+        .filter(([k]) => !skip.has(k))
+        .map(([k, v]) => `<tr><td><strong>${ocHistory.escapeHtml(k)}</strong></td><td>${ocHistory.escapeHtml(String(v))}</td></tr>`)
+        .join('');
+      tbody.innerHTML = rows || '<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>';
+    })
+    .catch(() => {
+      tbody.dataset.loaded = 'true';
+      tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>';
+    });
+};
+
 // Attach lazy-load listeners to Job Details modals.
 document.querySelectorAll('[id^="_historyJobId"]').forEach(function(el) {
   el.addEventListener('show.bs.modal', function() {
     ocHistory.loadJobDetails(this);
+    ocHistory.loadJobEfficiency(this);
   });
 });
 

@@ -92,12 +92,28 @@ helpers do
   # Output a modal for displaying live job details fetched from scontrol/sacct.
   # Content is lazy-loaded via AJAX when the modal is opened.
   def output_job_id_modal(job, filter)
-    modal_id   = "_historyJobId#{job[JOB_ID]}"
-    job_id_esc = escape_html(job[JOB_ID].to_s)
+    modal_id     = "_historyJobId#{job[JOB_ID]}"
+    job_id_esc   = escape_html(job[JOB_ID].to_s)
+    status_esc   = escape_html(job[JOB_STATUS_ID].to_s)
     cluster_attr = @cluster_name ? " data-cluster=\"#{escape_html(@cluster_name)}\"" : ""
 
+    terminal_statuses = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
+    show_efficiency   = terminal_statuses.include?(job[JOB_STATUS_ID])
+
+    eff_section = show_efficiency ? <<~EFF : ""
+      <div id="#{modal_id}EffRow" class="mt-3">
+        <hr>
+        <h6>Job Efficiency</h6>
+        <table class="table table-striped table-sm text-break">
+          <tbody id="#{modal_id}EffBody">
+            <tr><td colspan="2" class="text-center text-muted">Loading&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    EFF
+
     <<~HTML
-    <div class="modal" aria-hidden="true" id="#{modal_id}" tabindex="-1">
+    <div class="modal" aria-hidden="true" id="#{modal_id}" tabindex="-1" data-job-status="#{status_esc}">
       <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content" style="resize: horizontal; padding-right: 16px;">
           <div class="modal-header">
@@ -110,6 +126,7 @@ helpers do
                 <span class="visually-hidden">Loading...</span>
               </div>
             </div>
+            #{eff_section}
           </div>
         </div>
       </div>

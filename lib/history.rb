@@ -126,8 +126,8 @@ helpers do
                 <span class="visually-hidden">Loading...</span>
               </div>
             </div>
-            #{eff_section}
           </div>
+          #{eff_section}
         </div>
       </div>
     </div>

@@ -14,7 +14,7 @@ end
 def get_icon_path(dirname, icon)
   is_bi_or_fa_icon = false # Bootstrap icon or Font Awesome icon
   icon_path = if icon.nil?
-                URI.join(url, "app_default.svg")
+                "#{@script_name}/app_default.svg"
               elsif valid_url?(icon)
                 icon
               else
@@ -27,7 +27,7 @@ def get_icon_path(dirname, icon)
                   is_bi_or_fa_icon = true
                   nil
                 else
-                  URI.join(url, "app_default.svg")
+                  "#{@script_name}/app_default.svg"
                 end
               end
 
@@ -63,9 +63,9 @@ helpers do
         File.exist?(local) ? File.join(@script_name, tp) : nil
       end
       url_path ? "<img src=\"#{ERB::Util.h(url_path)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">" :
-                 "<img src=\"#{ERB::Util.h(URI.join(url, 'app_default.svg').to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
+                 "<img src=\"#{ERB::Util.h("#{@script_name}/app_default.svg".to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     else
-      "<img src=\"#{ERB::Util.h(URI.join(url, 'app_default.svg').to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
+      "<img src=\"#{ERB::Util.h("#{@script_name}/app_default.svg".to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     end
 
     <<~HTML
@@ -106,7 +106,7 @@ helpers do
 
     # Use the text-reset class to prevent color changes when using font awesome icons
     html = <<~HTML
-      <div class="col text-center">
+      <div class="col text-center oc-app-card" data-name="#{ERB::Util.h(name.to_s.downcase)}">
         <div class="d-flex flex-column h-100 align-items-center">
           <div class="flex-grow-1 d-flex align-items-center">
             <a href="#{@script_name}/#{dirname}#{href_suffix}" class="stretched-link position-relative text-reset">
@@ -138,7 +138,7 @@ HTML
     is_bi_or_fa_icon = false
     icon_s = icon.to_s
     icon_path = if icon_s.empty?
-                  URI.join(url, "app_default.svg")
+                  "#{@script_name}/app_default.svg"
                 elsif valid_url?(icon_s)
                   icon_s
                 elsif icon_s.start_with?("bi-", "fa-")
@@ -146,7 +146,7 @@ HTML
                   nil
                 else
                   local = File.join(Dir.pwd, generic_apps_dir, dirname, icon_s)
-                  File.exist?(local) ? File.join(@script_name, "_generic_icon", dirname, icon_s) : URI.join(url, "app_default.svg")
+                  File.exist?(local) ? File.join(@script_name, "_generic_icon", dirname, icon_s) : "#{@script_name}/app_default.svg"
                 end
 
     width = @conf['thumbnail_width']
@@ -157,7 +157,7 @@ HTML
                 end
 
     <<~HTML
-      <div class="col text-center">
+      <div class="col text-center oc-app-card" data-name="#{ERB::Util.h(name.to_s.downcase)}">
         <div class="d-flex flex-column h-100 align-items-center">
           <div class="flex-grow-1 d-flex align-items-center">
             <a href="#{@script_name}/_generic/#{dirname}#{href_suffix}" class="stretched-link position-relative text-reset">

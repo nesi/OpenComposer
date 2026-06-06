@@ -70,6 +70,7 @@ $ sudo cp conf.yml.erb.app.example conf.yml.erb</pre>
         <tr><td>external_reload_app</td><td>Subfolder inside <code>generic_apps_dir</code> to open when loading an external (non-OpenComposer) job from the History page</td><td><code>Slurm</code></td></tr>
         <tr><td>history</td><td>Additional display fields on the history page (see section 2.3)</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code></td></tr>
         <tr><td>history_store_script</td><td>Whether to store the full batch script text in the history database. Set to <code>false</code> to always fetch it live via <code>sacct -B</code></td><td><code>true</code></td></tr>
+        <tr><td>history_efficiency</td><td>Show a <strong>Job Efficiency</strong> section (Wall Time, CPU, Memory, optional GPU) in the job details modal for completed, failed, and cancelled jobs. Uses <code>sacct --json</code>, which requires Slurm 20.11+. Set to <code>true</code> to enable.</td><td><code>false</code></td></tr>
       </table>
 
       <h4 class="mt-4">Navigation Bar</h4>
@@ -358,11 +359,17 @@ $ sudo cp /var/www/ood/apps/sys/opencomposer/ood_integration/views/apps/opencomp
         Clicking the Open Composer tile will now open it embedded within OOD's page.
       </p>
       <p>
-        To uninstall, remove the two integration files and reload Apache. Open Composer will revert to opening in a new tab.
+        To uninstall, remove the two integration files and reload Apache:
       </p>
       <pre>$ sudo rm /etc/ood/config/apps/dashboard/initializers/opencomposer_embed.rb
 $ sudo rm /etc/ood/config/apps/dashboard/views/apps/opencomposer_embed.html.erb
 $ sudo httpd -k graceful</pre>
+      <p>
+        After this, clicking the tile will open Open Composer as a full-page app in the same browser tab (because <code>new_window: false</code> is still set in <code>manifest.yml</code>).
+        If you also want to restore the original new-tab behaviour, remove or revert that line:
+      </p>
+      <pre># /var/www/ood/apps/sys/opencomposer/manifest.yml
+new_window: true   # or remove the line entirely — true is the OOD default</pre>
 
     </main>
   </div>

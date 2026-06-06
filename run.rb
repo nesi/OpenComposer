@@ -158,6 +158,7 @@ def create_conf
   conf["data_dir"]                ||= ENV["HOME"] + "/composer"
   conf["history"]                 ||= HISTORY_KEY_MAP.keys
   conf["history_store_script"]    = conf.fetch("history_store_script", true)
+  conf["history_efficiency"]      = conf.fetch("history_efficiency",   false)
   conf["footer"]                  ||= "&nbsp;"
   conf["thumbnail_width"]         ||= "100"
   conf["navbar_color"]            ||= "#3D3B40"

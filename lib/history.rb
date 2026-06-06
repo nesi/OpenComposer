@@ -98,7 +98,7 @@ helpers do
     cluster_attr = @cluster_name ? " data-cluster=\"#{escape_html(@cluster_name)}\"" : ""
 
     terminal_statuses = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
-    show_efficiency   = terminal_statuses.include?(job[JOB_STATUS_ID])
+    show_efficiency   = terminal_statuses.include?(job[JOB_STATUS_ID]) && @conf.fetch("history_efficiency", true)
 
     eff_section = show_efficiency ? <<~EFF : ""
       <div id="#{modal_id}EffRow" class="px-3 pb-3">

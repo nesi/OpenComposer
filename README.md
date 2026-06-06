@@ -143,8 +143,9 @@ All configuration lives in `conf.yml.erb`. The file `conf.yml.erb.app.example` s
 ### History
 
 | Key | Default | Description |
-|-----|---------|-------------|
+| --- | ------- | ----------- |
 | `history_store_script` | `true` | Store the submitted batch script in the DB. Set to `false` to always re-fetch via `sacct -B`. |
+| `history_efficiency` | `false` | Show a **Job Efficiency** section (Wall Time, CPU, Memory, optional GPU) in the job details modal for completed, failed, and cancelled jobs. Uses `sacct --json`, which requires Slurm 20.11+. Set to `true` to enable. |
 | `history` | — | Map of extra columns for the History page. Each key is an env variable name; `label:` sets the column header. |
 
 ### Layout

@@ -443,6 +443,26 @@ window.onload = function() {
   let scriptValues = [];
   let submitValues = [];
 
+  // Restore remembered last values from localStorage.
+  // Skip when the server already pre-selected values from a template or history load.
+  (function() {
+    var sp = new URLSearchParams(window.location.search);
+    if (!sp.has('template') && !sp.has('jobId')) {
+      document.querySelectorAll('select[data-remember-last]').forEach(function(el) {
+        var saved = localStorage.getItem('oc_last_' + el.id);
+        if (saved == null) return;
+        var idx = Array.from(el.options).findIndex(function(o) { return o.value === saved; });
+        if (idx >= 0) el.selectedIndex = idx;
+      });
+    }
+    document.addEventListener('change', function(e) {
+      var el = e.target;
+      if (el.tagName === 'SELECT' && el.dataset.rememberLast) {
+        localStorage.setItem('oc_last_' + el.id, el.options[el.selectedIndex].value);
+      }
+    });
+  })();
+
   ocForm.execDynamicWidget();
   ocForm.onceExec();
   ocForm.updateScriptContents(scriptValues);

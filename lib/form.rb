@@ -365,6 +365,7 @@ helpers do
 
     html = output_label_with_span_tag(key, value)
     html += "<select tabindex=\"#{@table_index}\" id=\"#{key}\" name=\"#{key}\" class=\"form-select\" "
+    html << "data-remember-last=\"true\" " if value['remember_last']
     script_flag = references_key_or_has_flag?(key, value['options'], script_content, app_name, dir_name)
     submit_flag = references_key_or_has_flag?(key, value['options'], submit_content, app_name, dir_name)
     type = if script_flag && submit_flag

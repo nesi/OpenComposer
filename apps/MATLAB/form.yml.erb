@@ -34,9 +34,14 @@ base['form'].each do |k, v|
       'label'  => "CUDA Module"
     }
     new_form['matlab_gpu_flag'] = {
-      'widget' => 'text',
-      'label'  => 'MATLAB GPU Flag',
-      'value'  => '-batch "gpuDevice()"'
+      'widget'    => 'radio',
+      'label'     => 'GPU Mode',
+      'value'     => '-nodisplay < MATLAB_job.m',
+      'direction' => 'horizontal',
+      'options'   => [
+        ['No GPU', '-nodisplay < MATLAB_job.m'],
+        ['GPU',    '-batch "gpuDevice()" -nodisplay < MATLAB_job.m']
+      ]
     }
   end
   new_form[k] = v
@@ -49,7 +54,7 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module load #{cuda_module}
 
   # Run the MATLAB script MATLAB_job.m
-  matlab :#{matlab_gpu_flag} -nodisplay < MATLAB_job.m
+  matlab #{matlab_gpu_flag}
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

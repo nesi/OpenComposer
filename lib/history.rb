@@ -101,14 +101,8 @@ helpers do
     show_efficiency   = terminal_statuses.include?(job[JOB_STATUS_ID])
 
     eff_section = show_efficiency ? <<~EFF : ""
-      <div id="#{modal_id}EffRow" class="mt-3">
-        <hr>
-        <h6>Job Efficiency</h6>
-        <table class="table table-striped table-sm text-break">
-          <tbody id="#{modal_id}EffBody">
-            <tr><td colspan="2" class="text-center text-muted">Loading&#8230;</td></tr>
-          </tbody>
-        </table>
+      <div id="#{modal_id}EffRow" class="px-3 pb-3">
+        <div class="text-center py-2 text-muted small">Loading efficiency&#8230;</div>
       </div>
     EFF
 

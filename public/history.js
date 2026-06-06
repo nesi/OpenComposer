@@ -410,10 +410,10 @@ ocHistory.loadJobScript = function(modalEl) {
 
 // Load efficiency data for a terminal job (completed/failed/cancelled).
 ocHistory.loadJobEfficiency = function(modalEl) {
-  const tbody = document.getElementById(modalEl.id + 'EffBody');
-  if (!tbody || tbody.dataset.loaded === 'true') return;
+  const effRow = document.getElementById(modalEl.id + 'EffRow');
+  if (!effRow || effRow.dataset.loaded === 'true') return;
 
-  const body    = modalEl.querySelector('.modal-body[data-job-id]');
+  const body = modalEl.querySelector('.modal-body[data-job-id]');
   if (!body) return;
   const jobId   = body.dataset.jobId;
   const cluster = body.dataset.cluster;
@@ -421,24 +421,33 @@ ocHistory.loadJobEfficiency = function(modalEl) {
   let url = `${base}/history/job_efficiency?job_id=${encodeURIComponent(jobId)}`;
   if (cluster) url += `&cluster=${encodeURIComponent(cluster)}`;
 
+  const noData = '<hr class="mt-0"><h6 class="mb-2">Job Efficiency</h6><p class="text-muted small mb-0">No efficiency information available.</p>';
+
   fetch(url)
     .then(r => r.json())
     .then(data => {
-      tbody.dataset.loaded = 'true';
+      effRow.dataset.loaded = 'true';
       if (data.error || data.status === 'not_available') {
-        tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>';
+        effRow.innerHTML = noData;
         return;
       }
-      const skip = new Set(['status', 'state']);
+      const skip = new Set(['status', 'state', 'command']);
       const rows = Object.entries(data)
         .filter(([k]) => !skip.has(k))
-        .map(([k, v]) => `<tr><td><strong>${ocHistory.escapeHtml(k)}</strong></td><td>${ocHistory.escapeHtml(String(v))}</td></tr>`)
+        .map(([k, v]) => `<tr><td>${ocHistory.escapeHtml(k)}</td><td>${ocHistory.escapeHtml(String(v))}</td></tr>`)
         .join('');
-      tbody.innerHTML = rows || '<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>';
+      let html = '<hr class="mt-0"><h6 class="mb-2">Job Efficiency</h6>';
+      html += '<table class="table table-striped table-sm text-break mb-1">';
+      html += rows || `<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>`;
+      html += '</table>';
+      if (data.command) {
+        html += `<details class="mt-1"><summary class="text-muted small" style="cursor:pointer">Source: sacct</summary><pre class="small text-muted mt-1 p-1 mb-0" style="white-space:pre-wrap;word-break:break-all">${ocHistory.escapeHtml(data.command)}</pre></details>`;
+      }
+      effRow.innerHTML = html;
     })
     .catch(() => {
-      tbody.dataset.loaded = 'true';
-      tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>';
+      effRow.dataset.loaded = 'true';
+      effRow.innerHTML = noData;
     });
 };
 

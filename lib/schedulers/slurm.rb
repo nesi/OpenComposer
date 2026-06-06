@@ -456,6 +456,7 @@ class Slurm < Scheduler
     result = {
       "status"    => "available",
       "state"     => state,
+      "command"   => cmd,
       "cluster"   => job["cluster"].to_s,
       "cores"     => ncores.to_s,
       "nodes"     => job["allocation_nodes"].to_s,

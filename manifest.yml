@@ -1,8 +1,8 @@
-name: Open Composer
+name: Slurm Composer
 category: Jobs
 description: |
-  Open Composer is an application that creates and submits batch job scripts.
-icon: fas://hat-wizard
+  Slurm Composer is an application that creates and submits batch job scripts.
+icon: public/Slurm_logo.svg
 new_window: false
 tile:
   sub_caption: |

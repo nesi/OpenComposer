@@ -1443,11 +1443,19 @@ ocForm.setValue = function(key, num, widget, attr, value, fromId) {
       if (key !== fromId) {
         const selectBox = document.getElementById(key);
         const options = Array.from(selectBox.querySelectorAll('option'));
+        const prevIndex = selectBox.selectedIndex;
 
         for (let i = 0; i < options.length; i++) {
           if (options[i].textContent === value) {
-            document.getElementById(key).selectedIndex = i;
+            selectBox.selectedIndex = i;
           }
+        }
+        // Cascade the newly-selected option's actions (show/disable/hide etc.) for plain
+        // selects, but only when the index actually changed — prevents infinite recursion
+        // when two options cross-reference each other via set-value-X actions.
+        // module_load and dependent_module_select manage their own async change logic.
+        if (widget === 'select' && selectBox.selectedIndex !== prevIndex) {
+          ocForm.execDynamicWidget(key);
         }
       }
       break;

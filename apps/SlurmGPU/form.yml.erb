@@ -13,7 +13,7 @@
       - [ milan, milan, set-max-cores_simple: 126, set-max-memory_total_gb: 1000, show-gpu_milan, disable-gpu_any,   disable-number_of_gpus_any,   disable-gpu_genoa, disable-number_of_gpus_genoa]
   YAML
 
-  # 2. GPU-specific fields — inserted after show_memory_per_cpu_option
+  # 2. GPU-specific fields — inserted before time_days_hours_minutes
   _gpu_fields = YAML.safe_load(<<~YAML)
     gpu_any:
       widget:   select
@@ -74,7 +74,7 @@
   end
   _base["form"] = _new_form
 
-  # 3. Insert --gpus-per-node lines after --mem-per-cpu in the script
+  # 3. Insert --gpus-per-node lines before --time in the script
   # (YAML strips the 2-space indent from literal block scalars, so lines have no leading spaces)
   _gpu_lines = "#SBATCH --gpus-per-node=\#{gpu_any}:\#{number_of_gpus_any} \n" \
                "#SBATCH --gpus-per-node=\#{gpu_genoa}:\#{number_of_gpus_genoa}\n" \

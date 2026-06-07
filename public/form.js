@@ -59,7 +59,7 @@ ocForm.parseScriptToWidgets = function() {
         break;
       }
       case 'module_load':
-      case 'two_module_select':
+      case 'multi_prefix_select':
       case 'select': {
         var el = document.getElementById(key);
         if (el && !el.disabled) {
@@ -848,7 +848,7 @@ ocForm.getValue = function(key, widget) {
     if(e && !e.disabled) return e.value;
     break;
   case 'module_load':
-  case 'two_module_select':
+  case 'multi_prefix_select':
   case 'select':
     const sKey = ocForm.splitKeyAndNumber(key);
     e = document.getElementById(sKey.baseKey);
@@ -1076,7 +1076,7 @@ ocForm.showLine = function(selectedValues, line, keys, widgets, canHide, separat
       case "text":
       case "email":
       case "module_load":
-      case "two_module_select":
+      case "multi_prefix_select":
       case "select":
       case "radio":
       case "path":
@@ -1154,7 +1154,7 @@ ocForm.enableWidget = function(key, num, widget, size) {
       }
       break;
     case 'module_load':
-    case 'two_module_select':
+    case 'multi_prefix_select':
     case 'select':
     case 'multi_select':
     case 'path':
@@ -1211,7 +1211,7 @@ ocForm.disableWidget = function(key, num, widget, value, size) {
       }
       break;
     case 'module_load':
-    case 'two_module_select':
+    case 'multi_prefix_select':
     case 'select':
     case 'multi_select':
     case 'path':
@@ -1444,7 +1444,7 @@ ocForm.setValue = function(key, num, widget, attr, value, fromId) {
       break;
     }
     case 'module_load':
-    case 'two_module_select':
+    case 'multi_prefix_select':
     case 'select':
       if (key !== fromId) {
         const selectBox = document.getElementById(key);

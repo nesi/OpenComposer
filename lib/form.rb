@@ -660,7 +660,7 @@ helpers do
     sn      = @script_name.to_s
 
     mod_map_js = modules.map { |m|
-      "{prefix: #{m['prefix'].to_s.to_json}, module: #{m['module'].to_s.to_json}}"
+      "{prefix: #{m['prefix'].to_s.to_json}, select_option: #{m['select_option'].to_s.to_json}}"
     }.join(", ")
 
     <<~JS
@@ -674,9 +674,9 @@ helpers do
 
         function moduleForValue(val) {
           for (var i = 0; i < modMap.length; i++) {
-            if (String(val).startsWith(modMap[i].prefix)) return modMap[i].module;
+            if (String(val).startsWith(modMap[i].prefix)) return modMap[i].select_option;
           }
-          return modMap.length > 0 ? modMap[modMap.length - 1].module : '';
+          return modMap.length > 0 ? modMap[modMap.length - 1].select_option : '';
         }
 
         function loadModules(moduleName) {

@@ -2,7 +2,7 @@ name: Slurm Composer
 category: Jobs
 description: |
   Slurm Composer is an application that creates and submits batch job scripts.
-icon: public/Slurm_logo.svg
+icon: public/Slurm_logo.png
 new_window: false
 tile:
   sub_caption: |

@@ -166,7 +166,7 @@ helpers do
           </div>
           #{body_html}
           <div class="modal-footer">
-            <a href="#{job_link}" class="btn btn-primary text-white text-decoration-none">Load parameters</a>
+            <a href="#{job_link}" class="btn btn-primary text-white text-decoration-none">Load script</a>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">Close</button>
           </div>
         </div>
@@ -197,7 +197,7 @@ helpers do
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="ocHistory.loadExtScript(this)">Load parameters</button>
+            <button type="button" class="btn btn-primary" onclick="ocHistory.loadExtScript(this)">Load script</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">Close</button>
           </div>
         </div>
@@ -695,7 +695,8 @@ helpers do
   # Runs once per DB; subsequent calls are no-ops.
   def migrate_history_db_to_v2(db)
     cols = db.table_info("jobs").map { |c| c["name"] }
-    return if cols.include?("_deleted")
+    return if cols.include?("_deleted")       # already V2 or being migrated to V3
+    return if cols.include?("_script_content") # already V3 (fresh DB or post-migration)
 
     # Rename legacy column names if needed (very old databases)
     migrate_history_db_internal_columns(db)
@@ -725,7 +726,7 @@ helpers do
           {}
         end
 
-        script_content = payload[OC_SCRIPT_CONTENT] || payload["_script_content"]
+        script_content = payload[OC_SCRIPT_CONTENT] || payload["_script_content"] || row["_script_content"]
         job_name       = row["_job_name"].to_s.empty? ? payload[JOB_NAME] : row["_job_name"]
 
         db.execute(

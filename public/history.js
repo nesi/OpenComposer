@@ -252,7 +252,7 @@ window.addEventListener('pageshow', function(event) {
   if (event.persisted) {
     document.querySelectorAll('button[onclick*="loadExtScript"]').forEach(function(btn) {
       btn.disabled = false;
-      btn.textContent = 'Load parameters';
+      btn.textContent = 'Load script';
     });
   }
 });
@@ -298,13 +298,13 @@ ocHistory.loadExtScript = function(btn) {
       } else {
         alert('Error: ' + (data.error || 'Unknown error'));
         btn.disabled    = false;
-        btn.textContent = 'Load parameters';
+        btn.textContent = 'Load script';
       }
     })
     .catch(function(e) {
       alert('Error: ' + e.message);
       btn.disabled    = false;
-      btn.textContent = 'Load parameters';
+      btn.textContent = 'Load script';
     });
 };
 
@@ -392,7 +392,7 @@ ocHistory.loadJobScript = function(modalEl) {
     .then(r => r.json())
     .then(data => {
       body.dataset.loaded = 'true';
-      // Stash metadata for loadExtScript to use when "Load parameters" is clicked.
+      // Stash metadata for loadExtScript to use when "Load script" is clicked.
       if (data.script_location) body.dataset.extScriptLocation = data.script_location;
       if (data.script_name)     body.dataset.extScriptName     = data.script_name;
       if (data.data && data.data.JobName) body.dataset.extJobName = data.data.JobName;

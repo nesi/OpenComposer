@@ -737,7 +737,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
           replace_with_cache(@body["form"], cache)
           if !cache[OC_SCRIPT_CONTENT].to_s.strip.empty?
             @script_content = escape_html(cache[OC_SCRIPT_CONTENT])
-          elsif @dir_name == "Slurm"
+          else
             # Script content not stored in DB — fetch from sacct -B
             sched_inst = create_scheduler(@conf)
             bin_val    = @conf["bin"]

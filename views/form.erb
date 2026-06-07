@@ -440,6 +440,13 @@ window.onload = function() {
   ocForm.submitArea.value = ocForm.isSubmitCache() ? ocForm.loadSubmitCache() : generatedSubmit;
   ocForm.refreshEditorLayout();
 
+  // When loaded from history (?jobId=) with a pre-fetched script, parse the script
+  // directives into the left-panel widgets so they match the loaded script's inputs.
+  if (new URLSearchParams(window.location.search).has('jobId') && ocForm.isScriptCache()) {
+    ocForm.parseScriptToWidgets();
+    ocForm.refreshEditorLayout();
+  }
+
   var _ocExtKey = new URLSearchParams(window.location.search).get('ocExtLoad');
   if (_ocExtKey) {
     var _ocExtRaw = sessionStorage.getItem(_ocExtKey);

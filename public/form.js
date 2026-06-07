@@ -1210,6 +1210,18 @@ ocForm.setInitValue = function(key, num, widget, attr, value, fromId) {
     const element = document.getElementById(id);
     if (element !== null) {
       element.setAttribute(attr, value);
+      if (attr === "max" && element.value !== "") {
+        const maxVal = parseFloat(value);
+        if (!isNaN(maxVal) && parseFloat(element.value) > maxVal) {
+          element.value = maxVal;
+        }
+      }
+      if (attr === "min" && element.value !== "") {
+        const minVal = parseFloat(value);
+        if (!isNaN(minVal) && parseFloat(element.value) < minVal) {
+          element.value = minVal;
+        }
+      }
     }
   }
   else if (attr === "label" || attr == "help") {

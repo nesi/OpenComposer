@@ -35,13 +35,19 @@
       </p>
       <pre>
 $ cd /var/www/ood/apps/sys/
-$ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git
-$ cd OpenComposer
+$ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git</pre>
+
+      <h4 class="mt-3">Pre-initialise gems <span class="badge bg-secondary" style="font-size: 0.7em; vertical-align: middle;">Optional but recommended</span></h4>
+      <p>
+        Open Composer will install its Ruby gem dependencies automatically the first time a user opens the app.
+        To avoid users seeing a loading delay on that first visit, you can pre-install the gems as the administrator:
+      </p>
+      <pre>
+$ cd /var/www/ood/apps/sys/OpenComposer
 $ sudo cp misc/Gemfile .
 $ sudo bundle install</pre>
       <p>
-        The <code>bundle install</code> step installs the Ruby gem dependencies required by Open Composer.
-        It must be run once after cloning (and again after any <code>git pull</code> that updates the <code>Gemfile</code>).
+        Re-run <code>bundle install</code> after any <code>git pull</code> that updates the <code>Gemfile</code>.
       </p>
 
       <h2 id="setting">2. Setting</h2>
@@ -366,8 +372,10 @@ $ sudo cp /var/www/ood/apps/sys/opencomposer/ood_integration/views/apps/opencomp
       <p>
         Clicking the Open Composer tile will now open it embedded within OOD's page.
       </p>
+
+      <h3>Uninstalling OOD-integrated mode</h3>
       <p>
-        To uninstall, remove the two integration files and reload Apache:
+        Remove the two integration files and reload Apache:
       </p>
       <pre>$ sudo rm /etc/ood/config/apps/dashboard/initializers/opencomposer_embed.rb
 $ sudo rm /etc/ood/config/apps/dashboard/views/apps/opencomposer_embed.html.erb

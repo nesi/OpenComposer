@@ -31,10 +31,10 @@ base['form'].each do |k, v|
       'value'   => af_options.first ? af_options.first[0] : ""
     }
     new_form['alphafold_db_module'] = {
-      'widget'  => 'two_module_select',
+      'widget'  => 'multi_prefix_select',
       'label'   => 'AlphaFold Database Module',
       'driver'  => 'alphafold_module',
-      'modules' => [
+      'options' => [
         {'prefix' => 'AlphaFold/2.', 'module' => 'AlphaFold2DB'},
         {'prefix' => 'AlphaFold/3.', 'module' => 'AlphaFold3DB'}
       ]

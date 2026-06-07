@@ -625,8 +625,8 @@ helpers do
     return !value['required'].is_a?(Array) && value['required'].to_s == "true" ? "  ocForm.validateCheckboxForSubmit('#{key}');" : ""
   end
 
-  # Output a two_module_select: a single <select> that switches its module list based on a driver widget.
-  def output_two_module_select_html(key, value, script_content, submit_content, app_name, dir_name)
+  # Output a multi_prefix_select: a single <select> that switches its module list based on a driver widget.
+  def output_multi_prefix_select_html(key, value, script_content, submit_content, app_name, dir_name)
     html  = output_label_with_span_tag(key, value)
     html += "<select tabindex=\"#{@table_index}\" id=\"#{key}\" name=\"#{key}\" class=\"form-select\" "
 
@@ -652,11 +652,11 @@ helpers do
     html + output_help(key, value)
   end
 
-  # JavaScript to initialise a two_module_select: watches a driver widget and re-fetches
+  # JavaScript to initialise a multi_prefix_select: watches a driver widget and re-fetches
   # the module version list whenever the driver's selected value changes prefix group.
-  def output_two_module_select_js(key, value)
+  def output_multi_prefix_select_js(key, value)
     driver  = value['driver'].to_s
-    modules = value['modules'] || []
+    modules = value['options'] || []
     sn      = @script_name.to_s
 
     mod_map_js = modules.map { |m|
@@ -1228,9 +1228,9 @@ HTML
       when 'module_load'
         @js["once"] += output_module_load_js(key, value)
         html += output_module_load_html(key, value, script_content, submit_content, app_name, dir_name)
-      when 'two_module_select'
-        @js["once"] += output_two_module_select_js(key, value)
-        html += output_two_module_select_html(key, value, script_content, submit_content, app_name, dir_name)
+      when 'multi_prefix_select'
+        @js["once"] += output_multi_prefix_select_js(key, value)
+        html += output_multi_prefix_select_html(key, value, script_content, submit_content, app_name, dir_name)
       end
 
       html += "</div>\n"

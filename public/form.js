@@ -562,17 +562,7 @@ ocForm.addSelectedItem = function(id) {
         ocForm.updateArea(contentType, id);
       };
 
-      if (!scriptOverwriteFlag && !submitOverwriteFlag) {
-        removeBadge();
-      }
-      else {
-        if (scriptOverwriteFlag) {
-          ocForm.confirmOverwrite('script', id,  () => removeBadge('script'));
-        }
-        else { // submitOverwriteFlag === true
-          ocForm.confirmOverwrite('submit', id,  () => removeBadge('submit'));
-        }
-      }
+      removeBadge();
     });
 
     selectedItems.appendChild(badge);
@@ -585,15 +575,7 @@ ocForm.addSelectedItem = function(id) {
   };
 
   if (selectedText && validSuggestions.includes(selectedText)) {
-    if (!scriptOverwriteFlag && !submitOverwriteFlag) {
-      addBadge();
-    }
-    else if (scriptOverwriteFlag) {
-      ocForm.confirmOverwrite('script', id, addBadge);
-    }
-    else {
-      ocForm.confirmOverwrite('submit', id, addBadge);
-    }
+    addBadge();
   }
 };
 
@@ -1507,35 +1489,6 @@ ocForm.validateCheckboxForSubmit = function(key) {
   }
 };
 
-// Merge changes from a regenerated template into a manually-edited script.
-// Only lines that differ between oldGenerated and newGenerated are applied to
-// currentScript. Lines the user has modified (not matching oldGenerated) are left alone.
-ocForm.mergeScriptChanges = function(currentScript, oldGenerated, newGenerated) {
-  if (!oldGenerated || oldGenerated === newGenerated) return currentScript;
-
-  const result    = currentScript.split('\n');
-  const oldLines  = oldGenerated.split('\n');
-  const newLines  = newGenerated.split('\n');
-
-  for (let i = 0; i < Math.max(oldLines.length, newLines.length); i++) {
-    const oldLine = i < oldLines.length ? oldLines[i] : undefined;
-    const newLine = i < newLines.length ? newLines[i] : undefined;
-
-    if (oldLine === newLine) continue;
-
-    if (oldLine !== undefined && newLine !== undefined) {
-      const idx = result.indexOf(oldLine);
-      if (idx !== -1) result[idx] = newLine;
-    } else if (oldLine !== undefined) {
-      const idx = result.indexOf(oldLine);
-      if (idx !== -1) result.splice(idx, 1);
-    } else {
-      result.splice(Math.min(i, result.length), 0, newLine);
-    }
-  }
-
-  return result.join('\n');
-};
 
 // Return true if the script has no executable commands.
 // Lines that are blank, start with '#' (shebang, #SBATCH, comments), or

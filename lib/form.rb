@@ -146,7 +146,7 @@ helpers do
              end
       if type
         html << "onfocus=\"ocForm.storePreviousValue('#{id}')\" " \
-                "oninput=\"ocForm.confirmOverwrite('#{type}', '#{id}', function(){ocForm.updateArea('#{type}', '#{id}');})\""
+                "oninput=\"ocForm.updateArea('#{type}', '#{id}')\""
         html << " style=\"background-color: #{@conf["submit_color"]};\"" if type == 'submit'
       else
         html << "style=\"background-color: #{@conf["non_script_color"]};\""
@@ -377,7 +377,7 @@ helpers do
            end
     if type
       html << "onfocus=\"ocForm.storePreviousValue('#{key}')\" " \
-              "onchange=\"ocForm.confirmOverwrite('#{type}', '#{key}', function(){ocForm.updateArea('#{type}', '#{key}');})\""
+              "onchange=\"ocForm.updateArea('#{type}', '#{key}')\""
       html << " style=\"background-color: #{@conf["submit_color"]};\"" if type == 'submit'
     else
       html << "onchange=\"ocForm.execDynamicWidget('#{key}')\" " \
@@ -553,7 +553,7 @@ helpers do
                'submit'
              end
       if type
-        html << "onchange=\"ocForm.confirmOverwrite('#{type}', '#{id}', function(){ocForm.updateArea('#{type}', '#{id}')})\" oninput=\"ocForm.storePreviousValue('#{id}')\""
+        html << "onchange=\"ocForm.updateArea('#{type}', '#{id}')\" oninput=\"ocForm.storePreviousValue('#{id}')\""
         html << " style=\"background-color: #{@conf["submit_button_color"]};\"" if type == 'submit'
         html << ">\n"
       else
@@ -603,7 +603,7 @@ helpers do
                'submit'
              end
       if type
-        html << "onchange=\"ocForm.confirmOverwrite('#{type}', '#{id}', function(){ocForm.updateArea('#{type}', '#{id}')})\""
+        html << "onchange=\"ocForm.updateArea('#{type}', '#{id}')\""
         html << " style=\"background-color: #{@conf["submit_button_color"]};\"" if type == 'submit'
         html << ">\n"
       else
@@ -639,7 +639,7 @@ helpers do
 
     if type
       html += "onfocus=\"ocForm.storePreviousValue('#{key}')\" " \
-              "onchange=\"ocForm.confirmOverwrite('#{type}', '#{key}', function(){ocForm.updateArea('#{type}', '#{key}');})\""
+              "onchange=\"ocForm.updateArea('#{type}', '#{key}')\""
       html += " style=\"background-color: #{@conf["submit_color"]};\"" if type == 'submit'
     else
       html += "onchange=\"ocForm.execDynamicWidget('#{key}')\" "
@@ -749,7 +749,7 @@ helpers do
              'submit'
            end
     if type
-      html += "oninput=\"ocForm.confirmOverwrite('#{type}', '#{key}', function(){ocForm.updateArea('#{type}', '#{key}')})\" "
+      html += "oninput=\"ocForm.updateArea('#{type}', '#{key}')\" "
       html += "onfocus=\"ocForm.storePreviousValue('#{key}')\""
       html += " style=\"background-color: #{@conf["submit_color"]};\"" if type == 'submit'
     else
@@ -833,7 +833,7 @@ helpers do
 HTML
     html += "<button type=\"button\" class=\"btn btn-primary\" data-bs-dismiss=\"modal\" tabindex=\"-1\" "
     onclick = if type
-                "ocForm.confirmOverwrite('#{type}', '#{key}', function(){ocForm.updatePath('#{key}'); ocForm.updateArea('#{type}', '#{key}')})"
+                "ocForm.updatePath('#{key}'); ocForm.updateArea('#{type}', '#{key}')"
               else
                 "ocForm.updatePath('#{key}')"
               end

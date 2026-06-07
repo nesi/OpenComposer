@@ -36,7 +36,6 @@
         <li class="nav-item ms-3"><a href="#save" class="nav-link">5.2. ファイルの保存</a></li>
         <li class="nav-item ms-3"><a href="#hide-script" class="nav-link">5.3. 非表示化</a></li>
         <li class="nav-item ms-3"><a href="#variables" class="nav-link">5.4. 特殊な変数</a></li>
-        <li class="nav-item ms-3"><a href="#overwrite_warning" class="nav-link">5.5. 警告の無効化</a></li>
         <li class="nav-item"><a href="#check" class="nav-link">6. checkセクション</a></li>
         <li class="nav-item"><a href="#submit" class="nav-link">7. submitセクション</a></li>
         <li class="nav-item"><a href="#header" class="nav-link">8. headerセクション</a></li>
@@ -717,23 +716,6 @@ script:
         <li>#{OC_SCRIPT_NAME}: ヘッダで定義されている<code>Script Name</code></li>
         <li>#{OC_JOB_NAME}: ヘッダで定義されている<code>Job Name</code></li>
       </ul>
-
-      <h3 id="overwrite_warning">5.5. 警告の無効化</h3>
-      <p>
-        <code>script</code>セクションや<code>submit</code>セクションを手動で変更した後に、それらを変更するウィジットを変更しようとすると、下記のような警告が表示されます。"Discard and continue"をクリックすると、各セクションに加えられた変更は消去され、新しいスクリプトが生成されます。
-      <p>
-        <img style="border-style: solid; border-width: 1px;" src="img/overwrite_warning.png" width="400" alt="warning">
-      <p>
-        この警告を無効化するには、無効化したいセクションの設定で<code>overwrite_warning: false</code>を指定します。
-      </p>
-
-      <pre>script:
-  overwrite_warning: false
-  content: |</pre>
-
-      <pre>submit:
-  overwrite_warning: false
-  content: |</pre>
 
       <h2 id="check">6. checkセクション</h2>
       <p>

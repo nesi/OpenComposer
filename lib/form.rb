@@ -660,7 +660,11 @@ helpers do
     sn      = @script_name.to_s
 
     mod_map_js = modules.map { |m|
-      "{prefix: #{m['prefix'].to_s.to_json}, select_option: #{m['select_option'].to_s.to_json}}"
+      parts = []
+      parts << "prefix: #{m['prefix'].to_s.to_json}"   if m['prefix']
+      parts << "contains: #{m['contains'].to_s.to_json}" if m['contains']
+      parts << "select_option: #{m['select_option'].to_s.to_json}"
+      "{#{parts.join(', ')}}"
     }.join(", ")
 
     <<~JS
@@ -673,8 +677,10 @@ helpers do
         var lastModule = null;
 
         function moduleForValue(val) {
+          var s = String(val);
           for (var i = 0; i < modMap.length; i++) {
-            if (String(val).startsWith(modMap[i].prefix)) return modMap[i].select_option;
+            if (modMap[i].prefix   && s.startsWith(modMap[i].prefix))   return modMap[i].select_option;
+            if (modMap[i].contains && s.includes(modMap[i].contains))   return modMap[i].select_option;
           }
           return modMap.length > 0 ? modMap[modMap.length - 1].select_option : '';
         }

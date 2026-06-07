@@ -35,8 +35,8 @@ base['form'].each do |k, v|
       'label'   => 'AlphaFold Database Module',
       'driver'  => 'alphafold_module',
       'options' => [
-        {'prefix' => 'AlphaFold/2.', 'select_option' => 'AlphaFold2DB'},
-        {'prefix' => 'AlphaFold/3.', 'select_option' => 'AlphaFold3DB'}
+        {'contains' => 'AlphaFold/2.', 'select_option' => 'AlphaFold2DB'},
+        {'contains' => 'AlphaFold/3.', 'select_option' => 'AlphaFold3DB'}
       ]
     }
   end
@@ -53,7 +53,7 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   OUTPUT=/nesi/project/nesi12345/alphafold/results
 
   run_alphafold.py --use_gpu_relax \
-  --data_dir=$AF2DB \
+  --data_dir              =$AF2DB \
   --uniref90_database_path=$AF2DB/uniref90/uniref90.fasta \
   --mgnify_database_path  =$AF2DB/mgnify/mgy_clusters_2022_05.fa \
   --bfd_database_path     =$AF2DB/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt \

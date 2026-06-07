@@ -228,6 +228,7 @@ ocForm.submitHighlight = document.getElementById('<%= SUBMIT_CONTENT %>_highligh
 <script src="<%= @script_name %>/form.js"></script>
 <script>
 ocForm.scriptLinePatterns = [];
+ocForm.enabledBy = {};
 <%= @js["script_patterns"].chomp %>
 </script>
 <script>

@@ -320,11 +320,24 @@ def parse_sbatch_into_cache(script_content, body, app_name, dir_name)
       sep          = widget_def["separator"] || ","
       checked_vals = val.split(sep).map(&:strip)
       (widget_def["options"] || []).each_with_index do |opt, idx|
-        opt_val = (opt.is_a?(Array) ? opt[1] : opt).to_s
-        cache["#{field}_#{idx + 1}"] = opt_val if checked_vals.include?(opt_val)
+        opt_val   = (opt.is_a?(Array) ? opt[1] : opt).to_s
+        opt_label = (opt.is_a?(Array) ? opt[0] : opt).to_s
+        cache["#{field}_#{idx + 1}"] = opt_label if checked_vals.include?(opt_val)
       end
     else
       cache[field] = val
+    end
+  end
+
+  # Auto-check toggle checkboxes (e.g. "Show advanced options") whose enable-X
+  # targets are already in the cache so the section renders expanded.
+  form_fields.each do |key, field_def|
+    next unless field_def.is_a?(Hash) && field_def["widget"] == "checkbox"
+    (field_def["options"] || []).each_with_index do |opt, idx|
+      next unless opt.is_a?(Array) && opt.length > 2
+      enabled_fields = opt[2..-1].grep(/^enable-/).map { |a| a.sub(/^enable-/, '') }
+      next unless enabled_fields.any? { |f| cache.keys.any? { |k| k == f || k.start_with?("#{f}_") } }
+      cache["#{key}_#{idx + 1}"] ||= opt[0].to_s
     end
   end
 

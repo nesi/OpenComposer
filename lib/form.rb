@@ -625,6 +625,24 @@ helpers do
     return !value['required'].is_a?(Array) && value['required'].to_s == "true" ? "  ocForm.validateCheckboxForSubmit('#{key}');" : ""
   end
 
+  # Generate JS that populates ocForm.enabledBy: maps each field key to the checkbox
+  # option IDs that enable it.  Used by parseScriptToWidgets to auto-open parent
+  # toggle sections (e.g. "Show advanced options") when populating fields from a script.
+  def output_enabled_by_js(key, options)
+    js = ""
+    return js if options.nil?
+    options.each_with_index do |option, i|
+      next unless option.is_a?(Array)
+      (option[2..-1] || []).each do |action|
+        next unless action.is_a?(String) && action.start_with?("enable-")
+        target     = action.sub(/^enable-/, '')
+        enabler_id = "#{key}_#{i + 1}"
+        js += "  (ocForm.enabledBy[#{target.to_json}] = ocForm.enabledBy[#{target.to_json}] || []).push(#{enabler_id.to_json});\n"
+      end
+    end
+    js
+  end
+
   # Output a dependent_module_select: a single <select> that switches its module list based on a driver widget.
   def output_dependent_module_select_html(key, value, script_content, submit_content, app_name, dir_name)
     html  = output_label_with_span_tag(key, value)
@@ -1225,9 +1243,10 @@ HTML
         @js["exec_dw"] += output_exec_dw_js(key, value["options"], obj)
         html += output_radio_html(key, value, script_content, submit_content, app_name, dir_name)
       when 'checkbox'
-        @js["init_dw"] += output_init_dw_js(value["options"], obj)
-        @js["exec_dw"] += output_exec_dw_js(key, value["options"], obj)
-        @js["exec_dw"] += output_checkbox_js(key, value)
+        @js["init_dw"]         += output_init_dw_js(value["options"], obj)
+        @js["exec_dw"]         += output_exec_dw_js(key, value["options"], obj)
+        @js["exec_dw"]         += output_checkbox_js(key, value)
+        @js["script_patterns"] += output_enabled_by_js(key, value["options"])
         html += output_checkbox_html(key, value, script_content, submit_content, app_name, dir_name)
       when 'path'
         html += output_path_html(key, value, script_content, submit_content, app_name, dir_name)
@@ -1292,9 +1311,10 @@ HTML
         @js["exec_dw"] += output_exec_dw_js(key, value["options"], obj)
         html += output_radio_html(key, value, script_content, submit_content, app_name, dir_name)
       when 'checkbox'
-        @js["init_dw"] += output_init_dw_js(value["options"], obj)
-        @js["exec_dw"] += output_exec_dw_js(key, value["options"], obj)
-        @js["exec_dw"] += output_checkbox_js(key, value)
+        @js["init_dw"]         += output_init_dw_js(value["options"], obj)
+        @js["exec_dw"]         += output_exec_dw_js(key, value["options"], obj)
+        @js["exec_dw"]         += output_checkbox_js(key, value)
+        @js["script_patterns"] += output_enabled_by_js(key, value["options"])
         html += output_checkbox_html(key, value, script_content, submit_content, app_name, dir_name)
       when 'path'
         html += output_path_html(key, value, script_content, submit_content, app_name, dir_name)

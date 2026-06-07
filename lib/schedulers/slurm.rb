@@ -1,6 +1,7 @@
 # coding: utf-8
 require 'open3'
 require 'date'
+require 'json'
 
 class Slurm < Scheduler
   SLURM_ENV = "SLURM_TIME_FORMAT=standard"
@@ -159,25 +160,40 @@ class Slurm < Scheduler
     return nil, e.message
   end
 
-  # Run scontrol show job for one job ID and parse the key=value output.
+  # Run scontrol show job --json for one job ID.
   # Returns [hash, nil, command] on success, [nil, nil, nil] when the job is not found,
   # or [nil, error_message, command] on failure.
   def scontrol_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
     scontrol = get_command_path("scontrol", bin, bin_overrides)
-    command  = [ssh_wrapper, scontrol, "show job", job_id].compact.join(" ")
+    command  = [ssh_wrapper, scontrol, "show job", job_id, "--json"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
-    parsed = {}
-    stdout.split.each do |token|
-      idx = token.index('=')
-      next unless idx && idx > 0
-      key   = token[0...idx]
-      value = token[idx + 1..]
-      parsed[key] = value unless key.empty?
+    parsed = JSON.parse(stdout)
+    job = parsed.dig("jobs", 0)
+    return nil, nil, command if job.nil?
+
+    # Flatten the JSON object into a display-ready string hash.
+    # Scalars are used as-is; arrays are joined; nested hashes become k=v pairs.
+    result = {}
+    job.each do |k, v|
+      result[k] = case v
+                  when String, Integer, Float, TrueClass, FalseClass then v.to_s
+                  when NilClass then ""
+                  when Array    then v.map(&:to_s).join(", ")
+                  when Hash     then v.map { |hk, hv| "#{hk}=#{hv}" }.join(", ")
+                  else v.to_s
+                  end
     end
-    parsed.empty? ? [nil, nil, command] : [parsed, nil, command]
+
+    # Aliases expected by the consuming code in run.rb
+    result["Command"] = result["command"]  if result.key?("command")
+    result["WorkDir"] = result["work_dir"] if result.key?("work_dir")
+
+    result.empty? ? [nil, nil, command] : [result, nil, command]
+  rescue JSON::ParserError => e
+    return nil, "scontrol JSON parse error: #{e.message}", command
   rescue Exception => e
     return nil, e.message, nil
   end
@@ -609,7 +625,7 @@ class Slurm < Scheduler
                    .sub(/\[(\d+)[^\]]*\]/) { $1 }
                    .strip
 
-    path
+    resolved = path
       .gsub('%%', "\x00")    # protect literal %% before other substitutions
       .gsub('%A', array_master)
       .gsub('%a', array_index)
@@ -621,6 +637,10 @@ class Slurm < Scheduler
       .gsub('%W', workdir)
       .gsub('%Z', workdir)
       .gsub("\x00", '%')     # restore literal %
+
+    # Slurm stores relative paths as-is; resolve against WorkDir so the
+    # full absolute path is available for file links and existence checks.
+    resolved.start_with?('/') ? resolved : File.join(workdir, resolved)
   end
 
   # Expand a bracket-range job ID into individual task IDs.

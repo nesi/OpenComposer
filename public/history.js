@@ -421,7 +421,7 @@ ocHistory.loadJobEfficiency = function(modalEl) {
   let url = `${base}/history/job_efficiency?job_id=${encodeURIComponent(jobId)}`;
   if (cluster) url += `&cluster=${encodeURIComponent(cluster)}`;
 
-  const noData = '<hr class="mt-0"><h6 class="mb-2">Job Efficiency</h6><p class="text-muted small mb-0">No efficiency information available.</p>';
+  const noData = '<hr class="mt-0"><h6 class="mb-2">Job Efficiency (<code>seff</code>)</h6><p class="text-muted small mb-0">No efficiency information available.</p>';
 
   fetch(url)
     .then(r => r.json())
@@ -436,7 +436,7 @@ ocHistory.loadJobEfficiency = function(modalEl) {
         .filter(([k]) => !skip.has(k))
         .map(([k, v]) => `<tr><td>${ocHistory.escapeHtml(k)}</td><td>${ocHistory.escapeHtml(String(v))}</td></tr>`)
         .join('');
-      let html = '<hr class="mt-0"><h6 class="mb-2">Job Efficiency</h6>';
+      let html = '<hr class="mt-0"><h6 class="mb-2">Job Efficiency (<code>seff</code>)</h6>';
       html += '<table class="table table-striped table-sm text-break mb-1">';
       html += rows || `<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>`;
       html += '</table>';

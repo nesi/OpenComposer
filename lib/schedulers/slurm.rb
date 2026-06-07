@@ -256,7 +256,7 @@ class Slurm < Scheduler
     sacct = get_command_path("sacct", bin, bin_overrides)
 
     fields = %w[JobID JobName Partition State Submit Start End Elapsed
-                WorkDir Account AllocCPUS ReqMem ExitCode StdOut StdErr]
+                WorkDir Account AllocCPUS ReqMem ExitCode NodeList StdOut StdErr]
 
     effective_from = date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : date_from.to_s
     effective_to   = date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")       : date_to.to_s
@@ -282,6 +282,11 @@ class Slurm < Scheduler
         row[key] = value
       end
       jobs << row unless row.empty?
+    end
+
+    jobs.each do |row|
+      row["StdOut"] = resolve_slurm_filename_pattern(row["StdOut"], row)
+      row["StdErr"] = resolve_slurm_filename_pattern(row["StdErr"], row)
     end
 
     [jobs, nil, command]
@@ -519,6 +524,47 @@ class Slurm < Scheduler
   end
 
   private
+
+  # Resolve Slurm filename pattern substitutions in a StdOut/StdErr path.
+  # Handles the patterns defined in https://slurm.schedmd.com/sbatch.html#SECTION_FILENAME-PATTERN
+  def resolve_slurm_filename_pattern(path, row)
+    path = path.to_s.strip
+    return path if path.empty? || path == "None"
+
+    job_id = row["JobID"].to_s.strip
+    # Array jobs: sacct returns "MASTER_INDEX" (e.g. "123_1")
+    if job_id =~ /\A(\d+)_(\d+)\z/
+      array_master = $1
+      array_index  = $2
+      plain_id     = array_master
+    else
+      plain_id     = job_id.split('.').first.to_s
+      array_master = plain_id
+      array_index  = "0"
+    end
+
+    username   = ENV['USER'] || ENV['LOGNAME'] || ""
+    workdir    = row["WorkDir"].to_s.strip
+    job_name   = row["JobName"].to_s.strip
+    # NodeList may be comma-separated or use bracket notation (e.g. "node[001-003]")
+    first_node = row["NodeList"].to_s.strip
+                   .split(',').first.to_s
+                   .sub(/\[(\d+)[^\]]*\]/) { $1 }
+                   .strip
+
+    path
+      .gsub('%%', "\x00")    # protect literal %% before other substitutions
+      .gsub('%A', array_master)
+      .gsub('%a', array_index)
+      .gsub('%J', job_id)
+      .gsub('%j', plain_id)
+      .gsub('%N', first_node)
+      .gsub('%u', username)
+      .gsub('%x', job_name)
+      .gsub('%W', workdir)
+      .gsub('%Z', workdir)
+      .gsub("\x00", '%')     # restore literal %
+  end
 
   # Expand a bracket-range job ID into individual task IDs.
   # "6801262_[1494-2000]"   → ["6801262_1494", ..., "6801262_2000"]

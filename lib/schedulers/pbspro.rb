@@ -126,13 +126,16 @@ class Pbspro < Scheduler
       when /^\s*([^=\s]+)\s*=\s*(.+)$/
         key, value = $1.strip, $2.strip
         case key
-        when "Job_Name"   then cur_job["JobName"]   = value
-        when "queue"      then cur_job["Partition"]  = value
-        when "job_state"  then cur_job["State"]      = value
-        when "ctime"      then cur_job["Submit"]     = value
-        when "start_time" then cur_job["Start"]      = value
-        when "comp_time"  then cur_job["End"]        = value
-        when "Exit_status" then cur_job["ExitCode"]  = value
+        when "Job_Name"    then cur_job["JobName"]   = value
+        when "queue"       then cur_job["Partition"]  = value
+        when "job_state"   then cur_job["State"]      = value
+        when "ctime"       then cur_job["Submit"]     = value
+        when "start_time"  then cur_job["Start"]      = value
+        when "comp_time"   then cur_job["End"]        = value
+        when "Exit_status" then cur_job["ExitCode"]   = value
+        # Output_Path and Error_Path use "host:path" format; strip the host prefix
+        when "Output_Path" then cur_job["StdOut"] = value.sub(/\A[^:]+:/, '')
+        when "Error_Path"  then cur_job["StdErr"] = value.sub(/\A[^:]+:/, '')
         end
       end
     end

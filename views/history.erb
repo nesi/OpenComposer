@@ -194,8 +194,7 @@
   </div>
 <% end %>
 
-<% show_output_col = @conf["history"].is_a?(Hash) && @conf["history"].key?("OC_HISTORY_OUTPUT_FILE") %>
-<% show_error_col  = @conf["history"].is_a?(Hash) && @conf["history"].key?("OC_HISTORY_ERROR_FILE") %>
+<% _has_file_link_col = (@conf_history_cols || []).any? { |c| c["type"] == "file_link" } %>
 
 <% if @jobs.nil? || @jobs.empty? %>
   <div class="mt-3 ms-2">
@@ -232,28 +231,12 @@
             <span>Script Name</span>
             <%= output_history_sort_controls(HEADER_SCRIPT_NAME) %>
           </th>
-          <th class="text-wrap text-break">
-            <span>Job Name</span>
-            <%= output_history_sort_controls(JOB_NAME) %>
+          <% (@conf_history_cols || []).each do |col| %>
+          <% _col_cls = col["responsive"] ? " d-none d-lg-table-cell" : "" %>
+          <th class="text-wrap text-break<%= _col_cls %>">
+            <span><%= escape_html(col["label"]) %></span>
+            <% if col["sortable"] %><%= output_history_sort_controls(col["job_key"]) %><% end %>
           </th>
-          <th class="text-wrap text-break d-none d-lg-table-cell">
-            <span>Start Time</span>
-            <%= output_history_sort_controls("Start") %>
-          </th>
-          <th class="text-wrap text-break d-none d-lg-table-cell">
-            <span>End Time</span>
-            <%= output_history_sort_controls("End") %>
-          </th>
-          <% (@extra_history_fields || []).each do |ef| %>
-          <th class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(ef["label"]) %></th>
-          <% end %>
-          <% if show_output_col %>
-          <% _output_label = @conf.dig("history", "OC_HISTORY_OUTPUT_FILE").then { |v| v.is_a?(Hash) ? v["label"] : nil } || "Output" %>
-          <th class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(_output_label) %></th>
-          <% end %>
-          <% if show_error_col %>
-          <% _error_label = @conf.dig("history", "OC_HISTORY_ERROR_FILE").then { |v| v.is_a?(Hash) ? v["label"] : nil } || "Error" %>
-          <th class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(_error_label) %></th>
           <% end %>
           <th class="text-wrap text-break">
             <span>Status</span>
@@ -310,27 +293,21 @@
                 <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>">Job</a>
               <% end %>
             </td>
-            <td class="text-wrap text-break"><%= output_text(job[JOB_NAME], job_name_filter) %></td>
-            <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["Start"].to_s) %></td>
-            <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["End"].to_s) %></td>
-            <% (@extra_history_fields || []).each do |ef| %>
-            <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job[ef["key"]].to_s) %></td>
-            <% end %>
-            <% if show_output_col %>
-            <td class="text-wrap text-break d-none d-lg-table-cell">
-              <% stdout_path = job["StdOut"].to_s.strip %>
-              <% unless stdout_path.empty? %>
-                <a href="#" title="<%= escape_html(stdout_path) %>" onclick="ocHistory.openFileOverlay('<%= escape_html(stdout_path) %>'); return false;"><%= escape_html(File.basename(stdout_path)) %></a>
+            <% (@conf_history_cols || []).each do |col| %>
+            <% _col_cls = col["responsive"] ? " d-none d-lg-table-cell" : "" %>
+            <% case col["type"] %>
+            <% when "job_name" %>
+            <td class="text-wrap text-break<%= _col_cls %>"><%= output_text(job[col["job_key"]], job_name_filter) %></td>
+            <% when "file_link" %>
+            <td class="text-wrap text-break<%= _col_cls %>">
+              <% _fp = job[col["job_key"]].to_s.strip %>
+              <% unless _fp.empty? %>
+                <a href="#" title="<%= escape_html(_fp) %>" onclick="ocHistory.openFileOverlay('<%= escape_html(_fp) %>'); return false;"><%= escape_html(File.basename(_fp)) %></a>
               <% end %>
             </td>
+            <% else %>
+            <td class="text-wrap text-break<%= _col_cls %>"><%= escape_html(job[col["job_key"]].to_s) %></td>
             <% end %>
-            <% if show_error_col %>
-            <td class="text-wrap text-break d-none d-lg-table-cell">
-              <% stderr_path = job["StdErr"].to_s.strip %>
-              <% unless stderr_path.empty? %>
-                <a href="#" title="<%= escape_html(stderr_path) %>" onclick="ocHistory.openFileOverlay('<%= escape_html(stderr_path) %>'); return false;"><%= escape_html(File.basename(stderr_path)) %></a>
-              <% end %>
-            </td>
             <% end %>
             <td class="text-wrap text-break"><%= output_status(job[JOB_STATUS_ID]) %></td>
           </tr>
@@ -356,7 +333,7 @@
 </div>
 <% end %>
 
-<% if show_output_col || show_error_col %>
+<% if _has_file_link_col %>
 <div class="modal" id="_historyFileOverlay" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-scrollable modal-xl">
     <div class="modal-content" style="resize: horizontal; padding-right: 16px;">

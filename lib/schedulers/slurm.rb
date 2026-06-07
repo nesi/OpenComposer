@@ -195,17 +195,31 @@ class Slurm < Scheduler
     help_out = to_utf8(help_out)
     return nil, "sacct --helpformat failed: #{[help_out, help_err].join(' ').strip}", nil unless help_status.success?
 
-    # Exclude fields whose values may contain pipe characters and corrupt the row
-    unsafe = %w[SubmitLine AdminComment SystemComment Comment Extra Container]
-    all_fields = help_out.split.reject { |f| unsafe.include?(f) }
-    return nil, "sacct --helpformat returned no fields", nil if all_fields.empty?
+    available = help_out.split
+    return nil, "sacct --helpformat returned no fields", nil if available.empty?
 
-    # Put key fields first so they are always in the earliest columns (unaffected
-    # by any pipe character appearing in a later field's value)
-    priority = %w[WorkDir JobID JobIDRaw JobName State Partition Account User
-                  NodeList AllocCPUS AllocTRES ReqMem Start End Submit Elapsed ExitCode]
-    fields = priority.select { |f| all_fields.include?(f) } +
-             all_fields.reject { |f| priority.include?(f) }
+    # Preferred display order. Fields not available in this Slurm version are silently dropped.
+    # Free-text fields that can embed pipe characters are intentionally excluded.
+    ordered = %w[
+      WorkDir JobID JobIDRaw JobName State Partition Account User NodeList
+      AllocCPUS AllocTRES ReqMem Start End Submit Elapsed ExitCode
+      AllocNodes AssocID AveCPU AveCPUFreq AveDiskRead AveDiskWrite AvePages AveRSS AveVMSize
+      BlockID Cluster Constraints ConsumedEnergy ConsumedEnergyRaw CPUTime CPUTimeRAW
+      DBIndex DerivedExitCode ElapsedRaw Eligible FailedNode Flags GID Group Layout Licenses
+      MaxDiskRead MaxDiskReadNode MaxDiskReadTask MaxDiskWrite MaxDiskWriteNode MaxDiskWriteTask
+      MaxPages MaxPagesNode MaxPagesTask MaxRSS MaxRSSNode MaxRSSTask
+      MaxVMSize MaxVMSizeNode MaxVMSizeTask McsLabel MinCPU MinCPUNode MinCPUTask
+      NCPUS NNodes NTasks Planned PlannedCPU PlannedCPURAW Priority QOS QOSRAW QOSREQ
+      Reason ReqCPUFreq ReqCPUFreqGov ReqCPUFreqMax ReqCPUFreqMin ReqCPUS ReqNodes ReqTRES
+      Reservation ReservationId ReqReservation Restarts SegmentSize SLUID
+      StdErr StdIn StdOut Suspended SystemCPU Timelimit TimelimitRaw TotalCPU
+      TRESUsageInAve TRESUsageInMax TRESUsageInMaxNode TRESUsageInMaxTask
+      TRESUsageInMin TRESUsageInMinNode TRESUsageInMinTask TRESUsageInTot
+      TRESUsageOutAve TRESUsageOutMax TRESUsageOutMaxNode TRESUsageOutMaxTask
+      TRESUsageOutMin TRESUsageOutMinNode TRESUsageOutMinTask TRESUsageOutTot
+      UID UserCPU WCKey WCKeyID
+    ]
+    fields = ordered.select { |f| available.any? { |a| a.casecmp?(f) } }
 
     command = [ssh_wrapper, SLURM_ENV, sacct, "-j", job_id, "-X",
                "--format=#{fields.join(',')}", "--parsable2"].compact.join(" ")
@@ -269,8 +283,9 @@ class Slurm < Scheduler
     available = help_status.success? ? help_out.split : []
 
     wanted = %w[JobID JobName Partition State Submit Start End Elapsed
-                WorkDir Account TotalCPU AllocCPUS ReqMem ExitCode NodeList StdOut StdErr SubmitLine]
-    fields = available.empty? ? wanted : wanted.select { |f| available.include?(f) }
+                WorkDir Account TotalCPU AllocCPUS ReqMem ExitCode NodeList Stdout Stderr SubmitLine]
+    # Use case-insensitive match so Slurm variants (Stdout vs StdOut) are accepted.
+    fields = available.empty? ? wanted : wanted.select { |f| available.any? { |a| a.casecmp?(f) } }
 
     effective_from = date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : date_from.to_s
     effective_to   = date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")       : date_to.to_s
@@ -300,19 +315,20 @@ class Slurm < Scheduler
     end
 
     jobs.each do |row|
-      # When sacct doesn't provide StdOut/StdErr (older Slurm), derive them from the batch script.
+      # Normalize Slurm's Stdout/Stderr header variants to the keys used throughout the app.
+      row["StdOut"] = row.delete("Stdout") if row.key?("Stdout") && !row.key?("StdOut")
+      row["StdErr"] = row.delete("Stderr") if row.key?("Stderr") && !row.key?("StdErr")
+
+      # Older Slurm (pre-22.11) doesn't expose StdOut/StdErr as sacct fields.
+      # Recover them from the SubmitLine sbatch arguments — sacct always records this.
       if row["StdOut"].to_s.empty? && row["StdErr"].to_s.empty?
-        script_path = row["SubmitLine"].to_s.split.drop(1).reject { |t| t.start_with?("-") }.last
-        if script_path && File.file?(script_path)
-          script = File.read(script_path) rescue ""
-          out_match = script.match(/^#SBATCH\s+(?:--output=|-o\s+)(\S+)/m)
-          err_match = script.match(/^#SBATCH\s+(?:--error=|-e\s+)(\S+)/m)
-          work_dir  = row["WorkDir"].to_s
-          job_id    = row["JobID"].to_s.split('.').first
-          row["StdOut"] = out_match ? out_match[1] : (work_dir.empty? ? nil : "#{work_dir}/slurm-#{job_id}.out")
-          row["StdErr"] = err_match ? err_match[1] : row["StdOut"]
-        end
+        submit_line = row["SubmitLine"].to_s
+        out_match = submit_line.match(/(?:--output=|-o\s+)(\S+)/)
+        err_match = submit_line.match(/(?:--error=|-e\s+)(\S+)/)
+        row["StdOut"] = out_match[1] if out_match
+        row["StdErr"] = err_match[1] if err_match
       end
+
       row["StdOut"] = resolve_slurm_filename_pattern(row["StdOut"], row)
       row["StdErr"] = resolve_slurm_filename_pattern(row["StdErr"], row)
     end

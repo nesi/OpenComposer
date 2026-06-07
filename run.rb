@@ -533,12 +533,24 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
               end
 
     history_conf = @conf["history"].is_a?(Hash) ? @conf["history"] : {}
-    extra_field_keys = history_conf.keys.reject { |k| k.start_with?("OC_HISTORY_") }
-    @extra_history_fields = extra_field_keys.map do |k|
-      fc = history_conf[k]
-      label = fc.is_a?(Hash) ? (fc["label"] || k) : k
-      { "key" => k, "label" => label }
+    oc_col_defs = {
+      "OC_HISTORY_JOB_NAME"    => { "default_label" => "Job Name",    "job_key" => JOB_NAME, "type" => "job_name",  "sortable" => true,  "responsive" => false },
+      "OC_HISTORY_START_TIME"  => { "default_label" => "Start Time",  "job_key" => "Start",   "type" => "text",      "sortable" => true,  "responsive" => true  },
+      "OC_HISTORY_END_TIME"    => { "default_label" => "End Time",    "job_key" => "End",     "type" => "text",      "sortable" => true,  "responsive" => true  },
+      "OC_HISTORY_OUTPUT_FILE" => { "default_label" => "Output",      "job_key" => "StdOut",  "type" => "file_link", "sortable" => false, "responsive" => true  },
+      "OC_HISTORY_ERROR_FILE"  => { "default_label" => "Error",       "job_key" => "StdErr",  "type" => "file_link", "sortable" => false, "responsive" => true  },
+    }
+    @conf_history_cols = history_conf.map do |k, v|
+      conf_label = v.is_a?(Hash) ? v["label"] : nil
+      defn = oc_col_defs[k]
+      label = conf_label || (defn && defn["default_label"]) || k
+      if defn
+        defn.merge("key" => k, "label" => label)
+      else
+        { "key" => k, "job_key" => k, "label" => label, "type" => "text", "sortable" => false, "responsive" => true }
+      end
     end
+    extra_field_keys = history_conf.keys.reject { |k| k.start_with?("OC_HISTORY_") }
 
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @jobs, @jobs_size = build_merged_history_jobs(
@@ -976,19 +988,6 @@ get "/job_details" do
 
   script_content, _err = scheduler.batch_script(job_id, bin, bin_overrides, ssh_wrapper)
   result["script_content"] = script_content
-
-  # If the user configured explicit non-OC_HISTORY_* fields in conf["history"],
-  # build a filtered, labelled display map in the user's configured order.
-  # When only OC_HISTORY_* keys are present (or no history: block), display all fields.
-  history_conf = conf["history"].is_a?(Hash) ? conf["history"] : {}
-  modal_fields = history_conf.reject { |k, _| k.start_with?("OC_HISTORY_") }
-  unless modal_fields.empty?
-    raw = result["data"] || {}
-    result["display"] = modal_fields.each_with_object({}) do |(field_key, field_conf), h|
-      label = field_conf.is_a?(Hash) ? (field_conf["label"] || field_key) : field_key
-      h[label] = raw[field_key].to_s
-    end
-  end
 
   result.to_json
 rescue Exception => e

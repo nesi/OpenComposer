@@ -31,12 +31,12 @@ base['form'].each do |k, v|
       'value'   => af_options.first ? af_options.first[0] : ""
     }
     new_form['alphafold_db_module'] = {
-      'widget'  => 'multi_prefix_select',
+      'widget'  => 'dependent_module_select',
       'label'   => 'AlphaFold Database Module',
       'driver'  => 'alphafold_module',
       'options' => [
-        {'contains' => 'AlphaFold/2.', 'select_option' => 'AlphaFold2DB'},
-        {'contains' => 'AlphaFold/3.', 'select_option' => 'AlphaFold3DB'}
+        {'contains' => 'AlphaFold/2.', 'module' => 'AlphaFold2DB'},
+        {'contains' => 'AlphaFold/3.', 'module' => 'AlphaFold3DB'}
       ]
     }
   end

@@ -625,8 +625,8 @@ helpers do
     return !value['required'].is_a?(Array) && value['required'].to_s == "true" ? "  ocForm.validateCheckboxForSubmit('#{key}');" : ""
   end
 
-  # Output a multi_prefix_select: a single <select> that switches its module list based on a driver widget.
-  def output_multi_prefix_select_html(key, value, script_content, submit_content, app_name, dir_name)
+  # Output a dependent_module_select: a single <select> that switches its module list based on a driver widget.
+  def output_dependent_module_select_html(key, value, script_content, submit_content, app_name, dir_name)
     html  = output_label_with_span_tag(key, value)
     html += "<select tabindex=\"#{@table_index}\" id=\"#{key}\" name=\"#{key}\" class=\"form-select\" "
 
@@ -652,9 +652,9 @@ helpers do
     html + output_help(key, value)
   end
 
-  # JavaScript to initialise a multi_prefix_select: watches a driver widget and re-fetches
+  # JavaScript to initialise a dependent_module_select: watches a driver widget and re-fetches
   # the module version list whenever the driver's selected value changes prefix group.
-  def output_multi_prefix_select_js(key, value)
+  def output_dependent_module_select_js(key, value)
     driver  = value['driver'].to_s
     modules = value['options'] || []
     sn      = @script_name.to_s
@@ -663,7 +663,7 @@ helpers do
       parts = []
       parts << "prefix: #{m['prefix'].to_s.to_json}"   if m['prefix']
       parts << "contains: #{m['contains'].to_s.to_json}" if m['contains']
-      parts << "select_option: #{m['select_option'].to_s.to_json}"
+      parts << "module: #{m['module'].to_s.to_json}"
       "{#{parts.join(', ')}}"
     }.join(", ")
 
@@ -679,10 +679,10 @@ helpers do
         function moduleForValue(val) {
           var s = String(val);
           for (var i = 0; i < modMap.length; i++) {
-            if (modMap[i].prefix   && s.startsWith(modMap[i].prefix))   return modMap[i].select_option;
-            if (modMap[i].contains && s.includes(modMap[i].contains))   return modMap[i].select_option;
+            if (modMap[i].prefix   && s.startsWith(modMap[i].prefix))   return modMap[i].module;
+            if (modMap[i].contains && s.includes(modMap[i].contains))   return modMap[i].module;
           }
-          return modMap.length > 0 ? modMap[modMap.length - 1].select_option : '';
+          return modMap.length > 0 ? modMap[modMap.length - 1].module : '';
         }
 
         function loadModules(moduleName) {
@@ -1234,9 +1234,9 @@ HTML
       when 'module_load'
         @js["once"] += output_module_load_js(key, value)
         html += output_module_load_html(key, value, script_content, submit_content, app_name, dir_name)
-      when 'multi_prefix_select'
-        @js["once"] += output_multi_prefix_select_js(key, value)
-        html += output_multi_prefix_select_html(key, value, script_content, submit_content, app_name, dir_name)
+      when 'dependent_module_select'
+        @js["once"] += output_dependent_module_select_js(key, value)
+        html += output_dependent_module_select_html(key, value, script_content, submit_content, app_name, dir_name)
       end
 
       html += "</div>\n"

@@ -21,11 +21,11 @@
         <li class="nav-item ms-3"><a href="#text" class="nav-link">2.2. text widget</a></li>
         <li class="nav-item ms-3"><a href="#email" class="nav-link">2.3. email widget</a></li>
         <li class="nav-item ms-3"><a href="#select" class="nav-link">2.4. select widget</a></li>
-        <li class="nav-item ms-3"><a href="#multi_prefix_select" class="nav-link">2.5. multi_prefix_select widget</a></li>
-        <li class="nav-item ms-3"><a href="#multi_select" class="nav-link">2.6. multi_select widget</a></li>
-        <li class="nav-item ms-3"><a href="#radio" class="nav-link">2.7. radio widget</a></li>
-        <li class="nav-item ms-3"><a href="#checkbox" class="nav-link">2.8. checkbox widget</a></li>
-        <li class="nav-item ms-3"><a href="#path" class="nav-link">2.9. path widget</a></li>
+        <li class="nav-item ms-3"><a href="#multi_select" class="nav-link">2.5. multi_select widget</a></li>
+        <li class="nav-item ms-3"><a href="#radio" class="nav-link">2.6. radio widget</a></li>
+        <li class="nav-item ms-3"><a href="#checkbox" class="nav-link">2.7. checkbox widget</a></li>
+        <li class="nav-item ms-3"><a href="#path" class="nav-link">2.8. path widget</a></li>
+        <li class="nav-item ms-3"><a href="#dependent_module_select" class="nav-link">2.9. dependent_module_select widget</a></li>
         <li class="nav-item ms-3"><a href="#functions" class="nav-link">2.10. Functions</a></li>
         <li class="nav-item"><a href="#dynamic" class="nav-link">3. Dynamic Form Widget</a></li>
         <li class="nav-item ms-3"><a href="#set" class="nav-link">3.1. Widget setting</a></li>
@@ -112,11 +112,11 @@ related_apps:
   <li>text widget: Displays a text input field.</li>
   <li>email widget: Displays an email input field.</li>
   <li>select widget: Displays a dropdown menu.</li>
-  <li>multi_prefix_select widget: Displays a dropdown whose options are loaded dynamically based on the value of a driver widget.</li>
   <li>multi_select: Displays an input field where multiple items can be selected.</li>
   <li>radio widget: Displays radio buttons.</li>
   <li>checkbox widget: Displays checkboxes.</li>
   <li>path widget: Displays an input field for path of a file or directory on the Open OnDemand server.</li>
+  <li>dependent_module_select widget: Displays a dropdown whose options are loaded dynamically based on the value of a driver widget.</li>
       </ul>
 
       <h3 id="number">2.1. number widget</h3>
@@ -290,43 +290,7 @@ script: |
 script: |
   #SBATCH --partition=#{partition}</pre>
 
-      <h3 id="multi_prefix_select">2.5. multi_prefix_select widget</h3>
-      <p>
-        Displays a dropdown whose options are loaded dynamically based on which <code>prefix</code> the currently-selected value of a <strong>driver</strong> widget matches.
-        Use it when one select widget (e.g. an application version) determines which set of modules should be offered in a second select.
-      </p>
-      <p>
-        The <code>driver</code> key names the field whose value is watched.
-        The <code>options</code> key is a list of <code>prefix</code>/<code>select_option</code> pairs:
-        when the driver's current value starts with <code>prefix</code>, the widget queries for all available versions of <code>select_option</code> and populates the dropdown with the results.
-      </p>
-      <pre>form:
-  alphafold_module:
-    widget: select
-    label: AlphaFold Module
-    options:
-      - [AlphaFold 2, AlphaFold/2.3.2]
-      - [AlphaFold 3, AlphaFold/3.0.0]
-
-  alphafold_db_module:
-    widget: multi_prefix_select
-    label: AlphaFold Database Module
-    driver: alphafold_module
-    options:
-      - prefix: AlphaFold/2.
-        select_option: AlphaFold2DB
-      - prefix: AlphaFold/3.
-        select_option: AlphaFold3DB
-
-script: |
-  module load #{alphafold_module}
-  module load #{alphafold_db_module}</pre>
-      <p>
-        In this example, selecting <code>AlphaFold/2.3.2</code> in the driver loads the available versions of <code>AlphaFold2DB</code>, while selecting <code>AlphaFold/3.0.0</code> loads the versions of <code>AlphaFold3DB</code>.
-        The first matching prefix wins, so list more specific prefixes before more general ones.
-      </p>
-
-      <h3 id="multi_select">2.6. multi_select widget</h3>
+      <h3 id="multi_select">2.5. multi_select widget</h3>
       <p>
   Displays an input field where multiple items can be selected.
   The <code>options</code> key specifies the available choices.
@@ -386,7 +350,7 @@ script: |
 script: |
   module load #{load_modules}</pre>
 
-      <h3 id="radio">2.7. radio widget</h3>
+      <h3 id="radio">2.6. radio widget</h3>
       <p>
   Displays radio buttons.
   It is similar to the <code>select</code> widget,
@@ -420,7 +384,7 @@ script: |
   module load #{jupyter}</pre>
       <img width="800" src="img/radio2.png" alt="radio">
 
-      <h3 id="checkbox">2.8. checkbox widget</h3>
+      <h3 id="checkbox">2.7. checkbox widget</h3>
       <p>
   Displays checkboxes. If you set <code>required</code> in array format as follows, it will set whether each item is required.
       </p>
@@ -465,7 +429,7 @@ script: |
   You can set the <code>separator</code> similar to the <code>multi_select</code> widget, and you can set the <code>direction</code> similar to the <code>radio</code> widget.
       </p>
 
-      <h3 id="path">2.9. path widget</h3>
+      <h3 id="path">2.8. path widget</h3>
       <p>
   Displays an input field for path of a file or directory on the Open OnDemand server.
   The <code>show_files</code> key toggles whether files are displayed (default: true).
@@ -486,6 +450,45 @@ script: |
       You can enter any string like in a <code>text</code> widget. Also, by clicking the "Select Path" button, you can select a file or directory using the modal shown below.
     </p>
     <img style="border-style: solid; border-width: 1px;" width="600" src="img/path2.png" alt="path">
+
+      <h3 id="dependent_module_select">2.9. dependent_module_select widget</h3>
+      <p>
+        Displays a dropdown whose options are loaded dynamically based on which <code>prefix</code> the currently-selected value of a <strong>driver</strong> widget matches.
+        Use it when one select widget (e.g. an application version) determines which set of modules should be offered in a second select.
+      </p>
+      <p>
+        The <code>driver</code> key names the field whose value is watched.
+        The <code>options</code> key is a list of <code>prefix</code>/<code>module</code> pairs:
+        when the driver's current value starts with <code>prefix</code>, the widget queries for all available versions of <code>module</code> and populates the dropdown with the results.
+      </p>
+      <pre>form:
+  alphafold_module:
+    widget: select
+    label: AlphaFold Module
+    options:
+      - [AlphaFold 2.3.2, AlphaFold/2.3.2]
+      - [AlphaFold 3.0.0, AlphaFold/3.0.0]
+      - [AlphaFold 3.0.1, AlphaFold/3.0.1]
+      - [AlphaFold 3.0.2, AlphaFold/3.0.2]
+
+  alphafold_db_module:
+    widget: dependent_module_select
+    label: AlphaFold Database Module
+    driver: alphafold_module
+    options:
+      - prefix: AlphaFold/2.
+        module: AlphaFold2DB
+      - prefix: AlphaFold/3.
+        module: AlphaFold3DB
+
+script: |
+  module load #{alphafold_module}
+  module load #{alphafold_db_module}</pre>
+      <p>
+        In this example, selecting <code>AlphaFold/2.3.2</code> in the driver loads the available versions of <code>AlphaFold2DB</code>, while selecting <code>AlphaFold/3.0.0</code>, <code>AlphaFold/3.0.1</code>, or <code>AlphaFold/3.0.2</code> loads the versions of <code>AlphaFold3DB</code>.
+        The first matching prefix wins, so list more specific prefixes before more general ones.
+      </p>
+      <img src="img/dependent_module_select.png" alt="dependent_module_select example" class="img-fluid">
 
     <h3 id="functions">2.10. Functions</h3>
     <p>
@@ -739,7 +742,7 @@ script: |
       <td>select</td><td>OK</td><td>OK (OK)</td><td></td><td></td><td></td><td></td><td></td><td>OK</td>
     </tr>
     <tr>
-      <td>multi_prefix_select</td><td>label, help</td><td>prefix/module pairs<br>(see 2.5)</td><td></td><td></td><td></td><td></td><td></td><td></td>
+      <td>dependent_module_select</td><td>label, help</td><td>prefix/module pairs<br>(see 2.9)</td><td></td><td></td><td></td><td></td><td></td><td></td>
     </tr>
     <tr>
       <td>multi_select</td><td>OK</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td><td></td>

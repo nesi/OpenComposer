@@ -9,8 +9,8 @@
     label: Partition
     options:
       - [ any,   "",    set-max-cores_simple: 166, set-max-memory_total_gb: 1450, show-gpu_any,   disable-gpu_genoa, disable-number_of_gpus_genoa, disable-gpu_milan, disable-number_of_gpus_milan, set-value-gpu_any: None]
-      - [ genoa, genoa, set-max-cores_simple: 166, set-max-memory_total_gb: 1450, show-gpu_genoa, disable-gpu_any,   disable-number_of_gpus_any,   disable-gpu_milan, disable-number_of_gpus_milan]
-      - [ milan, milan, set-max-cores_simple: 126, set-max-memory_total_gb: 1000, show-gpu_milan, disable-gpu_any,   disable-number_of_gpus_any,   disable-gpu_genoa, disable-number_of_gpus_genoa]
+      - [ genoa, genoa, set-max-cores_simple: 166, set-max-memory_total_gb: 1450, show-gpu_genoa, disable-gpu_any,   disable-number_of_gpus_any,   disable-gpu_milan, disable-number_of_gpus_milan, set-value-gpu_genoa: None]
+      - [ milan, milan, set-max-cores_simple: 126, set-max-memory_total_gb: 1000, show-gpu_milan, disable-gpu_any,   disable-number_of_gpus_any,   disable-gpu_genoa, disable-number_of_gpus_genoa, set-value-gpu_milan: None]
   YAML
 
   # 2. GPU-specific fields — inserted before time_days_hours_minutes

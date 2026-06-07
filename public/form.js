@@ -737,6 +737,7 @@ ocForm.isElementChecked = function(id) {
   if(element.disabled) return false;
 
   if (element.tagName === "OPTION") {
+    if (element.parentElement && element.parentElement.disabled) return false;
     return element.selected;
   }
   else if (element.tagName === "INPUT") {

@@ -807,6 +807,10 @@ ocHistory.openFileOverlay = function(path) {
         body.innerHTML = `<div class="alert alert-danger m-2">${ocHistory.escapeHtml(data.error)}</div>`;
         return;
       }
+      if (data.empty) {
+        body.innerHTML = '<p class="text-muted p-3 mb-0">(File is empty)</p>';
+        return;
+      }
       if (data.truncated) {
         const warn = document.createElement('div');
         warn.className = 'alert alert-warning mx-2 mt-2 mb-0';

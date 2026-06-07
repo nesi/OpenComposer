@@ -876,6 +876,7 @@ get "/_read_file" do
   max_bytes = 1_048_576 # 1 MB
   begin
     size    = File.size(path)
+    return { empty: true }.to_json if size == 0
     content = File.open(path, "rb") { |f| f.read(max_bytes) } || ""
     { content: content.force_encoding("UTF-8").scrub("?"), truncated: size > max_bytes }.to_json
   rescue => e

@@ -358,6 +358,7 @@ document.addEventListener('keydown', function(event) {
   }
 });
 
+ocForm.emptyScriptWarning = <%= @conf.fetch('empty_script_warning', true) ? 'true' : 'false' %>;
 ocForm.previousScript = ""
 ocForm.multiSelectDisabledIndexes = {};
 ocForm.previousValues = {};

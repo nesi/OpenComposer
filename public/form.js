@@ -1511,7 +1511,7 @@ ocForm.submitEffect = function(action) {
   var isSubmit = (action === 'submit' || action === 'confirm');
   if (isSubmit) {
     var scriptArea = document.getElementById('_script_content');
-    if (scriptArea && ocForm.scriptHasNoCommands(scriptArea.value)) {
+    if (ocForm.emptyScriptWarning !== false && scriptArea && ocForm.scriptHasNoCommands(scriptArea.value)) {
       if (!window.confirm('No commands have been added to the batch script.\n\nAre you sure you want to submit?')) {
         return false;
       }

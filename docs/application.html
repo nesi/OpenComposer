@@ -39,6 +39,7 @@
         <li class="nav-item ms-3"><a href="#variables" class="nav-link">5.4. Special variables</a></li>
         <li class="nav-item"><a href="#check" class="nav-link">6. Check section</a></li>
         <li class="nav-item"><a href="#submit" class="nav-link">7. Submit section</a></li>
+        <li class="nav-item ms-3"><a href="#empty-script-warning" class="nav-link">7.1. Empty script warning</a></li>
         <li class="nav-item"><a href="#header" class="nav-link">8. Header section</a></li>
         <li class="nav-item"><a href="#erb" class="nav-link">9. ERB and Dynamic Configuration</a></li>
         <li class="nav-item ms-3"><a href="#erb-conf" class="nav-link">9.1. Accessing @conf</a></li>
@@ -932,6 +933,26 @@ submit:
       </p>
       <img src="img/submit2.png" width="600" alt="Submit">
 
+      <h3 id="empty-script-warning">7.1. Empty script warning</h3>
+      <p>
+        When the user clicks <strong>Submit</strong> (or <strong>Confirm</strong>), Open Composer automatically checks whether the batch script contains any real commands.
+        A line is considered boilerplate and ignored if it is blank, starts with <code>#</code> (comments, <code>#SBATCH</code> directives, or the shebang line), or starts with <code>module</code>.
+        If no real commands are found, a browser confirmation dialog is shown before the job is submitted:
+      </p>
+      <pre>No commands have been added to the batch script.
+
+Are you sure you want to submit?</pre>
+      <p>
+        Clicking <strong>Cancel</strong> returns the user to the form without submitting.
+        Clicking <strong>OK</strong> proceeds with submission as normal.
+        This check is automatic and enabled by default.
+      </p>
+      <p>
+        To disable the warning, set <code>empty_script_warning: false</code> in <code>conf.yml.erb</code>:
+      </p>
+      <pre>empty_script_warning: false</pre>
+      <img src="img/no_entry_warning_message.png" alt="Empty script warning" class="img-fluid">
+
       <h2 id="header">8. Header section</h2>
       <p>
   You can define the <code>header</code> section.
@@ -1090,6 +1111,7 @@ base['script'] = base['script'].rstrip + "\n\nmodule load #{myapp_module}\n"
   <li>The order of processing that Open Composer performs before submitting a job script is as follows.
     <ol>
       <li>The "Submit" button is clicked in the application page</li>
+      <li>If <code>empty_script_warning</code> is enabled, check whether the batch script contains any real commands and show a confirmation dialog if not (see <a href="#empty-script-warning">section 7.1</a>)</li>
       <li>Execute the script written in the <code>check</code> section in <code>form.yml</code> (if the <code>check</code> section exists)</li>
       <li>Execute the script written in the <code>submit</code> section in <code>form.yml</code> (if the <code>submit</code> section exists)</li>
       <li>Submit the job script</li>

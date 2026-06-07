@@ -136,6 +136,12 @@ $ sudo cp conf.yml.erb.app.example conf.yml.erb</pre>
         <tr><td>history_action_color</td><td>Background color of the "Cancel Job" and "Delete Info" action buttons on the history page</td><td style="color: white; background-color: #DC3545;">#DC3545</td></tr>
       </table>
 
+      <h4 class="mt-4">Form Behaviour</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>empty_script_warning</td><td>Show a confirmation dialog when the user submits a batch script that contains no real commands (only blank lines, comments, <code>#SBATCH</code> directives, and <code>module</code> lines). Set to <code>false</code> to disable.</td><td><code>true</code></td></tr>
+      </table>
+
       <h3 id="clusters">2.1. clusters</h3>
       <p>
   Set this when using multiple clusters.

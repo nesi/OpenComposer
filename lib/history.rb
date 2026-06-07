@@ -488,7 +488,7 @@ helpers do
 
   # Merge sacct data and DB1 metadata into one page of job hashes.
   # All filtering, sorting, and pagination is done in Ruby.
-  def build_merged_history_jobs(sacct_map, db1_map, deleted_ids, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset, scheduler = nil)
+  def build_merged_history_jobs(sacct_map, db1_map, deleted_ids, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset, scheduler = nil, extra_sacct_fields = [])
     # sacct is the sole source of which jobs exist. DB1 only enriches (app name, script, etc.).
     all_ids = sacct_map.keys
 
@@ -513,7 +513,9 @@ helpers do
         "StdOut"               => sacct_row&.[]("StdOut"),
         "StdErr"               => sacct_row&.[]("StdErr"),
         "_has_db"              => db1_row ? 1 : 0
-      }
+      }.merge(
+        extra_sacct_fields.each_with_object({}) { |f, h| h[f] = sacct_row&.[](f) }
+      )
     end
 
     jobs = filter_history_jobs_by_status(jobs, statuses)

@@ -269,7 +269,7 @@ class Slurm < Scheduler
     available = help_status.success? ? help_out.split : []
 
     wanted = %w[JobID JobName Partition State Submit Start End Elapsed
-                WorkDir Account AllocCPUS ReqMem ExitCode NodeList StdOut StdErr SubmitLine]
+                WorkDir Account TotalCPU AllocCPUS ReqMem ExitCode NodeList StdOut StdErr SubmitLine]
     fields = available.empty? ? wanted : wanted.select { |f| available.include?(f) }
 
     effective_from = date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : date_from.to_s

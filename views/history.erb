@@ -244,11 +244,16 @@
             <span>End Time</span>
             <%= output_history_sort_controls("End") %>
           </th>
+          <% (@extra_history_fields || []).each do |ef| %>
+          <th class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(ef["label"]) %></th>
+          <% end %>
           <% if show_output_col %>
-          <th class="text-wrap text-break d-none d-lg-table-cell">Output</th>
+          <% _output_label = @conf.dig("history", "OC_HISTORY_OUTPUT_FILE").then { |v| v.is_a?(Hash) ? v["label"] : nil } || "Output" %>
+          <th class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(_output_label) %></th>
           <% end %>
           <% if show_error_col %>
-          <th class="text-wrap text-break d-none d-lg-table-cell">Error</th>
+          <% _error_label = @conf.dig("history", "OC_HISTORY_ERROR_FILE").then { |v| v.is_a?(Hash) ? v["label"] : nil } || "Error" %>
+          <th class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(_error_label) %></th>
           <% end %>
           <th class="text-wrap text-break">
             <span>Status</span>
@@ -308,6 +313,9 @@
             <td class="text-wrap text-break"><%= output_text(job[JOB_NAME], job_name_filter) %></td>
             <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["Start"].to_s) %></td>
             <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["End"].to_s) %></td>
+            <% (@extra_history_fields || []).each do |ef| %>
+            <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job[ef["key"]].to_s) %></td>
+            <% end %>
             <% if show_output_col %>
             <td class="text-wrap text-break d-none d-lg-table-cell">
               <% stdout_path = job["StdOut"].to_s.strip %>

@@ -532,12 +532,21 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
                 db.execute("SELECT * FROM jobs").each_with_object({}) { |r, h| h[r["_job_id"]] = r }
               end
 
+    history_conf = @conf["history"].is_a?(Hash) ? @conf["history"] : {}
+    extra_field_keys = history_conf.keys.reject { |k| k.start_with?("OC_HISTORY_") }
+    @extra_history_fields = extra_field_keys.map do |k|
+      fc = history_conf[k]
+      label = fc.is_a?(Hash) ? (fc["label"] || k) : k
+      { "key" => k, "label" => label }
+    end
+
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @jobs, @jobs_size = build_merged_history_jobs(
       sacct_map, db1_map, deleted_ids,
       @statuses, @filter, @filter_column, @filter_mode,
       raw_date_from.to_s, raw_date_to.to_s,
-      @sort, @order, requested_rows, offset, scheduler_s
+      @sort, @order, requested_rows, offset, scheduler_s,
+      extra_field_keys
     )
     @history_search_elapsed_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - history_search_started_at
 

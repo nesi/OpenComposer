@@ -12,6 +12,7 @@ class Slurm < Scheduler
     added_options = "--export=NONE" if added_options.nil?
     command = [ssh_wrapper, sbatch, job_name_option, added_options, script_path].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
+    stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ") unless status.success?
     job_id_match = stdout.match(/Submitted batch job (\d+)/)
     return nil, "Job ID not found in output." unless job_id_match
@@ -22,6 +23,7 @@ class Slurm < Scheduler
     scontrol = get_command_path("scontrol", bin, bin_overrides)
     command = [ssh_wrapper, scontrol, "show job", job_id].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
+    stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ") unless status.success?
 
     unless stdout.include?("ArrayTaskId") # Single Job
@@ -56,6 +58,7 @@ class Slurm < Scheduler
     jobs.each do |id|
       command = [ssh_wrapper, scancel, id].compact.join(" ")
       stdout, stderr, status = Open3.capture3(command)
+      stdout = to_utf8(stdout)
       errors << [stdout, stderr].join(" ").strip unless status.success?
     end
     errors.empty? ? nil : errors.join("; ")
@@ -90,11 +93,13 @@ class Slurm < Scheduler
     sacct = get_command_path("sacct", bin, bin_overrides)
     command1 = [ssh_wrapper, SLURM_ENV, sacct, "--helpformat"].compact.join(" ")
     stdout1, stderr1, status1 = Open3.capture3(command1)
+    stdout1 = to_utf8(stdout1)
     return nil, [stdout1, stderr1].join(" ") unless status1.success?
 
     # Run sacct with all fields, using --parsable2 for clean pipe-separated output
     command2 = [ssh_wrapper, SLURM_ENV, sacct, "--format=#{stdout1.split.join(",")} --parsable2 -j", jobs.join(",")].compact.join(" ")
     stdout2, stderr2, status2 = Open3.capture3(command2)
+    stdout2 = to_utf8(stdout2)
     return nil, [stdout2, stderr2].join(" ") unless status2.success?
 
     lines = stdout2.lines.map(&:chomp)
@@ -161,6 +166,7 @@ class Slurm < Scheduler
     scontrol = get_command_path("scontrol", bin, bin_overrides)
     command  = [ssh_wrapper, scontrol, "show job", job_id].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
+    stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
     parsed = {}
@@ -186,6 +192,7 @@ class Slurm < Scheduler
 
     help_cmd = [ssh_wrapper, sacct, "--helpformat"].compact.join(" ")
     help_out, help_err, help_status = Open3.capture3(help_cmd)
+    help_out = to_utf8(help_out)
     return nil, "sacct --helpformat failed: #{[help_out, help_err].join(' ').strip}", nil unless help_status.success?
 
     # Exclude fields whose values may contain pipe characters and corrupt the row
@@ -203,6 +210,7 @@ class Slurm < Scheduler
     command = [ssh_wrapper, SLURM_ENV, sacct, "-j", job_id, "-X",
                "--format=#{fields.join(',')}", "--parsable2"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
+    stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
     lines = stdout.lines.map(&:chomp).reject(&:empty?)
@@ -255,8 +263,14 @@ class Slurm < Scheduler
   def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
     sacct = get_command_path("sacct", bin, bin_overrides)
 
-    fields = %w[JobID JobName Partition State Submit Start End Elapsed
-                WorkDir Account AllocCPUS ReqMem ExitCode NodeList StdOut StdErr]
+    help_cmd = [ssh_wrapper, sacct, "--helpformat"].compact.join(" ")
+    help_out, _help_err, help_status = Open3.capture3(help_cmd)
+    help_out = to_utf8(help_out)
+    available = help_status.success? ? help_out.split : []
+
+    wanted = %w[JobID JobName Partition State Submit Start End Elapsed
+                WorkDir Account AllocCPUS ReqMem ExitCode NodeList StdOut StdErr SubmitLine]
+    fields = available.empty? ? wanted : wanted.select { |f| available.include?(f) }
 
     effective_from = date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : date_from.to_s
     effective_to   = date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")       : date_to.to_s
@@ -269,6 +283,7 @@ class Slurm < Scheduler
     stdout, stderr, status = Open3.capture3(command)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
+    stdout = to_utf8(stdout)
     lines = stdout.lines.map(&:chomp).reject(&:empty?)
     return [], nil, command if lines.size < 2
 
@@ -285,6 +300,19 @@ class Slurm < Scheduler
     end
 
     jobs.each do |row|
+      # When sacct doesn't provide StdOut/StdErr (older Slurm), derive them from the batch script.
+      if row["StdOut"].to_s.empty? && row["StdErr"].to_s.empty?
+        script_path = row["SubmitLine"].to_s.split.drop(1).reject { |t| t.start_with?("-") }.last
+        if script_path && File.file?(script_path)
+          script = File.read(script_path) rescue ""
+          out_match = script.match(/^#SBATCH\s+(?:--output=|-o\s+)(\S+)/m)
+          err_match = script.match(/^#SBATCH\s+(?:--error=|-e\s+)(\S+)/m)
+          work_dir  = row["WorkDir"].to_s
+          job_id    = row["JobID"].to_s.split('.').first
+          row["StdOut"] = out_match ? out_match[1] : (work_dir.empty? ? nil : "#{work_dir}/slurm-#{job_id}.out")
+          row["StdErr"] = err_match ? err_match[1] : row["StdOut"]
+        end
+      end
       row["StdOut"] = resolve_slurm_filename_pattern(row["StdOut"], row)
       row["StdErr"] = resolve_slurm_filename_pattern(row["StdErr"], row)
     end
@@ -304,6 +332,7 @@ class Slurm < Scheduler
     command = [ssh_wrapper, SLURM_ENV, squeue, "--start", "--noheader", "--parsable2",
                "--Format=jobid,starttime", "-j", job_ids.join(",")].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
+    stdout = to_utf8(stdout)
     return [{}, [stdout, stderr].join(" ")] unless status.success?
 
     result = {}
@@ -337,6 +366,7 @@ class Slurm < Scheduler
     fmt     = "nodelist:10,StateLong:15,cpusState:20,Memory:15,FreeMem:15,Gres:30,GresUsed:30"
     command = [ssh_wrapper, sinfo, "-N", "--Format=#{fmt}"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
+    stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
     lines  = stdout.lines.map { |l| l.chomp }
@@ -367,6 +397,7 @@ class Slurm < Scheduler
     sacct = get_command_path("sacct", bin, bin_overrides)
     command = [ssh_wrapper, SLURM_ENV, sacct, "-j", job_id, "-B"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
+    stdout = to_utf8(stdout)
     return nil, nil unless status.success?
 
     lines = stdout.lines
@@ -392,6 +423,7 @@ class Slurm < Scheduler
                  "--format=JobID,JobName,State,Start,End",
                  "-j", batch.join(",")].compact.join(" ")
       stdout, stderr, status = Open3.capture3(command)
+      stdout = to_utf8(stdout)
       unless status.success?
         last_error = [stdout, stderr].join(" ").strip
         next
@@ -421,6 +453,7 @@ class Slurm < Scheduler
     sacct = get_command_path("sacct", bin, bin_overrides)
     cmd   = [ssh_wrapper, sacct, "--json -j", job_id].compact.join(" ")
     out, err, st = Open3.capture3(cmd)
+    out = to_utf8(out)
     return [nil, [out, err].join(" ")] unless st.success?
 
     data      = JSON.parse(out)
@@ -524,6 +557,14 @@ class Slurm < Scheduler
   end
 
   private
+
+  # Re-tag a string as binary then encode to UTF-8, dropping any invalid bytes.
+  # Needed because Open3.capture3 returns strings tagged with the process's
+  # external encoding (US-ASCII when LANG=C), and sacct output can contain
+  # non-ASCII bytes in job names or paths.
+  def to_utf8(str)
+    str.to_s.b.encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+  end
 
   # Resolve Slurm filename pattern substitutions in a StdOut/StdErr path.
   # Handles the patterns defined in https://slurm.schedmd.com/sbatch.html#SECTION_FILENAME-PATTERN

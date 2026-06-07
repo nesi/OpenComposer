@@ -968,6 +968,19 @@ get "/job_details" do
   script_content, _err = scheduler.batch_script(job_id, bin, bin_overrides, ssh_wrapper)
   result["script_content"] = script_content
 
+  # If the user configured explicit non-OC_HISTORY_* fields in conf["history"],
+  # build a filtered, labelled display map in the user's configured order.
+  # When only OC_HISTORY_* keys are present (or no history: block), display all fields.
+  history_conf = conf["history"].is_a?(Hash) ? conf["history"] : {}
+  modal_fields = history_conf.reject { |k, _| k.start_with?("OC_HISTORY_") }
+  unless modal_fields.empty?
+    raw = result["data"] || {}
+    result["display"] = modal_fields.each_with_object({}) do |(field_key, field_conf), h|
+      label = field_conf.is_a?(Hash) ? (field_conf["label"] || field_key) : field_key
+      h[label] = raw[field_key].to_s
+    end
+  end
+
   result.to_json
 rescue Exception => e
   { "error" => e.message }.to_json

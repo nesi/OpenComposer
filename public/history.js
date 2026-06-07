@@ -321,8 +321,14 @@ ocHistory.buildJobDetailsContent = function(data) {
     return `<div class="alert alert-warning">${ocHistory.escapeHtml(data.error)}</div>`;
   }
 
-  const entries = data.data ? Object.entries(data.data) : [];
-  const rows    = entries.slice().sort(([a], [b]) => a.localeCompare(b));
+  // Use display (user-configured fields in configured order) when present,
+  // otherwise show all scheduler fields sorted alphabetically.
+  let rows;
+  if (data.display) {
+    rows = Object.entries(data.display);
+  } else {
+    rows = (data.data ? Object.entries(data.data) : []).slice().sort(([a], [b]) => a.localeCompare(b));
+  }
 
   if (rows.length === 0) {
     let html = '<p class="text-muted">(No details available for this job.)</p>';

@@ -82,7 +82,7 @@ $ sudo cp conf.yml.erb.app.example conf.yml.erb</pre>
         <tr><td>data_dir</td><td>Directory where submitted job information is stored</td><td><code>${HOME}/composer</code></td></tr>
         <tr><td>generic_apps_dir</td><td>Directory containing hidden generic apps (e.g. a generic Slurm form) that are not shown in the main app listing but can be linked to directly</td><td><code>./generic_apps</code></td></tr>
         <tr><td>external_reload_app</td><td>Subfolder inside <code>generic_apps_dir</code> to open when loading an external (non-OpenComposer) job from the History page</td><td><code>Slurm</code></td></tr>
-        <tr><td>history</td><td>Additional display fields on the history page (see section 2.3)</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code></td></tr>
+        <tr><td>history</td><td>Additional display fields on the history page (see section 2.3)</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code>, <code>OC_HISTORY_START_TIME</code>, <code>OC_HISTORY_END_TIME</code>, <code>OC_HISTORY_OUTPUT_FILE</code>, <code>OC_HISTORY_ERROR_FILE</code></td></tr>
         <tr><td>history_store_script</td><td>Whether to store the full batch script text in the history database. Set to <code>false</code> to always fetch it live via <code>sacct -B</code></td><td><code>true</code></td></tr>
         <tr><td>history_efficiency</td><td>Show a <strong>Job Efficiency</strong> section (Wall Time, CPU, Memory, optional GPU) in the job details modal for completed, failed, and cancelled jobs. Uses <code>sacct --json</code>, which requires Slurm 20.11+. Set to <code>true</code> to enable.</td><td><code>false</code></td></tr>
       </table>
@@ -211,7 +211,7 @@ clusters:
       <p>
         The mandatory fields to be displayed on the history page are "Job ID", "Application", "Script Location", "Script Name", and "Status".
         In addition to these, the <code>history</code> setting controls which extra fields appear.
-        If this setting is omitted, all five special variables are included by default.
+        If this setting is omitted, all special variables are included by default.
         The available special variables are:
       </p>
       <table class="table" style="vertical-align: middle;">
@@ -221,6 +221,8 @@ clusters:
         <tr><td><code>OC_HISTORY_SUBMISSION_TIME</code></td><td>Submission Time</td></tr>
         <tr><td><code>OC_HISTORY_START_TIME</code></td><td>Job start time (from the scheduler)</td></tr>
         <tr><td><code>OC_HISTORY_END_TIME</code></td><td>Job end time (from the scheduler)</td></tr>
+        <tr><td><code>OC_HISTORY_OUTPUT_FILE</code></td><td>Output — the scheduler's stdout file for the job. Clicking the filename opens the file content in an overlay panel.</td></tr>
+        <tr><td><code>OC_HISTORY_ERROR_FILE</code></td><td>Error — the scheduler's stderr file for the job. Clicking the filename opens the file content in an overlay panel.</td></tr>
       </table>
       <p>
         A typical configuration showing job name, start time, and end time with custom labels:

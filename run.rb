@@ -65,7 +65,9 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_PARTITION"       => JOB_PARTITION,
   "OC_HISTORY_SUBMISSION_TIME" => JOB_SUBMISSION_TIME,
   "OC_HISTORY_START_TIME"      => "Start",
-  "OC_HISTORY_END_TIME"        => "End"
+  "OC_HISTORY_END_TIME"        => "End",
+  "OC_HISTORY_OUTPUT_FILE"     => "StdOut",
+  "OC_HISTORY_ERROR_FILE"      => "StdErr"
 }.freeze
 CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "sge_root"].freeze
 MODULES_LIST_URL ||= "https://raw.githubusercontent.com/nesi/modules-list/main/module-list.json"
@@ -153,6 +155,7 @@ def create_conf
   # Set initial values if not defined
   conf["data_dir"]                ||= ENV["HOME"] + "/composer"
   conf["history"]                 ||= HISTORY_KEY_MAP.keys
+  conf["history"] = conf["history"].each_with_object({}) { |k, h| h[k] = nil } if conf["history"].is_a?(Array)
   conf["history_store_script"]    = conf.fetch("history_store_script", true)
   conf["history_efficiency"]      = conf.fetch("history_efficiency",   false)
   conf["footer"]                  ||= "&nbsp;"
@@ -861,6 +864,23 @@ get "/_files" do
   end
 
   { files: entries }.to_json
+end
+
+# Return the text content of a file for the history file overlay.
+get "/_read_file" do
+  path = params[:path].to_s.strip
+  content_type :json
+  return { error: "No path specified" }.to_json if path.empty?
+  return { error: "File not found" }.to_json unless File.file?(path)
+
+  max_bytes = 1_048_576 # 1 MB
+  begin
+    size    = File.size(path)
+    content = File.open(path, "rb") { |f| f.read(max_bytes) }
+    { content: content.force_encoding("UTF-8").scrub("?"), truncated: size > max_bytes }.to_json
+  rescue => e
+    { error: "Could not read file: #{e.message}" }.to_json
+  end
 end
 
 # Return whether the specified PATH is a file or a directory.

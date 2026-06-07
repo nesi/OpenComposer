@@ -510,6 +510,8 @@ helpers do
         OC_SCRIPT_CONTENT      => db1_row&.[]("_script_content"),
         "Start"                => normalize_time_for_db(sacct_row&.[]("Start")),
         "End"                  => normalize_time_for_db(sacct_row&.[]("End")),
+        "StdOut"               => sacct_row&.[]("StdOut"),
+        "StdErr"               => sacct_row&.[]("StdErr"),
         "_has_db"              => db1_row ? 1 : 0
       }
     end

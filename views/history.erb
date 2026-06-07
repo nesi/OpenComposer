@@ -194,6 +194,9 @@
   </div>
 <% end %>
 
+<% show_output_col = @conf["history"].is_a?(Hash) && @conf["history"].key?("OC_HISTORY_OUTPUT_FILE") %>
+<% show_error_col  = @conf["history"].is_a?(Hash) && @conf["history"].key?("OC_HISTORY_ERROR_FILE") %>
+
 <% if @jobs.nil? || @jobs.empty? %>
   <div class="mt-3 ms-2">
     <p>(No Jobs)</p>
@@ -241,6 +244,12 @@
             <span>End Time</span>
             <%= output_history_sort_controls("End") %>
           </th>
+          <% if show_output_col %>
+          <th class="text-wrap text-break d-none d-lg-table-cell">Output</th>
+          <% end %>
+          <% if show_error_col %>
+          <th class="text-wrap text-break d-none d-lg-table-cell">Error</th>
+          <% end %>
           <th class="text-wrap text-break">
             <span>Status</span>
             <%= output_history_sort_controls(JOB_STATUS_ID) %>
@@ -299,6 +308,22 @@
             <td class="text-wrap text-break"><%= output_text(job[JOB_NAME], job_name_filter) %></td>
             <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["Start"].to_s) %></td>
             <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["End"].to_s) %></td>
+            <% if show_output_col %>
+            <td class="text-wrap text-break d-none d-lg-table-cell">
+              <% stdout_path = job["StdOut"].to_s.strip %>
+              <% unless stdout_path.empty? %>
+                <a href="#" title="<%= escape_html(stdout_path) %>" onclick="ocHistory.openFileOverlay('<%= escape_html(stdout_path) %>'); return false;"><%= escape_html(File.basename(stdout_path)) %></a>
+              <% end %>
+            </td>
+            <% end %>
+            <% if show_error_col %>
+            <td class="text-wrap text-break d-none d-lg-table-cell">
+              <% stderr_path = job["StdErr"].to_s.strip %>
+              <% unless stderr_path.empty? %>
+                <a href="#" title="<%= escape_html(stderr_path) %>" onclick="ocHistory.openFileOverlay('<%= escape_html(stderr_path) %>'); return false;"><%= escape_html(File.basename(stderr_path)) %></a>
+              <% end %>
+            </td>
+            <% end %>
             <td class="text-wrap text-break"><%= output_status(job[JOB_STATUS_ID]) %></td>
           </tr>
         <% end %>
@@ -320,6 +345,23 @@
     <%= output_pagination(@current_page, @page_size, @rows) %>
   </div>
   <div class="col text-end"></div>
+</div>
+<% end %>
+
+<% if show_output_col || show_error_col %>
+<div class="modal" id="_historyFileOverlay" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content" style="resize: horizontal; padding-right: 16px;">
+      <div class="modal-header">
+        <h5 class="text-break" id="_historyFileOverlayTitle">File</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="_historyFileOverlayBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 <% end %>
 

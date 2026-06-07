@@ -256,7 +256,7 @@ class Slurm < Scheduler
     sacct = get_command_path("sacct", bin, bin_overrides)
 
     fields = %w[JobID JobName Partition State Submit Start End Elapsed
-                WorkDir Account AllocCPUS ReqMem ExitCode]
+                WorkDir Account AllocCPUS ReqMem ExitCode StdOut StdErr]
 
     effective_from = date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : date_from.to_s
     effective_to   = date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")       : date_to.to_s

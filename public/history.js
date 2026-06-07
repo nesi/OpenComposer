@@ -786,3 +786,41 @@ if (_ocCancelForm) {
     ocHistory.cancelJobsOneByOne(jobIds, cluster);
   });
 }
+
+// Open the file content overlay and lazy-load the file at the given path.
+ocHistory.openFileOverlay = function(path) {
+  const modal = document.getElementById('_historyFileOverlay');
+  const title = document.getElementById('_historyFileOverlayTitle');
+  const body  = document.getElementById('_historyFileOverlayBody');
+
+  title.textContent = path;
+  body.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading…</span></div></div>';
+
+  bootstrap.Modal.getOrCreateInstance(modal).show();
+
+  const base = window.location.pathname.replace(/\/history$/, '');
+  fetch(`${base}/_read_file?path=${encodeURIComponent(path)}`)
+    .then(r => r.json())
+    .then(data => {
+      body.innerHTML = '';
+      if (data.error) {
+        body.innerHTML = `<div class="alert alert-danger m-2">${ocHistory.escapeHtml(data.error)}</div>`;
+        return;
+      }
+      if (data.truncated) {
+        const warn = document.createElement('div');
+        warn.className = 'alert alert-warning mx-2 mt-2 mb-0';
+        warn.textContent = 'File is large — showing first 1 MB only.';
+        body.appendChild(warn);
+      }
+      const pre = document.createElement('pre');
+      pre.className = 'mb-0 p-2';
+      pre.style.whiteSpace = 'pre-wrap';
+      pre.style.wordBreak = 'break-all';
+      pre.textContent = data.content;
+      body.appendChild(pre);
+    })
+    .catch(e => {
+      body.innerHTML = `<div class="alert alert-danger m-2">Failed to load file: ${ocHistory.escapeHtml(e.message)}</div>`;
+    });
+};

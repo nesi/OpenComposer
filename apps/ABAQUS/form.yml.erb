@@ -1,3 +1,4 @@
+<%# AI generated %>
 <%
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
 base = YAML.load_file(base_path)
@@ -10,14 +11,35 @@ base['form'].each do |k, v|
       'module' => "ABAQUS",
       'label'  => "ABAQUS Module"
     }
+    new_form['abaqus_input'] = {
+      'widget' => 'text_field',
+      'label'  => "Input File",
+      'help'   => "Full path to your ABAQUS input file (.inp), e.g. /nesi/project/nesi99999/my_model.inp"
+    }
   end
   new_form[k] = v
 end
 
-base['form']   = new_form
-base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
-  module -q purge
-  module load #{abaqus_module}
-APP_SCRIPT
+base['form'] = new_form
+
+ntasks = cores_advanced_1.to_i > 1 ? cores_advanced_1.to_i : cores_simple.to_i
+cpus = cores_advanced_2.to_i > 1 ? cores_advanced_2.to_i : 1
+has_gpu = [gpu_any, gpu_genoa, gpu_milan].any? { |g| g.to_s != '' && g.to_s != 'None' }
+job_name = File.basename(abaqus_input.to_s, '.inp')
+if has_gpu
+  app_cmd = "abaqus input=#{abaqus_input} job=#{job_name} cpus=${SLURM_CPUS_PER_TASK} gpus=${SLURM_GPUS_PER_NODE} mp_mode=threads verbose=2 interactive"
+elsif ntasks > 1
+  app_cmd = "abaqus input=#{abaqus_input} job=#{job_name} cpus=${SLURM_NTASKS} mp_mode=mpi verbose=2 interactive"
+elsif cpus > 1
+  app_cmd = "abaqus input=#{abaqus_input} job=#{job_name} cpus=${SLURM_CPUS_PER_TASK} mp_mode=threads verbose=2 interactive"
+else
+  app_cmd = "abaqus input=#{abaqus_input} job=#{job_name} verbose=2 interactive"
+end
+
+base['script'] = base['script'].rstrip + "\n\n" + [
+  "module -q purge",
+  "module load #{abaqus_module}",
+  app_cmd
+].join("\n") + "\n"
 %>
 <%= base.to_yaml -%>

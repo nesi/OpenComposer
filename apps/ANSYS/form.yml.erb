@@ -1,3 +1,4 @@
+<%# AI generated %>
 <%
 base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
 base = YAML.load_file(base_path)
@@ -10,14 +11,65 @@ base['form'].each do |k, v|
       'module' => "ANSYS",
       'label'  => "ANSYS Module"
     }
+    new_form['ansys_solver'] = {
+      'widget' => 'select',
+      'label'  => "ANSYS Solver",
+      'help'   => "Select the ANSYS application to run.",
+      'options' => [["Fluent (CFD)", "fluent"], ["CFX", "cfx"], ["Mechanical APDL", "mapdl"], ["LS-DYNA", "lsdyna"]]
+    }
+    new_form['input_file'] = {
+      'widget' => 'text_field',
+      'label'  => "Input File",
+      'help'   => "Path to your input file. Fluent: .in journal file; CFX: .def file; MAPDL: .dat file; LS-DYNA: .k file. E.g. /nesi/project/nesi99999/simulation.in"
+    }
+    new_form['fluent_precision'] = {
+      'widget' => 'select',
+      'label'  => "Fluent Solver Type",
+      'help'   => "Dimension and precision for Fluent. Only used when Fluent is selected as the solver.",
+      'options' => [["3D double precision (3ddp)", "3ddp"], ["3D single precision (3d)", "3d"], ["2D double precision (2ddp)", "2ddp"], ["2D single precision (2d)", "2d"]]
+    }
   end
   new_form[k] = v
 end
 
-base['form']   = new_form
-base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
-  module -q purge
-  module load #{ansys_module}
-APP_SCRIPT
+base['form'] = new_form
+
+ntasks = cores_advanced_1.to_i > 1 ? cores_advanced_1.to_i : cores_simple.to_i
+cpus = cores_advanced_2.to_i > 1 ? cores_advanced_2.to_i : 1
+has_gpu = [gpu_any, gpu_genoa, gpu_milan].any? { |g| g.to_s != '' && g.to_s != 'None' }
+case ansys_solver
+when "fluent"
+  if ntasks > 1
+    app_cmd = "fluent #{fluent_precision} -g -t ${SLURM_NTASKS} -i #{input_file}"
+  else
+    app_cmd = "fluent #{fluent_precision} -g -i #{input_file}"
+  end
+when "cfx"
+  if ntasks > 1
+    app_cmd = "cfx5solve -batch -def \"#{input_file}\" -part ${SLURM_NTASKS}"
+  else
+    app_cmd = "cfx5solve -batch -def \"#{input_file}\""
+  end
+when "mapdl"
+  if ntasks > 1
+    app_cmd = "mapdl -b -dis -np ${SLURM_NTASKS} -i \"#{input_file}\""
+  elsif cpus > 1
+    app_cmd = "mapdl -b -np ${SLURM_CPUS_PER_TASK} -i \"#{input_file}\""
+  else
+    app_cmd = "mapdl -b -i \"#{input_file}\""
+  end
+when "lsdyna"
+  if cpus > 1
+    app_cmd = "lsdyna i=#{input_file} NCPUS=${SLURM_CPUS_PER_TASK}"
+  else
+    app_cmd = "lsdyna i=#{input_file}"
+  end
+end
+
+base['script'] = base['script'].rstrip + "\n\n" + [
+  "module -q purge",
+  "module load #{ansys_module}",
+  app_cmd
+].join("\n") + "\n"
 %>
 <%= base.to_yaml -%>

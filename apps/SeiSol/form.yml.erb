@@ -6,10 +6,10 @@ base = YAML.load_file(base_path)
 new_form = {}
 base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
-    new_form['delft3d_fm_module'] = {
+    new_form['seisol_module'] = {
       'widget' => 'module_load',
-      'module' => "Delft3D_FM",
-      'label'  => "Delft3D_FM Module"
+      'module' => "SeiSol",
+      'label'  => "SeiSol Module"
     }
 
   end
@@ -22,7 +22,7 @@ base['form'] = new_form
 
 base['script'] = base['script'].rstrip + "\n\n" + [
   "module -q purge",
-  "module load #{delft3d_fm_module}",
+  "module load #{seisol_module}",
   app_cmd
 ].join("\n") + "\n"
 %>

@@ -1,3 +1,4 @@
+<%# AI generated %>
 <%
 base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
 base = YAML.load_file(base_path)
@@ -10,14 +11,36 @@ base['form'].each do |k, v|
       'module' => "COMSOL",
       'label'  => "COMSOL Module"
     }
+    new_form['comsol_input'] = {
+      'widget' => 'text_field',
+      'label'  => "Input File",
+      'help'   => "Path to your COMSOL model file (.mph). Use the full path, e.g. /nesi/project/nesi99999/my_model.mph"
+    }
+    new_form['comsol_output'] = {
+      'widget' => 'text_field',
+      'label'  => "Output File",
+      'help'   => "Path for the output file (.mph), e.g. /nesi/project/nesi99999/my_model_out.mph. If left blank, the input file will be overwritten with results."
+    }
   end
   new_form[k] = v
 end
 
-base['form']   = new_form
-base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
-  module -q purge
-  module load #{comsol_module}
-APP_SCRIPT
+base['form'] = new_form
+
+ntasks = cores_advanced_1.to_i > 1 ? cores_advanced_1.to_i : cores_simple.to_i
+cpus = cores_advanced_2.to_i > 1 ? cores_advanced_2.to_i : 1
+has_gpu = [gpu_any, gpu_genoa, gpu_milan].any? { |g| g.to_s != '' && g.to_s != 'None' }
+output_flag = comsol_output.to_s.strip.empty? ? '' : " -outputfile #{comsol_output}"
+if ntasks > 1 || cpus > 1
+  app_cmd = "comsol batch -mpibootstrap slurm -inputfile #{comsol_input}#{output_flag}"
+else
+  app_cmd = "comsol batch -inputfile #{comsol_input}#{output_flag}"
+end
+
+base['script'] = base['script'].rstrip + "\n\n" + [
+  "module -q purge",
+  "module load #{comsol_module}",
+  app_cmd
+].join("\n") + "\n"
 %>
 <%= base.to_yaml -%>

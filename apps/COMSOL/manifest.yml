@@ -1,6 +1,8 @@
-name: COMSOL
+# AI generated
 category: Chemistry
-description: COMSOL is a multiphysics solver that provides a unified workflow for electrical, mechanical, fluid, and chemical applications.
-homepage: https://www.comsol.com/
-icon: icon.svg
+description: COMSOL is a multiphysics solver that provides a unified workflow for
+  electrical, mechanical, fluid, and chemical applications.
 hidden: true
+homepage: https://www.comsol.com/
+icon: icon.png
+name: COMSOL

@@ -283,6 +283,18 @@ url: https://&lt;your Open OnDemand URL&gt;/pun/sys/OpenComposer/Slurm</pre>
       <pre>$ cd /var/www/ood/apps/sys/
 $ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git opencomposer</pre>
 
+      <h4 class="mt-3">Pre-initialise gems <span class="badge bg-secondary" style="font-size: 0.7em; vertical-align: middle;">Optional but recommended</span></h4>
+      <p>
+        Open Composer will install its Ruby gem dependencies automatically the first time a user opens the app.
+        To avoid users seeing a loading delay on that first visit, you can pre-install the gems as the administrator:
+      </p>
+      <pre>$ cd /var/www/ood/apps/sys/opencomposer
+$ sudo cp misc/Gemfile .
+$ sudo bundle install</pre>
+      <p>
+        Re-run <code>bundle install</code> after any <code>git pull</code> that updates the <code>Gemfile</code>.
+      </p>
+
       <h3>Step 2 — Configure Open Composer for embedded mode (same as section 2)</h3>
       <pre>$ cd /var/www/ood/apps/sys/opencomposer
 $ sudo cp conf.yml.erb.app.example conf.yml.erb</pre>

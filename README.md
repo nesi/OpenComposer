@@ -98,8 +98,6 @@ sudo cp conf.yml.erb.app.example conf.yml.erb
 
 Then reload the OOD dashboard (**Help → Restart Web Server**). Open Composer will appear in the **Jobs** category.
 
-For full details see [Section 2. "Setting"](https://riken-rccs.github.io/OpenComposer/docs/install.html#setting) in the installation manual.
-
 ## Testing
 
 | System      | Site       | Scheduler          | Repository |

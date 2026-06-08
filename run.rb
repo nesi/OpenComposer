@@ -619,6 +619,9 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   when "nodes"
     @name = "Nodes"
     return erb :nodes
+  when "all_templates"
+    @name = "All Templates"
+    return erb :all_templates
   when "templates/new"
     @name = "New Template"
     generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"

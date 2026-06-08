@@ -223,33 +223,9 @@
               <li class="nav-item">
                 <a href="<%= @script_name %>/" class="nav-link <%= active?("" == @dir_name) %>">Selected Templates</a>
               </li>
-              <% if @conf.fetch('show_navbar_apps', true) %>
-              <li class="nav-item dropdown">
-                <a href="#" class="nav-link dropdown-toggle <%= active?("" != @dir_name && "history" != @dir_name && "nodes" != @dir_name) %>" data-bs-toggle="dropdown">
-                  <%= ERB::Util.h(@conf.fetch("navbar_apps_label", "Applications")) %>
-                </a>
-                <ul class="dropdown-menu" style="background:<%= @conf['dropdown_color'] %>; color:<%= @conf['dropdown_text_color'] %>; --bs-dropdown-link-color:<%= @conf['dropdown_text_color'] %>; --bs-dropdown-header-color:<%= @conf['dropdown_text_color'] %>; max-height: 80vh; overflow-y: auto;">
-                  <% @manifests_w_category.group_by(&:category).each do |category, manifests| %>
-                    <li class="dropdown-header"><%= category %></li>
-                    <% manifests.each do |m| %>
-                      <li>
-                        <a href="<%= @script_name %>/<%= m['dirname'] %>" class="dropdown-item <%= active?(m['dirname'] == @dir_name) %>">
-                          <%= m['name'] %>
-                        </a>
-                      </li>
-                    <% end %>
-                    <li><hr class="dropdown-divider"></li>
-                  <% end %>
-                  <% @manifests_wo_category.each do |m| %>
-                    <li>
-                      <a href="<%= @script_name %>/<%= m['dirname'] %>" class="dropdown-item <%= active?(m['dirname'] == @dir_name) %>">
-                        <%= m['name'] %>
-                      </a>
-                    </li>
-                  <% end %>
-                </ul>
+              <li class="nav-item">
+                <a href="<%= @script_name %>/all_templates" class="nav-link <%= active?("all_templates" == @dir_name) %>">All Templates</a>
               </li>
-              <% end %>
               <li class="nav-item me-1 d-flex align-items-center">
                 <input type="search" id="oc-search" class="form-control form-control-sm"
                        placeholder="<%= ERB::Util.h(@conf.fetch("navbar_search_placeholder", "Search apps…")) %>" autocomplete="off" style="width:180px;">

@@ -311,6 +311,7 @@
     (function() {
       var ALL_APPS = <%= @all_manifests.map { |m| { dirname: m.dirname, name: m.name, category: m.category, description: m.description, gpu: @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") } }.to_json.gsub('</', '<\/') %>;
       var scriptName = '<%= @script_name %>';
+      var CATEGORY_COLORS = <%= (@conf['category_badge_colors'] || {}).to_json %>;
 
       function esc(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -355,8 +356,13 @@
 
         results.innerHTML = matches.map(function(m) {
           var badges = '';
-          if (m.category) badges += '<span class="badge text-bg-secondary me-1">' + esc(m.category) + '</span>';
-          if (m.gpu)      badges += '<span class="badge text-bg-success me-1">GPU</span>';
+          if (m.category) {
+            var catColor = CATEGORY_COLORS[m.category];
+            var catStyle = catColor ? ' style="background-color:' + esc(catColor) + ';"' : '';
+            var catClass = catColor ? 'badge me-1' : 'badge text-bg-secondary me-1';
+            badges += '<span class="' + catClass + '"' + catStyle + '>' + esc(m.category) + '</span>';
+          }
+          if (m.gpu)      badges += '<span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>';
           var desc = m.description ? '<div class="small text-muted">' + esc(m.description) + '</div>' : '';
           return '<a href="' + scriptName + '/' + esc(m.dirname) + '" class="d-block text-decoration-none py-2 px-3 border-bottom">' +
                  '<div>' + badges + '<span class="fw-semibold">' + esc(m.name) + '</span></div>' +

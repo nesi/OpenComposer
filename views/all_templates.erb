@@ -6,10 +6,11 @@
        data-cat="<%= ERB::Util.h(m.category.to_s.downcase) %>">
       <div>
         <% if m.category %>
-          <span class="badge text-bg-secondary me-1"><%= ERB::Util.h(m.category) %></span>
+          <% cat_color = (@conf['category_badge_colors'] || {}).fetch(m.category, nil) %>
+          <span class="badge me-1" style="background-color:<%= ERB::Util.h(cat_color || '#6c757d') %>; color:#fff;"><%= ERB::Util.h(m.category) %></span>
         <% end %>
         <% if @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") %>
-          <span class="badge text-bg-success me-1">GPU</span>
+          <span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>
         <% end %>
         <span class="fw-semibold"><%= ERB::Util.h(m.name) %></span>
       </div>

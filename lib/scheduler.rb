@@ -62,6 +62,14 @@ class Scheduler
     [{}, nil]
   end
 
+  # Fetch all currently active (queued/running) jobs for the current user from squeue.
+  # Returns entries with the same key names as sacct_all_jobs so they can be merged
+  # into sacct_map for any job IDs sacct did not report (e.g. freshly queued jobs).
+  # @return [Array<Array, String>] [jobs_array, error_or_nil]
+  def squeue_active_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    [[], nil]
+  end
+
   # Fetch the batch script submitted for a job.
   # Override in subclasses that support this (e.g. Slurm via sacct -B).
   # @return [Array<String, String>] [script_content_or_nil, error_message_or_nil]

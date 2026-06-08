@@ -533,8 +533,19 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       sacct_map[jid] = j
     end
 
-    # Only load DB rows that sacct returned — sacct is the sole source of which jobs exist,
-    # so DB rows for jobs outside the sacct window are never shown and need not be fetched.
+    # Supplement sacct with squeue to catch PENDING jobs sacct may not report
+    # (e.g. jobs submitted so recently they haven't appeared in sacct yet, or
+    # Slurm configurations that omit PENDING jobs from sacct output).
+    squeue_jobs, _squeue_err = scheduler_s.squeue_active_jobs(bin_s, bin_overrides_s, ssh_wrapper_s)
+    (squeue_jobs || []).each do |j|
+      jid = j["JobID"].to_s.strip
+      next unless valid_oc_job_id?(jid, scheduler_s)
+      next if sacct_map.key?(jid)
+      sacct_map[jid] = j
+    end
+
+    # Load DB rows for all known job IDs (sacct + squeue) so OC metadata
+    # (app name, script, etc.) is joined for any newly discovered jobs too.
     db1_map = if sacct_map.empty?
                 {}
               elsif sacct_map.size <= 900

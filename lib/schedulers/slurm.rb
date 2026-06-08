@@ -391,6 +391,42 @@ class Slurm < Scheduler
     [{}, e.message]
   end
 
+  # Fetch all currently active (queued/running) jobs for the current user via squeue.
+  # Returns entries with the same key names as sacct_all_jobs so they can be merged
+  # directly into sacct_map for any job IDs sacct did not report (e.g. freshly queued jobs).
+  def squeue_active_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    user = ENV['USER'].to_s.strip
+    return [[], nil] if user.empty?
+
+    squeue  = get_command_path("squeue", bin, bin_overrides)
+    command = [ssh_wrapper, SLURM_ENV, squeue,
+               "--user=#{user}", "--parsable2", "--noheader",
+               "--Format=jobid,name,partition,state,submittime,starttime"].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    stdout = to_utf8(stdout)
+    return [[], [stdout, stderr].join(" ").strip] unless status.success?
+
+    jobs = []
+    stdout.lines.each do |line|
+      parts = line.chomp.split('|')
+      next if parts.size < 4
+      jobs << {
+        "JobID"     => parts[0].to_s.strip,
+        "JobName"   => parts[1].to_s.strip,
+        "Partition" => parts[2].to_s.strip,
+        "State"     => parts[3].to_s.strip,
+        "Submit"    => parts[4].to_s.strip,
+        "Start"     => parts[5].to_s.strip,
+        "End"       => "",
+        "StdOut"    => "",
+        "StdErr"    => ""
+      }
+    end
+    [jobs, nil]
+  rescue Exception => e
+    [[], e.message]
+  end
+
   # Fetch node info via sinfo -N with fixed-width columns.
   # Deduplicates by node name (a node appears once per partition in -N output).
   def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)

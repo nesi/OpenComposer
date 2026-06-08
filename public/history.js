@@ -179,7 +179,8 @@ ocHistory.updateStatusBatch = function(action, jobIds, blockedIds) {
   // Show the scancel command that will be run.
   if (action === 'CancelJob' && jobIds.length > 0) {
     const stripArraySuffix = id => id.replace(/\[([^\]]+)\]/g, (_, inner) => '[' + inner.replace(/[:%]\d+/g, '') + ']');
-    const command = 'scancel ' + jobIds.map(stripArraySuffix).join(' ');
+    const prefix  = ocHistory.cancelCommandPrefix || 'scancel';
+    const command = prefix + ' ' + jobIds.map(stripArraySuffix).join(' ');
     const details = document.createElement('details');
     details.className = 'mt-2';
     details.innerHTML =

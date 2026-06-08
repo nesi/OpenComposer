@@ -527,6 +527,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     bin_s           = @conf.key?("clusters") ? @bin[@cluster_name]               : @bin
     bin_overrides_s = @conf.key?("clusters") ? @bin_overrides[@cluster_name]     : @bin_overrides
     ssh_wrapper_s   = @conf.key?("clusters") ? @ssh_wrapper[@cluster_name]       : @ssh_wrapper
+    scancel_path    = scheduler_s.get_command_path("scancel", bin_s, bin_overrides_s)
+    @cancel_command_prefix = [ssh_wrapper_s, scancel_path].compact.join(" ")
 
     db         = open_history_db(@conf, @cluster_name)
     deleted_db = open_deleted_db(@conf, @cluster_name, main_db: db)

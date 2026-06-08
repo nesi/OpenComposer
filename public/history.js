@@ -497,8 +497,9 @@ if (ocHistory.selectAllCheckbox && ocHistory.tbody) {
 // Expand a single job ID: "6832503_[1000-2000]" → ["6832503_1000", ..., "6832503_2000"].
 // Plain IDs are returned as-is in a one-element array.
 function ocExpandJobId(jobId) {
-  var m = jobId.match(/^(\d+)_\[(\d+)-(\d+)(?::(\d+))?\]$/);
-  if (!m) return [jobId];
+  var cleanId = jobId.replace(/%\d+/g, '');
+  var m = cleanId.match(/^(\d+)_\[(\d+)-(\d+)(?::(\d+))?\]$/);
+  if (!m) return [cleanId];
   var parent = m[1], first = parseInt(m[2], 10), last = parseInt(m[3], 10);
   var step = m[4] ? Math.max(parseInt(m[4], 10), 1) : 1;
   var ids = [];

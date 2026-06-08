@@ -1034,7 +1034,7 @@ end
 
 post "/history/cancel_one" do
   conf         = create_conf
-  job_id       = params["jobId"].to_s.strip
+  job_id       = params["jobId"].to_s.strip.gsub(/%\d+/, '')
   content_type :json
   return JSON.generate({ ok: false, error: "No job ID" }) if job_id.empty?
   return JSON.generate({ ok: false, error: "Invalid job ID" }) unless job_id.match?(/\A[\d_.\[\]+\-]+\z/)

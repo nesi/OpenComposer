@@ -527,7 +527,13 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     bin_s           = @conf.key?("clusters") ? @bin[@cluster_name]               : @bin
     bin_overrides_s = @conf.key?("clusters") ? @bin_overrides[@cluster_name]     : @bin_overrides
     ssh_wrapper_s   = @conf.key?("clusters") ? @ssh_wrapper[@cluster_name]       : @ssh_wrapper
-    scancel_path    = scheduler_s.get_command_path("scancel", bin_s, bin_overrides_s)
+    scancel_path = if bin_overrides_s&.key?("scancel")
+      bin_overrides_s["scancel"]
+    elsif bin_s && File.exist?(File.join(bin_s, "scancel"))
+      File.join(bin_s, "scancel")
+    else
+      "scancel"
+    end
     @cancel_command_prefix = [ssh_wrapper_s, scancel_path].compact.join(" ")
 
     db         = open_history_db(@conf, @cluster_name)
@@ -1057,7 +1063,7 @@ end
 
 post "/history/cancel_one" do
   conf         = create_conf
-  job_id       = params["jobId"].to_s.strip.gsub(/%\d+/, '')
+  job_id       = params["jobId"].to_s.strip.gsub(/\[([^\]]+)\]/) { "[#{$1.gsub(/[:%]\d+/, '')}]" }
   content_type :json
   return JSON.generate({ ok: false, error: "No job ID" }) if job_id.empty?
   return JSON.generate({ ok: false, error: "Invalid job ID" }) unless job_id.match?(/\A[\d_.\[\]+\-]+\z/)

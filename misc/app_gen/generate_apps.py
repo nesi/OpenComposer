@@ -53,7 +53,9 @@ class AppGenerator:
         self.apps_dir = root / paths.get("apps_dir", "apps")
 
     def run(self):
+        print("Fetching modules list...", flush=True)
         module_data = json.loads(self._fetch("modules_list_url"))
+        print("Fetching support docs index...", flush=True)
         support_index = json.loads(self._fetch("support_docs_index_url"))
 
         support_doc_map = {
@@ -63,17 +65,24 @@ class AppGenerator:
         }
 
         targets = self._target_apps(module_data)
+        total = len(targets)
+        print(f"Targets: {total} app(s)\n", flush=True)
         # TODO: parallelize with ThreadPoolExecutor for bulk runs
-        results = [self._process_app(app, module_data, support_doc_map) for app in targets]
+        results = [self._process_app(app, module_data, support_doc_map, idx + 1, total)
+                   for idx, app in enumerate(targets)]
         self._print_summary(results)
 
-    def _process_app(self, app_name: str, module_data: dict, support_doc_map: dict) -> dict:
+    def _process_app(self, app_name: str, module_data: dict, support_doc_map: dict,
+                     idx: int = 1, total: int = 1) -> dict:
+        prefix = f"[{idx}/{total}] {app_name}"
         try:
+            print(f"{prefix}: starting...", flush=True)
             app_dir = self.apps_dir / app_name
             module_name, module_entry = self._resolve_module_entry(app_name, module_data)
             support_doc_name = support_doc_map.get(normalize_key(app_name))
 
             if support_doc_name:
+                print(f"{prefix}: fetching support doc ({support_doc_name})...", flush=True)
                 base_url = self._source_url("support_docs_raw_base_url")
                 support_md = self._fetch_url(f"{base_url}/{support_doc_name}")
             else:
@@ -85,11 +94,14 @@ class AppGenerator:
                 homepage = (module_entry.get("homepage", "") if module_entry else "").strip()
                 if homepage.lower() in ("", "(none)", "none"):
                     homepage = ""
+                print(f"{prefix}: no support doc with code examples — fetching web docs...", flush=True)
                 web_docs = self._fetch_web_docs(app_name, homepage)
                 if web_docs:
                     support_md = (support_md + "\n\n" if support_md else "") + web_docs
 
             mod_var = f"{normalize_key(app_name)}_module"
+            if support_md:
+                print(f"{prefix}: calling Claude for form...", flush=True)
             claude_result = self._claude_form(app_name, mod_var, support_md) if support_md else {}
             profile = claude_result.get("profile", "basic")
 
@@ -98,6 +110,7 @@ class AppGenerator:
 
             manifest_result = self._write_file(app_dir / "manifest.yml", manifest_text)
             form_result = self._write_file(app_dir / "form.yml.erb", form_text)
+            print(f"{prefix}: generating icon...", flush=True)
             icon_result = self._process_icon(app_dir,
                                              self._build_icon_prompt(app_name, module_entry, support_md))
 
@@ -112,6 +125,7 @@ class AppGenerator:
                 "files": {"manifest": manifest_result, "form": form_result, "icon": icon_result},
             }
         except Exception as exc:
+            print(f"{prefix}: ERROR — {exc}", flush=True)
             entry = {"app": app_name, "error": str(exc)}
             if self.options.get("verbose"):
                 entry["traceback"] = traceback.format_exc()
@@ -199,6 +213,7 @@ class AppGenerator:
             .replace("<<<HOMEPAGE_SECTION>>>", homepage_section)
         )
         try:
+            print(f"  web search via Claude ({app_name})...", flush=True)
             result = self._run_claude(prompt, command=web_cmd)
             return result.get("docs", "").strip()
         except Exception:

@@ -1,8 +1,4 @@
 <div style="display:flex; flex-direction:column; height:calc(100vh - 56px);">
-  <div class="px-3 pt-2 pb-1 flex-shrink-0">
-    <input type="search" id="oc-all-search" class="form-control form-control-sm w-auto"
-           placeholder="Search templates…" autocomplete="off">
-  </div>
   <div id="oc-all-list" style="flex:1; overflow-y:auto; min-height:0; background:#F3F4F4; border-top:1px solid #C3C8C8;">
     <% @all_manifests.each do |m| %>
       <a href="<%= @script_name %>/<%= ERB::Util.h(m.dirname) %>" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
@@ -28,19 +24,9 @@
 </div>
 
 <script>
+// Focus the navbar search when landing on this page so typing filters immediately.
 (function() {
-  var input = document.getElementById('oc-all-search');
-  input.addEventListener('input', function() {
-    var q = input.value.trim().toLowerCase();
-    var items = document.querySelectorAll('#oc-all-list .oc-all-item');
-    var visible = 0;
-    items.forEach(function(item) {
-      var match = !q || item.dataset.name.includes(q) || item.dataset.desc.includes(q) || item.dataset.cat.includes(q);
-      item.style.display = match ? '' : 'none';
-      if (match) visible++;
-    });
-    document.getElementById('oc-all-no-results').classList.toggle('d-none', visible > 0);
-  });
-  input.focus();
+  var s = document.getElementById('oc-search');
+  if (s) s.focus();
 })();
 </script>

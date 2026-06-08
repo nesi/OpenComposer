@@ -318,20 +318,8 @@
       input.addEventListener('input', function() {
         var q = this.value.trim().toLowerCase();
 
-        // On the All Templates page: filter the page list directly, no overlay.
-        var allList = document.getElementById('oc-all-list');
-        if (allList) {
-          var items = allList.querySelectorAll('.oc-all-item');
-          var visible = 0;
-          items.forEach(function(item) {
-            var match = !q || item.dataset.name.includes(q) || item.dataset.desc.includes(q) || item.dataset.cat.includes(q);
-            item.style.display = match ? '' : 'none';
-            if (match) visible++;
-          });
-          var noResults = document.getElementById('oc-all-no-results');
-          if (noResults) noResults.classList.toggle('d-none', visible > 0);
-          return;
-        }
+        // All Templates page handles its own search — skip the overlay.
+        if (window._ocAllTemplatesSearch) return;
 
         // All other pages: show the overlay.
         var list = document.getElementById('oc-app-list');

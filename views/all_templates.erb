@@ -24,9 +24,28 @@
 </div>
 
 <script>
-// Focus the navbar search when landing on this page so typing filters immediately.
+window._ocAllTemplatesSearch = true;
+
 (function() {
-  var s = document.getElementById('oc-search');
-  if (s) s.focus();
+  function filterList(q) {
+    var items = document.querySelectorAll('#oc-all-list .oc-all-item');
+    var visible = 0;
+    items.forEach(function(item) {
+      var match = !q || item.dataset.name.includes(q) || item.dataset.desc.includes(q) || item.dataset.cat.includes(q);
+      item.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    document.getElementById('oc-all-no-results').classList.toggle('d-none', visible > 0);
+  }
+
+  // Wire up the navbar search once the layout script has run.
+  window.addEventListener('load', function() {
+    var input = document.getElementById('oc-search');
+    if (!input) return;
+    input.focus();
+    input.addEventListener('input', function() {
+      filterList(this.value.trim().toLowerCase());
+    });
+  });
 })();
 </script>

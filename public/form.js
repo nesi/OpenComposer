@@ -1011,7 +1011,7 @@ function safeEval(expr) {
 function evalCalc(expr) {
   try {
     const parts = expr.split(",").map(s => s.trim()); // e.g. ["1 + (2 * 3)", "3", OC_ROUNDING_FLOOR]
-    const valueExpr = parts[0] ?? "";
+    var valueExpr = (parts[0] != null) ? parts[0] : "";
     if (valueExpr === "") return "";
     const value = safeEval(valueExpr); // 7
     const decimals = Number(parts[1]); // 3

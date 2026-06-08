@@ -2,6 +2,21 @@
   small_format = @conf['home_format'].to_s == 'small'
 %>
 
+<ul class="nav nav-tabs mt-2 px-3" id="oc-home-tabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="tab-selected-btn" data-bs-toggle="tab" data-bs-target="#pane-selected"
+            type="button" role="tab" aria-controls="pane-selected" aria-selected="true">Selected Templates</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="tab-all-btn" data-bs-toggle="tab" data-bs-target="#pane-all"
+            type="button" role="tab" aria-controls="pane-all" aria-selected="false">All Templates</button>
+  </li>
+</ul>
+
+<div class="tab-content">
+
+<%# ── Selected Templates ─────────────────────────────────────────────────── %>
+<div class="tab-pane fade show active" id="pane-selected" role="tabpanel" aria-labelledby="tab-selected-btn">
 <div id="oc-app-list">
 <% if small_format %>
 <%# ── Small format: letter-grouped pills, no icons ───────────────────────── %>
@@ -84,6 +99,39 @@
 <% end %>
 
 </div><%# /oc-app-list %>
+</div><%# /pane-selected %>
+
+<%# ── All Templates ──────────────────────────────────────────────────────── %>
+<div class="tab-pane fade" id="pane-all" role="tabpanel" aria-labelledby="tab-all-btn">
+  <div class="px-3 pt-2 pb-1">
+    <input type="search" id="oc-all-search" class="form-control form-control-sm w-auto"
+           placeholder="Search templates…" autocomplete="off">
+  </div>
+  <div id="oc-all-list" style="max-height:60vh; overflow-y:auto; background:#F3F4F4; border-bottom:1px solid #C3C8C8;">
+    <% @all_manifests.each do |m| %>
+      <a href="<%= @script_name %>/<%= ERB::Util.h(m.dirname) %>" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
+         data-name="<%= ERB::Util.h(m.name.to_s.downcase) %>"
+         data-desc="<%= ERB::Util.h(m.description.to_s.downcase) %>"
+         data-cat="<%= ERB::Util.h(m.category.to_s.downcase) %>">
+        <div>
+          <% if m.category %>
+            <span class="badge text-bg-secondary me-1"><%= ERB::Util.h(m.category) %></span>
+          <% end %>
+          <% if @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") %>
+            <span class="badge text-bg-success me-1">GPU</span>
+          <% end %>
+          <span class="fw-semibold"><%= ERB::Util.h(m.name) %></span>
+        </div>
+        <% if m.description && m.description.strip != '' %>
+          <div class="small text-muted"><%= ERB::Util.h(m.description) %></div>
+        <% end %>
+      </a>
+    <% end %>
+  </div>
+  <div id="oc-all-no-results" class="px-4 py-2 small text-muted d-none">No templates match your search.</div>
+</div><%# /pane-all %>
+
+</div><%# /tab-content %>
 
 <div class="modal fade" id="modal-rename-template" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
@@ -145,6 +193,23 @@ function ocRenameTemplate() {
       if (match) visible++;
     });
     var noResults = document.getElementById('oc-tmpl-no-results');
+    if (noResults) noResults.classList.toggle('d-none', visible > 0);
+  });
+})();
+
+(function() {
+  var input = document.getElementById('oc-all-search');
+  if (!input) return;
+  input.addEventListener('input', function() {
+    var q = input.value.trim().toLowerCase();
+    var items = document.querySelectorAll('#oc-all-list .oc-all-item');
+    var visible = 0;
+    items.forEach(function(item) {
+      var match = !q || item.dataset.name.includes(q) || item.dataset.desc.includes(q) || item.dataset.cat.includes(q);
+      item.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    var noResults = document.getElementById('oc-all-no-results');
     if (noResults) noResults.classList.toggle('d-none', visible > 0);
   });
 })();

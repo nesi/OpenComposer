@@ -318,9 +318,18 @@
       input.addEventListener('input', function() {
         var q = this.value.trim().toLowerCase();
 
-        // All Templates page: delegate directly to its filter function.
-        if (typeof window._ocAllTemplatesSearch === 'function') {
-          window._ocAllTemplatesSearch(q);
+        // All Templates page: filter the in-page list directly, skip the overlay.
+        var allList = document.getElementById('oc-all-list');
+        if (allList) {
+          var items = allList.querySelectorAll('.oc-all-item');
+          var visible = 0;
+          items.forEach(function(item) {
+            var match = !q || item.dataset.name.includes(q) || item.dataset.desc.includes(q) || item.dataset.cat.includes(q);
+            item.style.display = match ? '' : 'none';
+            if (match) visible++;
+          });
+          var noRes = document.getElementById('oc-all-no-results');
+          if (noRes) noRes.classList.toggle('d-none', visible > 0);
           return;
         }
 

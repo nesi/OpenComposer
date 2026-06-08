@@ -24,25 +24,8 @@
 </div>
 
 <script>
-(function() {
-  function filterList(q) {
-    var items = document.querySelectorAll('#oc-all-list .oc-all-item');
-    var visible = 0;
-    items.forEach(function(item) {
-      var match = !q || item.dataset.name.includes(q) || item.dataset.desc.includes(q) || item.dataset.cat.includes(q);
-      item.style.display = match ? '' : 'none';
-      if (match) visible++;
-    });
-    document.getElementById('oc-all-no-results').classList.toggle('d-none', visible > 0);
-  }
-
-  // Register with the layout's search handler (runs before layout's script block).
-  window._ocAllTemplatesSearch = function(q) { filterList(q); };
-
-  // Focus the search bar after everything has loaded.
-  window.addEventListener('load', function() {
-    var input = document.getElementById('oc-search');
-    if (input) input.focus();
-  });
-})();
+window.addEventListener('load', function() {
+  var input = document.getElementById('oc-search');
+  if (input) input.focus();
+});
 </script>

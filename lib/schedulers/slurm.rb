@@ -57,6 +57,7 @@ class Slurm < Scheduler
     scancel = get_command_path("scancel", bin, bin_overrides)
     errors  = []
     jobs.each do |id|
+      id = id.gsub(/\[([^\]]+)\]/) { "[#{$1.gsub(/[:%]\d+/, '')}]" }
       command = [ssh_wrapper, scancel, id].compact.join(" ")
       stdout, stderr, status = Open3.capture3(command)
       stdout = to_utf8(stdout)

@@ -1,26 +1,28 @@
-<div id="oc-all-list" style="background:#F3F4F4; border-top:1px solid #C3C8C8; height:calc(100vh - 56px); overflow-y:auto;">
-  <% @all_manifests.each do |m| %>
-    <a href="<%= @script_name %>/<%= ERB::Util.h(m.dirname) %>" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
-       data-name="<%= ERB::Util.h(m.name.to_s.downcase) %>"
-       data-desc="<%= ERB::Util.h(m.description.to_s.downcase) %>"
-       data-cat="<%= ERB::Util.h(m.category.to_s.downcase) %>">
-      <div>
-        <% if m.category %>
-          <% cat_color = (@conf['category_badge_colors'] || {}).fetch(m.category, nil) %>
-          <span class="badge me-1" style="background-color:<%= ERB::Util.h(cat_color || '#6c757d') %>; color:#fff;"><%= ERB::Util.h(m.category) %></span>
+<div style="display:flex; flex-direction:column; height:calc(100vh - 56px);">
+  <div id="oc-all-list" style="background:#F3F4F4; border-top:1px solid #C3C8C8; flex:1; overflow-y:auto;">
+    <% @all_manifests.each do |m| %>
+      <a href="<%= @script_name %>/<%= ERB::Util.h(m.dirname) %>" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
+         data-name="<%= ERB::Util.h(m.name.to_s.downcase) %>"
+         data-desc="<%= ERB::Util.h(m.description.to_s.downcase) %>"
+         data-cat="<%= ERB::Util.h(m.category.to_s.downcase) %>">
+        <div>
+          <% if m.category %>
+            <% cat_color = (@conf['category_badge_colors'] || {}).fetch(m.category, nil) %>
+            <span class="badge me-1" style="background-color:<%= ERB::Util.h(cat_color || '#6c757d') %>; color:#fff;"><%= ERB::Util.h(m.category) %></span>
+          <% end %>
+          <% if @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") %>
+            <span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>
+          <% end %>
+          <span class="fw-semibold"><%= ERB::Util.h(m.name) %></span>
+        </div>
+        <% if m.description && m.description.strip != '' %>
+          <div class="small text-muted"><%= ERB::Util.h(m.description) %></div>
         <% end %>
-        <% if @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") %>
-          <span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>
-        <% end %>
-        <span class="fw-semibold"><%= ERB::Util.h(m.name) %></span>
-      </div>
-      <% if m.description && m.description.strip != '' %>
-        <div class="small text-muted"><%= ERB::Util.h(m.description) %></div>
-      <% end %>
-    </a>
-  <% end %>
+      </a>
+    <% end %>
+  </div>
   <% if @conf['all_templates_footer'] && !@conf['all_templates_footer'].to_s.strip.empty? %>
-    <div class="px-3 py-3 text-muted small border-top">
+    <div class="px-3 py-3 text-muted small" style="background:#F3F4F4; border-top:1px solid #C3C8C8;">
       <%= @conf['all_templates_footer'] %>
     </div>
   <% end %>

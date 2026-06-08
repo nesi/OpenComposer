@@ -552,7 +552,7 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
   body.innerHTML =
     '<div class="mb-2">Cancelling ' + total + ' job' + (total !== 1 ? 's' : '') + '...</div>' +
     '<div class="progress mb-2" style="height:1.4rem;">' +
-      '<div id="_ocCancelBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"' +
+      '<div id="_ocCancelBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning"' +
            ' role="progressbar" style="width:0%;min-width:2.5rem;"' +
            ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">' +
         '0 / ' + total +
@@ -605,7 +605,7 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
   var statusEl = document.getElementById('_ocCancelStatus');
 
   if (aborted) {
-    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-warning'); }
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-warning'); }
     var remaining = total - done;
     if (statusEl) {
       statusEl.innerHTML = '<span class="text-warning fw-semibold">Aborted. ' +
@@ -616,11 +616,11 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
           : '');
     }
   } else if (errors.length === 0) {
-    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-success'); }
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-warning'); bar.classList.add('bg-success'); }
     if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold">All jobs cancelled successfully.</span>';
     setTimeout(function() { window.location.reload(); }, 1000);
   } else {
-    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-warning'); }
+    if (bar) { bar.classList.remove('progress-bar-animated'); }
     if (statusEl) {
       statusEl.innerHTML = '<span class="text-danger fw-semibold">Errors occurred:</span>' +
         '<ul class="mb-0 mt-1">' +
@@ -687,7 +687,7 @@ ocHistory.startCancelAll = function() {
       progressArea.innerHTML =
         '<div class="mb-2">Cancelling ' + total + ' job' + (total !== 1 ? 's' : '') + '…</div>' +
         '<div class="progress mb-2" style="height:1.4rem;">' +
-          '<div id="_cancelAllBar" class="progress-bar progress-bar-striped progress-bar-animated bg-danger"' +
+          '<div id="_cancelAllBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning"' +
                ' role="progressbar" style="width:0%;min-width:2.5rem;"' +
                ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0 / ' + total + '</div>' +
         '</div>' +
@@ -734,7 +734,7 @@ ocHistory.startCancelAll = function() {
         var statusEl = document.getElementById('_cancelAllStatus');
 
         if (aborted) {
-          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-warning'); }
+          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-warning'); }
           var remaining = total - done;
           if (statusEl) {
             statusEl.innerHTML = '<span class="text-warning fw-semibold">Aborted. ' +
@@ -745,11 +745,11 @@ ocHistory.startCancelAll = function() {
                 : '');
           }
         } else if (errors.length === 0) {
-          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-success'); }
+          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-warning'); bar.classList.add('bg-success'); }
           if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold">All jobs cancelled successfully.</span>';
           setTimeout(function() { window.location.reload(); }, 1000);
         } else {
-          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-warning'); }
+          if (bar) { bar.classList.remove('progress-bar-animated'); }
           if (statusEl) {
             statusEl.innerHTML = '<span class="text-danger fw-semibold">Some errors occurred:</span>' +
               '<ul class="mb-0 mt-1">' + errors.map(function(e) { return '<li>' + ocHistory.escapeHtml(e) + '</li>'; }).join('') + '</ul>';

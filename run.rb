@@ -91,7 +91,7 @@ SCHEDULER_TO_GENERIC_APP ||= {
 }.freeze
 
 # Structure of manifest
-Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps, :homepage, :hidden, :documentation)
+Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps, :homepage, :hidden, :documentation, :tags)
 
 # Create a YAML or ERB file object. Give priority to ERB.
 # If the file does not exist, return nil.
@@ -233,7 +233,7 @@ def create_manifest(app_path)
   return Manifest.new(dirname, dirname, nil, nil, nil, nil, nil, false, nil) if manifest.nil?
 
   manifest["name"] ||= dirname
-  return Manifest.new(dirname, manifest["name"], manifest["category"], manifest["description"], manifest["icon"], manifest["related_apps"], manifest["homepage"], manifest.fetch("hidden", false), manifest["documentation"])
+  return Manifest.new(dirname, manifest["name"], manifest["category"], manifest["description"], manifest["icon"], manifest["related_apps"], manifest["homepage"], manifest.fetch("hidden", false), manifest["documentation"], Array(manifest["tags"]))
 end
 
 # Create an array of manifest objects for all applications.

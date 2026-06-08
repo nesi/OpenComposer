@@ -329,7 +329,7 @@
 
     <script>
     (function() {
-      var ALL_APPS = <%= @all_manifests.map { |m| { dirname: m.dirname, name: m.name, category: m.category, description: m.description, gpu: @gpu_names.include?(m.name.to_s.downcase) } }.to_json.gsub('</', '<\/') %>;
+      var ALL_APPS = <%= @all_manifests.map { |m| { dirname: m.dirname, name: m.name, category: m.category, description: m.description, gpu: @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") } }.to_json.gsub('</', '<\/') %>;
       var scriptName = '<%= @script_name %>';
 
       function esc(s) {

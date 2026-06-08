@@ -22,6 +22,16 @@ set :environment, ENV.fetch("RACK_ENV", "production").to_sym
 set :host_authorization, { permitted_hosts: [] } if ENV.fetch("RACK_ENV", "production") == "development"
 set :erb, trim: "-"
 
+# When running behind OOD's nginx reverse proxy, TLS is terminated upstream and
+# X-Forwarded-Proto: https is set. Rack sees plain HTTP internally, so rewrite
+# rack.url_scheme here so that request.url / request.base_url / redirect all
+# produce https:// URLs.
+before do
+  if request.env['HTTP_X_FORWARDED_PROTO'] == 'https'
+    request.env['rack.url_scheme'] = 'https'
+  end
+end
+
 configure :development do
   register Sinatra::Reloader
   also_reload "./lib/**/*.rb"

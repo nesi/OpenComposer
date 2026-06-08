@@ -399,27 +399,28 @@ class Slurm < Scheduler
     return [[], nil] if user.empty?
 
     squeue  = get_command_path("squeue", bin, bin_overrides)
-    # Use --parsable2 so | separators come from squeue's output, never from the
-    # command string (avoids shell-pipe interpretation over SSH wrappers).
-    # Omit submittime: older Slurm versions don't recognise it as a --Format field.
+    # Use -o short format (same style as NeSI's qme alias) with @ as the field
+    # separator. @ is not a shell metacharacter so it survives SSH wrapping
+    # without any quoting, unlike | which gets interpreted as a pipe operator
+    # by the remote shell. %i=JOBID %j=NAME %P=PARTITION %T=STATE %V=SUBMIT %S=START
     command = [ssh_wrapper, SLURM_ENV, squeue,
-               "--user=#{user}", "--parsable2", "--noheader",
-               "--Format=jobid,name,partition,state,starttime"].compact.join(" ")
+               "--user=#{user}", "--noheader",
+               "-o", "%i@%j@%P@%T@%V@%S"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     stdout = to_utf8(stdout)
     return [[], [stdout, stderr].join(" ").strip] unless status.success?
 
     jobs = []
     stdout.lines.each do |line|
-      parts = line.chomp.split('|', 5)
+      parts = line.chomp.split('@', 6)
       next if parts.size < 4
       jobs << {
         "JobID"     => parts[0].to_s.strip,
         "JobName"   => parts[1].to_s.strip,
         "Partition" => parts[2].to_s.strip,
         "State"     => parts[3].to_s.strip,
-        "Submit"    => "",
-        "Start"     => parts[4].to_s.strip,
+        "Submit"    => parts[4].to_s.strip,
+        "Start"     => parts[5].to_s.strip,
         "End"       => "",
         "StdOut"    => "",
         "StdErr"    => ""

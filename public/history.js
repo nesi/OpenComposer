@@ -176,6 +176,18 @@ ocHistory.updateStatusBatch = function(action, jobIds, blockedIds) {
     modalBody.appendChild(jobList);
   }
 
+  // Show the scancel command that will be run.
+  if (action === 'CancelJob' && jobIds.length > 0) {
+    const stripArraySuffix = id => id.replace(/\[([^\]]+)\]/g, (_, inner) => '[' + inner.replace(/[:%]\d+/g, '') + ']');
+    const command = 'scancel ' + jobIds.map(stripArraySuffix).join(' ');
+    const details = document.createElement('details');
+    details.className = 'mt-2';
+    details.innerHTML =
+      `<summary class="text-muted small" style="cursor:pointer">Source: scancel <i class="bi bi-chevron-down"></i></summary>` +
+      `<pre class="small text-muted mt-1 p-1 mb-0" style="white-space:pre-wrap;word-break:break-all">${ocHistory.escapeHtml(command)}</pre>`;
+    modalBody.appendChild(details);
+  }
+
   // Warn about jobs that cannot be deleted because they are active.
   if (action === 'DeleteInfo' && Array.isArray(blockedIds) && blockedIds.length > 0) {
     const noun = blockedIds.length === 1 ? 'job' : 'jobs';

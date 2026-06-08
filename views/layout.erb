@@ -132,6 +132,10 @@
         flex-direction: column;
         min-height: 100vh;
       }
+      #oc-search-results {
+        font-size: 1rem;
+        line-height: 1.5;
+      }
       .ood-logo {
         filter: invert(1) grayscale(100%);
       }
@@ -282,7 +286,7 @@
         </div>
       </nav>
 
-      <div id="oc-search-results" style="display:none; background:#F3F4F4; border-bottom:1px solid #C3C8C8; max-height:60vh; overflow-y:auto;"></div>
+      <div id="oc-search-results" style="display:none; background:#F3F4F4; border-top:1px solid #C3C8C8; max-height:60vh; overflow-y:auto;"></div>
 
       <div style="flex: 1;">
         <%= yield %>
@@ -318,31 +322,25 @@
       input.addEventListener('input', function() {
         var q = this.value.trim().toLowerCase();
 
-        // All Templates page: filter the in-page list directly, skip the overlay.
-        var allList = document.getElementById('oc-all-list');
-        if (allList) {
-          var items = allList.querySelectorAll('.oc-all-item');
-          var visible = 0;
-          items.forEach(function(item) {
-            var match = !q || item.dataset.name.includes(q) || item.dataset.desc.includes(q) || item.dataset.cat.includes(q);
-            item.style.display = match ? '' : 'none';
-            if (match) visible++;
-          });
-          var noRes = document.getElementById('oc-all-no-results');
-          if (noRes) noRes.classList.toggle('d-none', visible > 0);
-          return;
-        }
-
-        // All other pages: show the overlay.
-        var list = document.getElementById('oc-app-list');
+        // Hide whichever main content list is on this page.
+        var list = document.getElementById('oc-app-list') || document.getElementById('oc-all-list');
         if (!q) {
           results.style.display = 'none';
+          results.style.height = '';
+          results.style.maxHeight = '';
           results.innerHTML = '';
           if (list) list.style.display = '';
           return;
         }
         if (list) list.style.display = 'none';
         results.style.display = '';
+        if (list && list.id === 'oc-all-list') {
+          results.style.height = 'calc(100vh - 56px)';
+          results.style.maxHeight = 'none';
+        } else {
+          results.style.height = '';
+          results.style.maxHeight = '';
+        }
 
         var matches = ALL_APPS.filter(function(m) {
           return (m.name        || '').toLowerCase().includes(q) ||

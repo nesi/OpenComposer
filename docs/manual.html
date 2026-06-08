@@ -15,9 +15,9 @@
       <ul class="nav flex-column px-2 py-2">
         <li class="nav-item"><a href="#intro" class="nav-link">1. Introduction</a></li>
         <li class="nav-item"><a href="#home" class="nav-link">2. Home Page</a></li>
-        <li class="nav-item ms-3"><a href="#templates" class="nav-link">2.1. My Templates</a></li>
+        <li class="nav-item ms-3"><a href="#templates" class="nav-link">2.1. My Custom Templates</a></li>
         <li class="nav-item"><a href="#application" class="nav-link">3. Application Page</a></li>
-        <li class="nav-item ms-3"><a href="#save-template" class="nav-link">3.1. Save as Template</a></li>
+        <li class="nav-item ms-3"><a href="#save-template" class="nav-link">3.1. Save as Custom Template</a></li>
         <li class="nav-item"><a href="#history" class="nav-link">4. History Page</a></li>
         <li class="nav-item"><a href="#nodes" class="nav-link">5. Nodes Page</a></li>
       </ul>
@@ -34,20 +34,40 @@
       <h2 id="home">2. Home Page</h2>
       <p>
         Displays application icons by category.
-        On the left side of the navigation bar are links to the "Home page", "Application page", and "History page".
-        On the right side of the navigation bar are links to the Open OnDemand "Home Directory", "Shell Access", and "Dashboard".
-        Note that "Shell Access" is only displayed if <code>login_node</code> is set in <code>conf.yml.erb</code>.
+        The home page layout can be configured by the administrator via the <code>home_format</code> setting in <code>conf.yml.erb</code>.
+        The <code>big</code> format (default) shows large tiles with the application icon and name; the <code>small</code> format shows compact list-style entries.
       </p>
+      <p>
+        The navigation bar contains the following links:
+      </p>
+      <ul>
+        <li><strong>Left side:</strong>
+          <ul>
+            <li><strong>Templates</strong> — returns to the home page (application and template gallery).</li>
+            <li><strong>Applications</strong> — a dropdown listing all apps by category, so you can jump directly to any app without going back to the home page. The label can be customised via <code>navbar_apps_label</code> in <code>conf.yml.erb</code>.</li>
+            <li><strong>Search box</strong> — filters the Applications dropdown as you type.</li>
+            <li><strong>History</strong> — opens the job history page.</li>
+            <li><strong>Nodes</strong> — opens the cluster node status page.</li>
+          </ul>
+        </li>
+        <li><strong>Right side:</strong>
+          <ul>
+            <li><strong>Home Directory</strong> — opens the Open OnDemand file browser. Hidden if <code>show_home_directory: false</code> in <code>conf.yml.erb</code>.</li>
+            <li><strong>Shell Access</strong> — opens an OOD terminal session on the login node. Only shown when <code>login_node</code> is set and <code>show_shell_access</code> is not <code>false</code>. If multiple login nodes are configured, this becomes a dropdown so you can pick which node to connect to.</li>
+            <li><strong>Open OnDemand</strong> — a link back to the OOD dashboard. Hidden if <code>show_open_ondemand: false</code>. The label and URL are set via <code>open_ondemand_label</code> and <code>open_ondemand_url</code>.</li>
+          </ul>
+        </li>
+      </ul>
       <img src="img/home_page.png" width="800" alt="Home page">
 
-      <h3 id="templates">2.1. My Templates</h3>
+      <h3 id="templates">2.1. My Custom Templates</h3>
       <p>
-        The "My Templates" section appears below the application categories.
+        The "My Custom Templates" section appears below the application categories.
         It shows your saved templates as thumbnails, using the same icon as the application the template was created from.
       </p>
       <ul>
         <li>Click a template thumbnail to open its source application page with all form values pre-filled.</li>
-        <li>Click the <strong>+ New Template</strong> button in the section header to open the Generic Slurm form and start a new template from scratch.</li>
+        <li>Click the <strong>+ New Custom Template</strong> button in the section header to open the "New Custom Template — Choose a Style" picker page, where you can select any available application as the starting point for your new template.</li>
         <li>Click the <strong>pencil icon</strong> on a template to rename it or update its description without leaving the home page.</li>
         <li>Click the <strong>× icon</strong> on a template to delete it (a confirmation prompt will appear).</li>
       </ul>
@@ -70,28 +90,17 @@
         <li>The "Script location," "Script name," and "Job name" in the header section specify the "Directory where the job script is stored," "Name of the job script file," and "Job name," respectively. </li>
         <li>The "Cluster name" in the header section  is only displayed if multiple job schedulers are configured. The job script will be submitted to the selected cluster. </li>
         <li>An asterisk next to the label of a web form indicates that it is a required field.</li>
-        <li>If you try to modify a web form with a white background after manually editing the job script, a warning like the one shown below will appear.
-          If you click "Discard and continue", the changes made in the job script will be discarded and a new script will be generated.
-          <p>
-            <img style="border-style: solid; border-width: 1px;" src="img/overwrite_warning.png" width="400" alt="warning">
-          </p>
-        </li>
-        <li>If the background color of the web form is <span style="background-color:#FFE28A">yellow</span>, it indicates that neither the job script nor the script that performs processing before job submission will be modified.</li>
-        <li>If the background color of the web form is <span style="background-color:#FFCCCC">pink</span>, it indicates that only the script that performs processing before job submission will be modified. If you try to modify these web forms after manually editing that script, the same warning described above will appear.
-          <p>
-            <img src="img/application_page3.png" width="600" alt="Application page">
-          </p>
-        </li>
+        <li>If you manually edit the job script and then change a form field, only the lines corresponding to that field are updated in the script — the rest of your manual edits are preserved.</li>
       </ul>
 
-      <h3 id="save-template">3.1. Save as Template</h3>
+      <h3 id="save-template">3.1. Save as Custom Template</h3>
       <p>
-        The "Save as Template" button appears in the left panel of every application page.
+        The <strong>"Save as Custom Template"</strong> button appears in the left panel of every application page.
         Clicking it opens a dialog where you can give the template a name and an optional description.
         The current form values, together with the application's icon and path, are saved as a reusable template.
       </p>
       <ul>
-        <li>Saved templates appear in the "My Templates" section on the home page.</li>
+        <li>Saved templates appear in the "My Custom Templates" section on the home page.</li>
         <li>When you open a template and then modify its values, the button changes to <strong>"Save"</strong>.
           Clicking "Save" overwrites the existing template with the updated values — no dialog is shown.</li>
       </ul>
@@ -118,7 +127,7 @@
                 <img src="img/history_page5.png" width="300" alt="History page">
               </p>
             </li>
-            <li>You can filter jobs by their status using the checkboxes: "Queued", "Running", "Completed", and "Failed".</li>
+            <li>You can filter jobs by their status using the checkboxes: "Queued", "Running", "Completed", "Cancelled", "Failed", and "Unknown".</li>
             <li>If multiple job schedulers are configured, radio buttons will appear below the status checkboxes. You can select a scheduler to display only its jobs (e.g., "Fugaku" and "Prepost"; labels depend on configuration).</li>
           </ul>
         </li>
@@ -140,8 +149,16 @@
 
         <li><span style="color: green; font-weight: bold;">Actions</span>
           <ul>
-            <li>This section allows you to perform operations on selected jobs.</li>
-            <li>Select jobs using the checkboxes on the left side of the table, then click "Cancel Job" to cancel queued or running jobs. Click "Delete Info" to remove completed job information from the table.</li>
+            <li>This section allows you to perform operations on jobs.</li>
+            <li>Select jobs using the checkboxes on the left side of the table, then use one of the per-selection actions:
+              <ul>
+                <li><strong>Cancel Job</strong> — cancels the selected queued or running jobs.</li>
+                <li><strong>Delete Info</strong> — removes the selected job entries from the history table.</li>
+                <li><strong>Cancel All Jobs</strong> — cancels every queued and running job. A confirmation dialog appears before any jobs are cancelled.</li>
+                <li><strong>Delete All History</strong> — permanently removes all job history entries. A confirmation dialog appears; this action cannot be undone.</li>
+                <li><strong>Refresh</strong> — reloads the history page to pick up the latest job statuses.</li>
+              </ul>
+            </li>
             <li>You can select multiple jobs and perform actions on them at once.</li>
             <li>Selecting the checkbox at the top of the table selects all jobs displayed on the current page.</li>
             <li>When cancelling multiple jobs, each job is cancelled individually.

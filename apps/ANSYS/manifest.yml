@@ -1,8 +1,7 @@
-# AI generated
-category: Engineering
-description: A bundle of computer-aided engineering software including Fluent and
-  CFX.
-hidden: true
-homepage: https://www.ansys.com
-icon: icon.png
 name: ANSYS
+category: Engineering
+description: A bundle of computer-aided engineering software including Fluent and CFX.
+hidden: true
+icon: icon.png
+homepage: https://www.ansys.com
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/ANSYS/

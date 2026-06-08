@@ -176,6 +176,19 @@ ocHistory.updateStatusBatch = function(action, jobIds, blockedIds) {
     modalBody.appendChild(jobList);
   }
 
+  // Show the scancel command that will be run.
+  if (action === 'CancelJob' && jobIds.length > 0) {
+    const stripArraySuffix = id => id.replace(/\[([^\]]+)\]/g, (_, inner) => '[' + inner.replace(/[:%]\d+/g, '') + ']');
+    const prefix  = ocHistory.cancelCommandPrefix || 'scancel';
+    const command = prefix + ' ' + jobIds.map(stripArraySuffix).join(' ');
+    const details = document.createElement('details');
+    details.className = 'mt-2';
+    details.innerHTML =
+      `<summary class="text-muted small" style="cursor:pointer">Source: scancel <i class="bi bi-chevron-down"></i></summary>` +
+      `<pre class="small text-muted mt-1 p-1 mb-0" style="white-space:pre-wrap;word-break:break-all">${ocHistory.escapeHtml(command)}</pre>`;
+    modalBody.appendChild(details);
+  }
+
   // Warn about jobs that cannot be deleted because they are active.
   if (action === 'DeleteInfo' && Array.isArray(blockedIds) && blockedIds.length > 0) {
     const noun = blockedIds.length === 1 ? 'job' : 'jobs';
@@ -252,7 +265,7 @@ window.addEventListener('pageshow', function(event) {
   if (event.persisted) {
     document.querySelectorAll('button[onclick*="loadExtScript"]').forEach(function(btn) {
       btn.disabled = false;
-      btn.textContent = 'Load parameters';
+      btn.textContent = 'Load script';
     });
   }
 });
@@ -298,13 +311,13 @@ ocHistory.loadExtScript = function(btn) {
       } else {
         alert('Error: ' + (data.error || 'Unknown error'));
         btn.disabled    = false;
-        btn.textContent = 'Load parameters';
+        btn.textContent = 'Load script';
       }
     })
     .catch(function(e) {
       alert('Error: ' + e.message);
       btn.disabled    = false;
-      btn.textContent = 'Load parameters';
+      btn.textContent = 'Load script';
     });
 };
 
@@ -321,8 +334,8 @@ ocHistory.buildJobDetailsContent = function(data) {
     return `<div class="alert alert-warning">${ocHistory.escapeHtml(data.error)}</div>`;
   }
 
-  const entries = data.data ? Object.entries(data.data) : [];
-  const rows    = entries.slice().sort(([a], [b]) => a.localeCompare(b));
+  // Show all scheduler fields in the order returned by the server (sacct/scontrol ordering).
+  const rows = data.data ? Object.entries(data.data) : [];
 
   if (rows.length === 0) {
     let html = '<p class="text-muted">(No details available for this job.)</p>';
@@ -392,7 +405,7 @@ ocHistory.loadJobScript = function(modalEl) {
     .then(r => r.json())
     .then(data => {
       body.dataset.loaded = 'true';
-      // Stash metadata for loadExtScript to use when "Load parameters" is clicked.
+      // Stash metadata for loadExtScript to use when "Load script" is clicked.
       if (data.script_location) body.dataset.extScriptLocation = data.script_location;
       if (data.script_name)     body.dataset.extScriptName     = data.script_name;
       if (data.data && data.data.JobName) body.dataset.extJobName = data.data.JobName;
@@ -408,10 +421,54 @@ ocHistory.loadJobScript = function(modalEl) {
     });
 };
 
+// Load efficiency data for a terminal job (completed/failed/cancelled).
+ocHistory.loadJobEfficiency = function(modalEl) {
+  const effRow = document.getElementById(modalEl.id + 'EffRow');
+  if (!effRow || effRow.dataset.loaded === 'true') return;
+
+  const body = modalEl.querySelector('.modal-body[data-job-id]');
+  if (!body) return;
+  const jobId   = body.dataset.jobId;
+  const cluster = body.dataset.cluster;
+  const base    = window.location.pathname.replace(/\/history$/, '');
+  let url = `${base}/history/job_efficiency?job_id=${encodeURIComponent(jobId)}`;
+  if (cluster) url += `&cluster=${encodeURIComponent(cluster)}`;
+
+  const noData = '<hr class="mt-0"><h6 class="mb-2">Job Efficiency (<code>seff</code>)</h6><p class="text-muted small mb-0">No efficiency information available.</p>';
+
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      effRow.dataset.loaded = 'true';
+      if (data.error || data.status === 'not_available') {
+        effRow.innerHTML = noData;
+        return;
+      }
+      const skip = new Set(['status', 'state', 'command']);
+      const rows = Object.entries(data)
+        .filter(([k]) => !skip.has(k))
+        .map(([k, v]) => `<tr><td>${ocHistory.escapeHtml(k)}</td><td>${ocHistory.escapeHtml(String(v))}</td></tr>`)
+        .join('');
+      let html = '<hr class="mt-0"><h6 class="mb-2">Job Efficiency (<code>seff</code>)</h6>';
+      html += '<table class="table table-striped table-sm text-break mb-1">';
+      html += rows || `<tr><td colspan="2" class="text-center text-muted">No efficiency information available.</td></tr>`;
+      html += '</table>';
+      if (data.command) {
+        html += `<details class="mt-1"><summary class="text-muted small" style="cursor:pointer">Source: sacct</summary><pre class="small text-muted mt-1 p-1 mb-0" style="white-space:pre-wrap;word-break:break-all">${ocHistory.escapeHtml(data.command)}</pre></details>`;
+      }
+      effRow.innerHTML = html;
+    })
+    .catch(() => {
+      effRow.dataset.loaded = 'true';
+      effRow.innerHTML = noData;
+    });
+};
+
 // Attach lazy-load listeners to Job Details modals.
 document.querySelectorAll('[id^="_historyJobId"]').forEach(function(el) {
   el.addEventListener('show.bs.modal', function() {
     ocHistory.loadJobDetails(this);
+    ocHistory.loadJobEfficiency(this);
   });
 });
 
@@ -453,8 +510,9 @@ if (ocHistory.selectAllCheckbox && ocHistory.tbody) {
 // Expand a single job ID: "6832503_[1000-2000]" → ["6832503_1000", ..., "6832503_2000"].
 // Plain IDs are returned as-is in a one-element array.
 function ocExpandJobId(jobId) {
-  var m = jobId.match(/^(\d+)_\[(\d+)-(\d+)(?::(\d+))?\]$/);
-  if (!m) return [jobId];
+  var cleanId = jobId.replace(/%\d+/g, '');
+  var m = cleanId.match(/^(\d+)_\[(\d+)-(\d+)(?::(\d+))?\]$/);
+  if (!m) return [cleanId];
   var parent = m[1], first = parseInt(m[2], 10), last = parseInt(m[3], 10);
   var step = m[4] ? Math.max(parseInt(m[4], 10), 1) : 1;
   var ids = [];
@@ -494,7 +552,7 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
   body.innerHTML =
     '<div class="mb-2">Cancelling ' + total + ' job' + (total !== 1 ? 's' : '') + '...</div>' +
     '<div class="progress mb-2" style="height:1.4rem;">' +
-      '<div id="_ocCancelBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"' +
+      '<div id="_ocCancelBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning"' +
            ' role="progressbar" style="width:0%;min-width:2.5rem;"' +
            ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">' +
         '0 / ' + total +
@@ -547,7 +605,7 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
   var statusEl = document.getElementById('_ocCancelStatus');
 
   if (aborted) {
-    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-warning'); }
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-warning'); }
     var remaining = total - done;
     if (statusEl) {
       statusEl.innerHTML = '<span class="text-warning fw-semibold">Aborted. ' +
@@ -558,11 +616,11 @@ ocHistory.cancelJobsOneByOne = async function(jobIds, cluster) {
           : '');
     }
   } else if (errors.length === 0) {
-    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-success'); }
+    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-warning'); bar.classList.add('bg-success'); }
     if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold">All jobs cancelled successfully.</span>';
     setTimeout(function() { window.location.reload(); }, 1000);
   } else {
-    if (bar) { bar.classList.remove('progress-bar-animated', 'bg-primary'); bar.classList.add('bg-warning'); }
+    if (bar) { bar.classList.remove('progress-bar-animated'); }
     if (statusEl) {
       statusEl.innerHTML = '<span class="text-danger fw-semibold">Errors occurred:</span>' +
         '<ul class="mb-0 mt-1">' +
@@ -629,7 +687,7 @@ ocHistory.startCancelAll = function() {
       progressArea.innerHTML =
         '<div class="mb-2">Cancelling ' + total + ' job' + (total !== 1 ? 's' : '') + '…</div>' +
         '<div class="progress mb-2" style="height:1.4rem;">' +
-          '<div id="_cancelAllBar" class="progress-bar progress-bar-striped progress-bar-animated bg-danger"' +
+          '<div id="_cancelAllBar" class="progress-bar progress-bar-striped progress-bar-animated bg-warning"' +
                ' role="progressbar" style="width:0%;min-width:2.5rem;"' +
                ' aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0 / ' + total + '</div>' +
         '</div>' +
@@ -676,7 +734,7 @@ ocHistory.startCancelAll = function() {
         var statusEl = document.getElementById('_cancelAllStatus');
 
         if (aborted) {
-          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-warning'); }
+          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-warning'); }
           var remaining = total - done;
           if (statusEl) {
             statusEl.innerHTML = '<span class="text-warning fw-semibold">Aborted. ' +
@@ -687,11 +745,11 @@ ocHistory.startCancelAll = function() {
                 : '');
           }
         } else if (errors.length === 0) {
-          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-success'); }
+          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-warning'); bar.classList.add('bg-success'); }
           if (statusEl) statusEl.innerHTML = '<span class="text-success fw-semibold">All jobs cancelled successfully.</span>';
           setTimeout(function() { window.location.reload(); }, 1000);
         } else {
-          if (bar) { bar.classList.remove('progress-bar-animated', 'bg-danger'); bar.classList.add('bg-warning'); }
+          if (bar) { bar.classList.remove('progress-bar-animated'); }
           if (statusEl) {
             statusEl.innerHTML = '<span class="text-danger fw-semibold">Some errors occurred:</span>' +
               '<ul class="mb-0 mt-1">' + errors.map(function(e) { return '<li>' + ocHistory.escapeHtml(e) + '</li>'; }).join('') + '</ul>';
@@ -742,3 +800,45 @@ if (_ocCancelForm) {
     ocHistory.cancelJobsOneByOne(jobIds, cluster);
   });
 }
+
+// Open the file content overlay and lazy-load the file at the given path.
+ocHistory.openFileOverlay = function(path) {
+  const modal = document.getElementById('_historyFileOverlay');
+  const title = document.getElementById('_historyFileOverlayTitle');
+  const body  = document.getElementById('_historyFileOverlayBody');
+
+  title.textContent = path;
+  body.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading…</span></div></div>';
+
+  bootstrap.Modal.getOrCreateInstance(modal).show();
+
+  const base = window.location.pathname.replace(/\/history$/, '');
+  fetch(`${base}/_read_file?path=${encodeURIComponent(path)}`)
+    .then(r => r.json())
+    .then(data => {
+      body.innerHTML = '';
+      if (data.error) {
+        body.innerHTML = `<div class="alert alert-danger m-2">${ocHistory.escapeHtml(data.error)}</div>`;
+        return;
+      }
+      if (data.empty) {
+        body.innerHTML = '<p class="text-muted p-3 mb-0">(File is empty)</p>';
+        return;
+      }
+      if (data.truncated) {
+        const warn = document.createElement('div');
+        warn.className = 'alert alert-warning mx-2 mt-2 mb-0';
+        warn.textContent = 'File is large — showing first 1 MB only.';
+        body.appendChild(warn);
+      }
+      const pre = document.createElement('pre');
+      pre.className = 'mb-0 p-2';
+      pre.style.whiteSpace = 'pre-wrap';
+      pre.style.wordBreak = 'break-all';
+      pre.textContent = data.content;
+      body.appendChild(pre);
+    })
+    .catch(e => {
+      body.innerHTML = `<div class="alert alert-danger m-2">Failed to load file: ${ocHistory.escapeHtml(e.message)}</div>`;
+    });
+};

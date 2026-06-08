@@ -22,6 +22,16 @@ set :environment, ENV.fetch("RACK_ENV", "production").to_sym
 set :host_authorization, { permitted_hosts: [] } if ENV.fetch("RACK_ENV", "production") == "development"
 set :erb, trim: "-"
 
+# When running behind OOD's nginx reverse proxy, TLS is terminated upstream and
+# X-Forwarded-Proto: https is set. Rack sees plain HTTP internally, so rewrite
+# rack.url_scheme here so that request.url / request.base_url / redirect all
+# produce https:// URLs.
+before do
+  if request.env['HTTP_X_FORWARDED_PROTO'] == 'https'
+    request.env['rack.url_scheme'] = 'https'
+  end
+end
+
 configure :development do
   register Sinatra::Reloader
   also_reload "./lib/**/*.rb"
@@ -46,10 +56,6 @@ FORM_LAYOUT            ||= "_form_layout"
 SUBMIT_BUTTON          ||= "_submitButton"
 SUBMIT_CONFIRM         ||= "_submitConfirm"
 SUBMIT_CONTENT         ||= "_submit_content"
-WARNING_MODAL          ||= "_warning_modal"
-WARNING_MODAL_CANCEL   ||= "_warning_cancel"
-WARNING_MODAL_DISCARD  ||= "_warning_discard"
-WARNING_MESSAGE        ||= "_warning_message"
 SUBMIT_FORM            ||= "_submit_form"
 JOB_NAME               ||= "Job Name"
 JOB_PARTITION          ||= "Partition"
@@ -69,7 +75,9 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_PARTITION"       => JOB_PARTITION,
   "OC_HISTORY_SUBMISSION_TIME" => JOB_SUBMISSION_TIME,
   "OC_HISTORY_START_TIME"      => "Start",
-  "OC_HISTORY_END_TIME"        => "End"
+  "OC_HISTORY_END_TIME"        => "End",
+  "OC_HISTORY_OUTPUT_FILE"     => "StdOut",
+  "OC_HISTORY_ERROR_FILE"      => "StdErr"
 }.freeze
 CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "sge_root"].freeze
 MODULES_LIST_URL ||= "https://raw.githubusercontent.com/nesi/modules-list/main/module-list.json"
@@ -83,7 +91,7 @@ SCHEDULER_TO_GENERIC_APP ||= {
 }.freeze
 
 # Structure of manifest
-Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps, :homepage, :hidden)
+Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps, :homepage, :hidden, :documentation, :tags)
 
 # Create a YAML or ERB file object. Give priority to ERB.
 # If the file does not exist, return nil.
@@ -157,7 +165,9 @@ def create_conf
   # Set initial values if not defined
   conf["data_dir"]                ||= ENV["HOME"] + "/composer"
   conf["history"]                 ||= HISTORY_KEY_MAP.keys
+  conf["history"] = conf["history"].each_with_object({}) { |k, h| h[k] = nil } if conf["history"].is_a?(Array)
   conf["history_store_script"]    = conf.fetch("history_store_script", true)
+  conf["history_efficiency"]      = conf.fetch("history_efficiency",   false)
   conf["footer"]                  ||= "&nbsp;"
   conf["thumbnail_width"]         ||= "100"
   conf["navbar_color"]            ||= "#3D3B40"
@@ -220,10 +230,10 @@ def create_manifest(app_path)
   halt 500, "In #{File.join(app_path, "manifest.yml")}, related_app: is deprecated." if manifest&.key?("related_app")
 
   dirname = File.basename(app_path)
-  return Manifest.new(dirname, dirname, nil, nil, nil, nil, nil, false) if manifest.nil?
+  return Manifest.new(dirname, dirname, nil, nil, nil, nil, nil, false, nil) if manifest.nil?
 
   manifest["name"] ||= dirname
-  return Manifest.new(dirname, manifest["name"], manifest["category"], manifest["description"], manifest["icon"], manifest["related_apps"], manifest["homepage"], manifest.fetch("hidden", false))
+  return Manifest.new(dirname, manifest["name"], manifest["category"], manifest["description"], manifest["icon"], manifest["related_apps"], manifest["homepage"], manifest.fetch("hidden", false), manifest["documentation"], Array(manifest["tags"]))
 end
 
 # Create an array of manifest objects for all applications.
@@ -320,11 +330,24 @@ def parse_sbatch_into_cache(script_content, body, app_name, dir_name)
       sep          = widget_def["separator"] || ","
       checked_vals = val.split(sep).map(&:strip)
       (widget_def["options"] || []).each_with_index do |opt, idx|
-        opt_val = (opt.is_a?(Array) ? opt[1] : opt).to_s
-        cache["#{field}_#{idx + 1}"] = opt_val if checked_vals.include?(opt_val)
+        opt_val   = (opt.is_a?(Array) ? opt[1] : opt).to_s
+        opt_label = (opt.is_a?(Array) ? opt[0] : opt).to_s
+        cache["#{field}_#{idx + 1}"] = opt_label if checked_vals.include?(opt_val)
       end
     else
       cache[field] = val
+    end
+  end
+
+  # Auto-check toggle checkboxes (e.g. "Show advanced options") whose enable-X
+  # targets are already in the cache so the section renders expanded.
+  form_fields.each do |key, field_def|
+    next unless field_def.is_a?(Hash) && field_def["widget"] == "checkbox"
+    (field_def["options"] || []).each_with_index do |opt, idx|
+      next unless opt.is_a?(Array) && opt.length > 2
+      enabled_fields = opt[2..-1].grep(/^enable-/).map { |a| a.sub(/^enable-/, '') }
+      next unless enabled_fields.any? { |f| cache.keys.any? { |k| k == f || k.start_with?("#{f}_") } }
+      cache["#{key}_#{idx + 1}"] ||= opt[0].to_s
     end
   end
 
@@ -418,25 +441,6 @@ def get_form_action(body)
   end
 end
 
-# Determine whether to show the overwrite warning when script content will be regenerated.
-# Default: true
-def check_overwrite_warning?(content)
-  return true unless content.is_a?(Hash)
-
-  raw_value = content["overwrite_warning"]
-
-  return true if raw_value.nil?
-  return raw_value if [true, false].include?(raw_value)
-
-  if raw_value.is_a?(String)
-    normalized = raw_value.strip.downcase
-    return true if ["true", "1", "yes", "on"].include?(normalized)
-    return false if ["false", "0", "no", "off"].include?(normalized)
-  end
-
-  !!raw_value
-end
-
 # Returns the directory where user templates are stored.
 def templates_dir(conf)
   File.join(conf["data_dir"], "templates")
@@ -471,7 +475,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   @conf          = create_conf
   @apps_dir      = @conf["apps_dir"]
   @version       = VERSION
-  @my_ood_url    = request.base_url
+  @my_ood_url        = request.base_url
+  @open_ondemand_url = @conf.fetch("open_ondemand_url", @my_ood_url)
   @script_name   = request.script_name
   @dir_name      = request.path_info.sub(/^\//, '')
   @cluster_name  = if @conf.key?("clusters")
@@ -522,6 +527,14 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     bin_s           = @conf.key?("clusters") ? @bin[@cluster_name]               : @bin
     bin_overrides_s = @conf.key?("clusters") ? @bin_overrides[@cluster_name]     : @bin_overrides
     ssh_wrapper_s   = @conf.key?("clusters") ? @ssh_wrapper[@cluster_name]       : @ssh_wrapper
+    scancel_path = if bin_overrides_s&.key?("scancel")
+      bin_overrides_s["scancel"]
+    elsif bin_s && File.exist?(File.join(bin_s, "scancel"))
+      File.join(bin_s, "scancel")
+    else
+      "scancel"
+    end
+    @cancel_command_prefix = [ssh_wrapper_s, scancel_path].compact.join(" ")
 
     db         = open_history_db(@conf, @cluster_name)
     deleted_db = open_deleted_db(@conf, @cluster_name, main_db: db)
@@ -538,8 +551,19 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       sacct_map[jid] = j
     end
 
-    # Only load DB rows that sacct returned — sacct is the sole source of which jobs exist,
-    # so DB rows for jobs outside the sacct window are never shown and need not be fetched.
+    # Supplement sacct with squeue to catch PENDING jobs sacct may not report
+    # (e.g. jobs submitted so recently they haven't appeared in sacct yet, or
+    # Slurm configurations that omit PENDING jobs from sacct output).
+    squeue_jobs, @squeue_error = scheduler_s.squeue_active_jobs(bin_s, bin_overrides_s, ssh_wrapper_s)
+    (squeue_jobs || []).each do |j|
+      jid = j["JobID"].to_s.strip
+      next unless valid_oc_job_id?(jid, scheduler_s)
+      next if sacct_map.key?(jid)
+      sacct_map[jid] = j
+    end
+
+    # Load DB rows for all known job IDs (sacct + squeue) so OC metadata
+    # (app name, script, etc.) is joined for any newly discovered jobs too.
     db1_map = if sacct_map.empty?
                 {}
               elsif sacct_map.size <= 900
@@ -550,12 +574,33 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
                 db.execute("SELECT * FROM jobs").each_with_object({}) { |r, h| h[r["_job_id"]] = r }
               end
 
+    history_conf = @conf["history"].is_a?(Hash) ? @conf["history"] : {}
+    oc_col_defs = {
+      "OC_HISTORY_JOB_NAME"    => { "default_label" => "Job Name",    "job_key" => JOB_NAME, "type" => "job_name",  "sortable" => true,  "responsive" => false },
+      "OC_HISTORY_START_TIME"  => { "default_label" => "Start Time",  "job_key" => "Start",   "type" => "text",      "sortable" => true,  "responsive" => true  },
+      "OC_HISTORY_END_TIME"    => { "default_label" => "End Time",    "job_key" => "End",     "type" => "text",      "sortable" => true,  "responsive" => true  },
+      "OC_HISTORY_OUTPUT_FILE" => { "default_label" => "Output",      "job_key" => "StdOut",  "type" => "file_link", "sortable" => false, "responsive" => true  },
+      "OC_HISTORY_ERROR_FILE"  => { "default_label" => "Error",       "job_key" => "StdErr",  "type" => "file_link", "sortable" => false, "responsive" => true  },
+    }
+    @conf_history_cols = history_conf.map do |k, v|
+      conf_label = v.is_a?(Hash) ? v["label"] : nil
+      defn = oc_col_defs[k]
+      label = conf_label || (defn && defn["default_label"]) || k
+      if defn
+        defn.merge("key" => k, "label" => label)
+      else
+        { "key" => k, "job_key" => k, "label" => label, "type" => "text", "sortable" => false, "responsive" => true }
+      end
+    end
+    extra_field_keys = history_conf.keys.reject { |k| k.start_with?("OC_HISTORY_") }
+
     history_search_started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     @jobs, @jobs_size = build_merged_history_jobs(
       sacct_map, db1_map, deleted_ids,
       @statuses, @filter, @filter_column, @filter_mode,
       raw_date_from.to_s, raw_date_to.to_s,
-      @sort, @order, requested_rows, offset, scheduler_s
+      @sort, @order, requested_rows, offset, scheduler_s,
+      extra_field_keys
     )
     @history_search_elapsed_seconds = Process.clock_gettime(Process::CLOCK_MONOTONIC) - history_search_started_at
 
@@ -574,6 +619,10 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   when "nodes"
     @name = "Nodes"
     return erb :nodes
+  when "all_templates"
+    @name = "All Templates"
+    @all_manifests = @all_manifests.sort_by { |m| m.name.downcase }
+    return erb :all_templates
   when "templates/new"
     @name = "New Template"
     generic_apps_dir = @conf["generic_apps_dir"] || "./generic_apps"
@@ -654,7 +703,6 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       @body["form"] ||= {} if @body.is_a?(Hash) && @body.key?("form")
 
       @form_action = get_form_action(@body)
-      @submit_overwrite_warning_enabled = check_overwrite_warning?(@body["submit"])
 
       # Since the widget name is used as a variable in Ruby, it should consist of only
       # alphanumeric characters and underscores, and numbers should not be used at the
@@ -735,7 +783,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
           replace_with_cache(@body["form"], cache)
           if !cache[OC_SCRIPT_CONTENT].to_s.strip.empty?
             @script_content = escape_html(cache[OC_SCRIPT_CONTENT])
-          elsif @dir_name == "Slurm"
+          else
             # Script content not stored in DB — fetch from sacct -B
             sched_inst = create_scheduler(@conf)
             bin_val    = @conf["bin"]
@@ -885,6 +933,24 @@ get "/_files" do
   { files: entries }.to_json
 end
 
+# Return the text content of a file for the history file overlay.
+get "/_read_file" do
+  path = params[:path].to_s.strip
+  content_type :json
+  return { error: "No path specified" }.to_json if path.empty?
+  return { error: "File not found" }.to_json unless File.file?(path)
+
+  max_bytes = 1_048_576 # 1 MB
+  begin
+    size    = File.size(path)
+    return { empty: true }.to_json if size == 0
+    content = File.open(path, "rb") { |f| f.read(max_bytes) } || ""
+    { content: content.force_encoding("UTF-8").scrub("?"), truncated: size > max_bytes }.to_json
+  rescue => e
+    { error: "Could not read file: #{e.message}" }.to_json
+  end
+end
+
 # Return whether the specified PATH is a file or a directory.
 get "/_file_or_directory" do
   path = params[:path] || "."
@@ -974,9 +1040,34 @@ rescue Exception => e
   { "error" => e.message }.to_json
 end
 
+get "/history/job_efficiency" do
+  content_type :json
+
+  job_id = (params["job_id"] || "").strip
+  return { "error" => "No job ID specified" }.to_json if job_id.empty?
+
+  conf         = create_conf
+  cluster_name = conf.key?("clusters") ? (params["cluster"] || conf["clusters"].keys.first) : nil
+  scheduler    = conf.key?("clusters") ? create_scheduler(conf)[cluster_name] : create_scheduler(conf)
+  bin          = conf.key?("clusters") ? conf["bin"][cluster_name]           : conf["bin"]
+  bin_overrides= conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
+  ssh_wrapper  = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]   : conf["ssh_wrapper"]
+
+  unless scheduler.respond_to?(:efficiency)
+    next({ "error" => "Efficiency not supported by this scheduler." }.to_json)
+  end
+
+  result, error = scheduler.efficiency(job_id, bin, bin_overrides, ssh_wrapper)
+  if error
+    { "error" => error }.to_json
+  else
+    (result || {}).to_json
+  end
+end
+
 post "/history/cancel_one" do
   conf         = create_conf
-  job_id       = params["jobId"].to_s.strip
+  job_id       = params["jobId"].to_s.strip.gsub(/\[([^\]]+)\]/) { "[#{$1.gsub(/[:%]\d+/, '')}]" }
   content_type :json
   return JSON.generate({ ok: false, error: "No job ID" }) if job_id.empty?
   return JSON.generate({ ok: false, error: "Invalid job ID" }) unless job_id.match?(/\A[\d_.\[\]+\-]+\z/)
@@ -1016,12 +1107,25 @@ get "/history/active_job_ids" do
   all_jobs, _err, _cmd = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
 
   active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
+  seen_ids = Set.new
   ids = (all_jobs || []).filter_map do |j|
     jid = j["JobID"].to_s.strip
     next unless valid_oc_job_id?(jid, scheduler)
     next if deleted_ids.include?(jid)
+    seen_ids.add(jid)
     oc_status = sacct_state_to_oc_status(j["State"].to_s, scheduler)
     jid if active_statuses.include?(oc_status)
+  end
+
+  # Supplement sacct with squeue to catch PENDING jobs not yet in sacct
+  squeue_jobs, _sq_err = scheduler.squeue_active_jobs(bin, bin_overrides, ssh_wrapper)
+  (squeue_jobs || []).each do |j|
+    jid = j["JobID"].to_s.strip
+    next unless valid_oc_job_id?(jid, scheduler)
+    next if deleted_ids.include?(jid)
+    next if seen_ids.include?(jid)
+    oc_status = sacct_state_to_oc_status(j["State"].to_s, scheduler)
+    ids << jid if active_statuses.include?(oc_status)
   end
 
   JSON.generate(ids)

@@ -117,12 +117,15 @@ class Sge < Scheduler
         job_id  = (task_id && task_id != "undefined") ? "#{base_id}.#{task_id}" : base_id
         next if jobs.key?(job_id)
         raw_state = (parsed["exit_status"] && parsed["exit_status"] != "0") ? "failed_exit" : "completed"
+        # stdout/stderr paths use "host:path" format; strip the host prefix
         jobs[job_id] = {
           "JobID"     => job_id,
           "JobName"   => parsed["jobname"] || "",
           "State"     => raw_state,
           "Partition" => parsed["qname"] || "",
-          "Submit"    => parsed["qsub_time"] || ""
+          "Submit"    => parsed["qsub_time"] || "",
+          "StdOut"    => parsed["stdout_path_list"].to_s.sub(/\A[^:]+:/, ''),
+          "StdErr"    => parsed["stderr_path_list"].to_s.sub(/\A[^:]+:/, '')
         }
       end
     end

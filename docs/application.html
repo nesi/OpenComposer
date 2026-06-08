@@ -25,7 +25,8 @@
         <li class="nav-item ms-3"><a href="#radio" class="nav-link">2.6. radio widget</a></li>
         <li class="nav-item ms-3"><a href="#checkbox" class="nav-link">2.7. checkbox widget</a></li>
         <li class="nav-item ms-3"><a href="#path" class="nav-link">2.8. path widget</a></li>
-        <li class="nav-item ms-3"><a href="#functions" class="nav-link">2.9. Functions</a></li>
+        <li class="nav-item ms-3"><a href="#dependent_module_select" class="nav-link">2.9. dependent_module_select widget</a></li>
+        <li class="nav-item ms-3"><a href="#functions" class="nav-link">2.10. Functions</a></li>
         <li class="nav-item"><a href="#dynamic" class="nav-link">3. Dynamic Form Widget</a></li>
         <li class="nav-item ms-3"><a href="#set" class="nav-link">3.1. Widget setting</a></li>
         <li class="nav-item ms-3"><a href="#disable" class="nav-link">3.2. Widget disabling</a></li>
@@ -36,11 +37,15 @@
         <li class="nav-item ms-3"><a href="#save" class="nav-link">5.2. Save file</a></li>
         <li class="nav-item ms-3"><a href="#hide-script" class="nav-link">5.3. Hide script</a></li>
         <li class="nav-item ms-3"><a href="#variables" class="nav-link">5.4. Special variables</a></li>
-        <li class="nav-item ms-3"><a href="#overwrite_warning" class="nav-link">5.5. Disable warning</a></li>
         <li class="nav-item"><a href="#check" class="nav-link">6. Check section</a></li>
         <li class="nav-item"><a href="#submit" class="nav-link">7. Submit section</a></li>
+        <li class="nav-item ms-3"><a href="#empty-script-warning" class="nav-link">7.1. Empty script warning</a></li>
         <li class="nav-item"><a href="#header" class="nav-link">8. Header section</a></li>
-        <li class="nav-item"><a href="#supplement" class="nav-link">9. Supplement</a></li>
+        <li class="nav-item"><a href="#erb" class="nav-link">9. ERB and Dynamic Configuration</a></li>
+        <li class="nav-item ms-3"><a href="#erb-conf" class="nav-link">9.1. Accessing @conf</a></li>
+        <li class="nav-item ms-3"><a href="#erb-command" class="nav-link">9.2. Populating a dropdown from a shell command</a></li>
+        <li class="nav-item ms-3"><a href="#erb-read-yaml" class="nav-link">9.3. Inheriting a base form with read_yaml</a></li>
+        <li class="nav-item"><a href="#supplement" class="nav-link">10. Supplement</a></li>
       </ul>
     </nav>
 
@@ -59,10 +64,12 @@
         Describes your application. Here is a sample:
       </p>
       <pre>name: Gaussian
-category: Quantum Chemistry
+category: Chemistry
 icon: icon.png
-description: |
-  [Gaussian](https://gaussian.com) is a general purpose computational chemistry software package.
+description: Gaussian is a general purpose computational chemistry software package.
+hidden: true
+homepage: https://gaussian.com/
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/Gaussian/
 related_apps:
   OVITO:
     icon: ovito.png
@@ -71,9 +78,12 @@ related_apps:
   ImageJ:</pre>
       <ul>
   <li>name: Application name (If this key is omitted, the directory name is used instead)</li>
-  <li>category：Category name</li>
+  <li>category: Category name</li>
   <li>icon: Path to image file for icon. URL, <a target="_blank" href="https://icons.getbootstrap.com/">Bootstrap icon</a>, or <a target="_blank" href="https://fontawesome.com">Font Awesome icon</a> is also possible. For Bootstrap icons, write <code>icon: bi-airplane-fill</code>. For Font Awesome icons, write <code>icon: fa-solid fa-gear</code>.</li>
   <li>description: Description of the application</li>
+  <li>hidden: If set to <code>true</code>, the application is not shown in the main application listing on the home page. Useful for base forms or generic apps that are only accessed via a direct link or inheritance.</li>
+  <li>homepage: URL for the software's homepage. Displayed as a link on the application page.</li>
+  <li>documentation: URL for the software's documentation. Displayed as a link on the application page.</li>
   <li>related_apps: Specify an application registered in Open OnDemand. The specified application is displayed on the history page. As with <code>icon:</code>, you can specify icon images, etc. If no image is specified, the image registered in Open OnDemand is used.</li>
       </ul>
 
@@ -106,6 +116,7 @@ related_apps:
   <li>radio widget: Displays radio buttons.</li>
   <li>checkbox widget: Displays checkboxes.</li>
   <li>path widget: Displays an input field for path of a file or directory on the Open OnDemand server.</li>
+  <li>dependent_module_select widget: Displays a dropdown whose options are loaded dynamically based on the value of a driver widget.</li>
       </ul>
 
       <h3 id="number">2.1. number widget</h3>
@@ -263,6 +274,21 @@ script: |
   module load #{package_1}
   mpiexec #{package_2}</pre>
       <img width="800" src="img/select2.png" alt="select">
+      <p>
+        Setting <code>remember_last: true</code> on a <code>select</code> widget causes the browser to remember the last value the user selected and restore it automatically the next time they visit the form.
+        This is useful for fields like a project or partition selector that users rarely change between job submissions.
+      </p>
+      <pre>form:
+  partition:
+    widget: select
+    label: Partition
+    remember_last: true
+    options:
+      - [ Small Queue, small ]
+      - [ Large Queue, large ]
+
+script: |
+  #SBATCH --partition=#{partition}</pre>
 
       <h3 id="multi_select">2.5. multi_select widget</h3>
       <p>
@@ -425,7 +451,46 @@ script: |
     </p>
     <img style="border-style: solid; border-width: 1px;" width="600" src="img/path2.png" alt="path">
 
-    <h3 id="functions">2.9. Functions</h3>
+      <h3 id="dependent_module_select">2.9. dependent_module_select widget</h3>
+      <p>
+        Displays a dropdown whose options are loaded dynamically based on which <code>prefix</code> the currently-selected value of a <strong>driver</strong> widget matches.
+        Use it when one select widget (e.g. an application version) determines which set of modules should be offered in a second select.
+      </p>
+      <p>
+        The <code>driver</code> key names the field whose value is watched.
+        The <code>options</code> key is a list of <code>prefix</code>/<code>module</code> pairs:
+        when the driver's current value starts with <code>prefix</code>, the widget queries for all available versions of <code>module</code> and populates the dropdown with the results.
+      </p>
+      <pre>form:
+  alphafold_module:
+    widget: select
+    label: AlphaFold Module
+    options:
+      - [AlphaFold 2.3.2, AlphaFold/2.3.2]
+      - [AlphaFold 3.0.0, AlphaFold/3.0.0]
+      - [AlphaFold 3.0.1, AlphaFold/3.0.1]
+      - [AlphaFold 3.0.2, AlphaFold/3.0.2]
+
+  alphafold_db_module:
+    widget: dependent_module_select
+    label: AlphaFold Database Module
+    driver: alphafold_module
+    options:
+      - prefix: AlphaFold/2.
+        module: AlphaFold2DB
+      - prefix: AlphaFold/3.
+        module: AlphaFold3DB
+
+script: |
+  module load #{alphafold_module}
+  module load #{alphafold_db_module}</pre>
+      <p>
+        In this example, selecting <code>AlphaFold/2.3.2</code> in the driver loads the available versions of <code>AlphaFold2DB</code>, while selecting <code>AlphaFold/3.0.0</code>, <code>AlphaFold/3.0.1</code>, or <code>AlphaFold/3.0.2</code> loads the versions of <code>AlphaFold3DB</code>.
+        The first matching prefix wins, so list more specific prefixes before more general ones.
+      </p>
+      <img src="img/dependent_module_select.png" alt="dependent_module_select example" class="img-fluid">
+
+    <h3 id="functions">2.10. Functions</h3>
     <p>
       The <code>zeropadding(key, digit)</code> function pads a number with leading zeros.
       If the number of digits is less than the value specified in the second argument, <code>digit</code>, the missing digits are filled with '0'.
@@ -663,31 +728,34 @@ script: |
   <thead>
     <tr style="vertical-align:middle">
       <th>Widget</th><th>label, value, help,<br>required, indent</th><th>options<br>(Dynamic Form Widget)</th><th>size</th><th>separator</th><th>direction</th><th>min, max,<br>step</th>
-      <th>show_files,<br>favorites</th>
+      <th>show_files,<br>favorites</th><th>remember_last</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>number</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td>OK</td><td></td>
+      <td>number</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td>OK</td><td></td><td></td>
     </tr>
     <tr>
-      <td>text, email</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td><td></td>
+      <td>text, email</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td><td></td><td></td>
     </tr>
     <tr>
-      <td>select</td><td>OK</td><td>OK (OK)</td><td></td><td></td><td></td><td></td><td></td>
+      <td>select</td><td>OK</td><td>OK (OK)</td><td></td><td></td><td></td><td></td><td></td><td>OK</td>
     </tr>
     <tr>
-      <td>multi_select</td><td>OK</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td>
+      <td>multi_select</td><td>OK</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td><td></td>
     </tr>
     <tr>
       <td>radio</td><td>OK</td><td>OK (OK)</td><td></td><td></td>
-      <td>OK</td><td></td><td></td>
+      <td>OK</td><td></td><td></td><td></td>
     </tr>
     <tr>
-      <td>checkbox</td><td>OK</td><td>OK (OK)</td> <td></td><td>OK</td><td>OK</td><td></td><td></td>
+      <td>checkbox</td><td>OK</td><td>OK (OK)</td> <td></td><td>OK</td><td>OK</td><td></td><td></td><td></td>
     </tr>
     <tr>
-      <td>path</td><td>OK</td><td></td><td></td><td></td><td></td><td></td><td>OK</td>
+      <td>path</td><td>OK</td><td></td><td></td><td></td><td></td><td></td><td>OK</td><td></td>
+    </tr>
+    <tr>
+      <td>dependent_module_select</td><td>label, help</td><td>prefix/module pairs<br>(see 2.9)</td><td></td><td></td><td></td><td></td><td></td><td></td>
     </tr>
   </tbody>
       </table>
@@ -774,23 +842,6 @@ Note that the filename is <code>form.yml.erb</code> since it uses ERB.
         <li>#{OC_JOB_NAME}: <code>Job Name</code> defined in the <code>header</code> section</li>
       </ul>
 
-      <h3 id="overwrite_warning">5.5. Disable warning</h3>
-      <p>
-        If you try to modify a widget that affects the <code>script</code> or <code>submit</code> section after manually editing those sections, a warning like the one below will appear.
-        If you click "Discard and continue", the changes you made to the section will be discarded and a new script will be generated.
-      </p>
-  <img style="border-style: solid; border-width: 1px;" src="img/overwrite_warning.png" width="400" alt="warning">
-      <p>
-        To disable this warning, set <code>overwrite_warning: false</code> in the configuration of the section where you want to disable the warning.
-      </p>
-
-      <pre>script:
-  overwrite_warning: false
-  content: |</pre>
-
-      <pre>submit:
-  overwrite_warning: false
-  content: |</pre>
       <h2 id="check">6. Check section</h2>
       <p>
   Variables defined in the <code>form</code> section can be validated in the <code>check</code> section using the Ruby language and the function <code>oc_assert(condition, message)</code>.
@@ -882,6 +933,26 @@ submit:
       </p>
       <img src="img/submit2.png" width="600" alt="Submit">
 
+      <h3 id="empty-script-warning">7.1. Empty script warning</h3>
+      <p>
+        When the user clicks <strong>Submit</strong> (or <strong>Confirm</strong>), Open Composer automatically checks whether the batch script contains any real commands.
+        A line is considered boilerplate and ignored if it is blank, starts with <code>#</code> (comments, <code>#SBATCH</code> directives, or the shebang line), or starts with <code>module</code>.
+        If no real commands are found, a browser confirmation dialog is shown before the job is submitted:
+      </p>
+      <pre>No commands have been added to the batch script.
+
+Are you sure you want to submit?</pre>
+      <p>
+        Clicking <strong>Cancel</strong> returns the user to the form without submitting.
+        Clicking <strong>OK</strong> proceeds with submission as normal.
+        This check is automatic and enabled by default.
+      </p>
+      <p>
+        To disable the warning, set <code>empty_script_warning: false</code> in <code>conf.yml.erb</code>:
+      </p>
+      <pre>empty_script_warning: false</pre>
+      <img src="img/no_entry_warning_message.png" alt="Empty script warning" class="img-fluid">
+
       <h2 id="header">8. Header section</h2>
       <p>
   You can define the <code>header</code> section.
@@ -934,7 +1005,104 @@ queue:
     - [large]
 &lt;% end %&gt;</pre>
 
-      <h2 id="supplement">9. Supplement</h2>
+      <h2 id="erb">9. ERB and Dynamic Configuration</h2>
+      <p>
+        When a form file is named <code>form.yml.erb</code>, Open Composer processes it as Embedded Ruby (ERB) before parsing the YAML.
+        This lets you generate form content dynamically at page load time — for example, running a shell command to build the list of options for a dropdown, or reading values from the OpenComposer configuration.
+      </p>
+
+      <h3 id="erb-conf">9.1. Accessing @conf</h3>
+      <p>
+        The variable <code>@conf</code> is available inside <code>form.yml.erb</code> and contains the full OpenComposer configuration hash loaded from <code>conf.yml.erb</code>.
+        Use it to read site-specific settings such as the login node hostname.
+      </p>
+      <pre>&lt;%
+  login_node = @conf&.fetch('login_node', nil)
+%&gt;
+---
+form:
+  my_field:
+    widget: text
+    label: Login node is &lt;%= login_node %&gt;</pre>
+
+      <h3 id="erb-command">9.2. Populating a dropdown from a shell command</h3>
+      <p>
+        You can run a shell command inside ERB to populate a <code>select</code> widget's <code>options</code> list at page load time.
+        If the OOD web server does not have direct access to the job scheduler daemon, prefix the command with
+        <code>ssh</code> to the login node (read from <code>@conf['login_node']</code>).
+      </p>
+      <p>
+        The example below populates a "Project" dropdown from the user's Slurm associations by running <code>sacctmgr</code> via SSH.
+        It always renders a <code>select</code> widget — if no accounts are found the options list is empty rather than crashing.
+      </p>
+      <pre>&lt;%
+  begin
+    _login_node = (@conf&amp;.fetch('login_node', nil) rescue nil)
+    _login_node = _login_node.is_a?(Hash) ? _login_node.values.compact.first : _login_node
+    _ssh_prefix = _login_node ? "ssh -o BatchMode=yes -o ConnectTimeout=10 #{_login_node}" : ""
+    _accounts = `#{_ssh_prefix} sacctmgr -n -P show user #{ENV['USER']} withassoc format=Account 2&gt;/dev/null`
+                .split("\n").map(&amp;:strip).reject(&amp;:empty?).uniq.sort
+  rescue
+    _accounts = []
+  end
+%&gt;
+---
+form:
+  account:
+    widget: select
+    label: Project
+&lt;% if _accounts.empty? %&gt;
+    options: []
+&lt;% else %&gt;
+    options:
+&lt;% _accounts.each do |a| %&gt;
+      - ["&lt;%= a %&gt;", "&lt;%= a %&gt;"]
+&lt;% end %&gt;
+&lt;% end %&gt;
+
+script: |
+  #SBATCH --account=#{account}</pre>
+      <p>
+        Key points:
+      </p>
+      <ul>
+        <li>Wrap the shell command in a <code>begin/rescue</code> block so a failed command produces an empty list rather than a form error.</li>
+        <li>Use <code>options: []</code> (not omitting the key) when the list is empty — a missing <code>options</code> key parses as <code>nil</code> in YAML and causes a runtime error.</li>
+        <li><code>BatchMode=yes</code> prevents SSH from hanging waiting for a password; <code>ConnectTimeout=10</code> prevents the page from stalling if the login node is unreachable.</li>
+        <li>The Passenger web process runs as the logged-in OOD user, so their SSH key to the login node must already be set up.</li>
+      </ul>
+
+      <h3 id="erb-read-yaml">9.3. Inheriting a base form with read_yaml</h3>
+      <p>
+        Use the <code>read_yaml(path)</code> helper to load another form file (including <code>.erb</code> files) and then modify its content before emitting YAML.
+        This is how all the apps in the <code>apps/</code> directory inherit the common Slurm fields from <code>SlurmBasic</code> — they load the base form, inject application-specific fields, and append the module-load commands to the script.
+      </p>
+      <pre>&lt;%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+# Insert an application-specific field before the time widget
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['myapp_module'] = {
+      'widget' => 'module_load',
+      'module' => 'myapp',
+      'label'  => 'MyApp Module'
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\nmodule load #{myapp_module}\n"
+%&gt;
+&lt;%= base.to_yaml -%&gt;</pre>
+      <p>
+        <code>read_yaml</code> automatically finds and processes the <code>.erb</code> version of the file if it exists, so <code>SlurmBasic</code>'s ERB header (which populates the Project dropdown) is executed correctly when inherited.
+      </p>
+
+      <h2 id="supplement">10. Supplement</h2>
       <ul>
   <li>All the samples on this page are written in the Bash language, but you can use other shells as well. However, the <code>submit</code> section can only be written in the Bash language.</li>
   <li>Widget names can only contain alphanumeric characters and underscores. Numbers and underscores cannot start the name. Please also avoid using widget names that end with an underscore followed by a number (e.g., <code>nodes_1</code>). The same rule applies to the directory name in which the application is saved. However, when defining the <code>header</code> section in <code>form.yml</code>, the widget names beginning with underscores (e.g. <code>_script_location</code>) used in <code>lib/header.yml.erb</code> can be used.</li>
@@ -943,6 +1111,7 @@ queue:
   <li>The order of processing that Open Composer performs before submitting a job script is as follows.
     <ol>
       <li>The "Submit" button is clicked in the application page</li>
+      <li>If <code>empty_script_warning</code> is enabled, check whether the batch script contains any real commands and show a confirmation dialog if not (see <a href="#empty-script-warning">section 7.1</a>)</li>
       <li>Execute the script written in the <code>check</code> section in <code>form.yml</code> (if the <code>check</code> section exists)</li>
       <li>Execute the script written in the <code>submit</code> section in <code>form.yml</code> (if the <code>submit</code> section exists)</li>
       <li>Submit the job script</li>

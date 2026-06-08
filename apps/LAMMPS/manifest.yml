@@ -4,3 +4,4 @@ description: This application generates a job script for LAMMPS.
 homepage: http://lammps.sandia.gov/
 icon: icon.png
 hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/LAMMPS/

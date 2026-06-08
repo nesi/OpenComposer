@@ -1,0 +1,84 @@
+<%
+  # Load SlurmBasic as the base — runs its own ERB preamble (accounts lookup) internally
+  _basic_path = File.expand_path(File.join("..", "SlurmBasic", "form.yml"), File.dirname(yml_path))
+  _base = read_yaml(_basic_path)
+
+  # 1. Replace partition with the GPU-aware version (adds GPU show/disable actions to options)
+  _base["form"]["partition"] = YAML.safe_load(<<~YAML)
+    widget: select
+    label: Partition
+    options:
+      - [ any,   "",    set-max-cores_simple: 166, set-max-memory_total_gb: 1450, show-gpu_any,   disable-gpu_genoa, disable-number_of_gpus_genoa, disable-gpu_milan, disable-number_of_gpus_milan, set-value-gpu_any: None]
+      - [ genoa, genoa, set-max-cores_simple: 166, set-max-memory_total_gb: 1450, show-gpu_genoa, disable-gpu_any,   disable-number_of_gpus_any,   disable-gpu_milan, disable-number_of_gpus_milan, set-value-gpu_genoa: None]
+      - [ milan, milan, set-max-cores_simple: 126, set-max-memory_total_gb: 1000, show-gpu_milan, disable-gpu_any,   disable-number_of_gpus_any,   disable-gpu_genoa, disable-number_of_gpus_genoa, set-value-gpu_milan: None]
+  YAML
+
+  # 2. GPU-specific fields — inserted before time_days_hours_minutes
+  _gpu_fields = YAML.safe_load(<<~YAML)
+    gpu_any:
+      widget:   select
+      label:    Type of GPU
+      size:     1
+      options:
+        - [ "None", "", ]
+        - [ "H100",       "h100", show-number_of_gpus_any, set-value-partition: genoa, set-value-gpu_genoa: H100]
+        - [ "A100 (40GB)", "a100", show-number_of_gpus_any, set-value-partition: genoa, set-value-gpu_genoa: "A100 (40GB)"]
+        - [ "A100 (80GB)", "a100", show-number_of_gpus_any, set-value-partition: milan, set-value-gpu_milan: "A100 (80GB)"]
+        - [ "L4",         "l4",   show-number_of_gpus_any, set-value-partition: genoa, set-value-gpu_genoa: L4]
+      help: Selecting a GPU here will change the partition
+    number_of_gpus_any:
+      widget: number
+      label: Number of GPUs
+      value: 1
+      min:   1
+      max:   4
+      step:  1
+    gpu_genoa:
+      widget:   select
+      label:    Type of GPU
+      size:     1
+      options:
+        - [ "None", "", ]
+        - [ "H100",       "h100", show-number_of_gpus_genoa]
+        - [ "A100 (40GB)", "a100", show-number_of_gpus_genoa]
+        - [ "L4",         "l4",   show-number_of_gpus_genoa]
+      help: If you want to use the A100 (80GB) graphic card, switch Partition to milan.
+    number_of_gpus_genoa:
+      widget: number
+      label: Number of GPUs
+      value: 1
+      min:   1
+      max:   4
+      step:  1
+    gpu_milan:
+      widget:   select
+      label:    Type of GPU
+      size:     1
+      options:
+        - [ "None", "", ]
+        - [ "A100 (80GB)", "a100", show-number_of_gpus_milan]
+      help: If you want to use the H100, A100 (40GB), or L4 graphic card, switch Partition to genoa.
+    number_of_gpus_milan:
+      widget: number
+      label: Number of GPUs
+      value: 1
+      min:   1
+      max:   4
+      step:  1
+  YAML
+
+  _new_form = {}
+  _base["form"].each do |k, v|
+    _new_form.merge!(_gpu_fields) if k == "time_days_hours_minutes"
+    _new_form[k] = v
+  end
+  _base["form"] = _new_form
+
+  # 3. Insert --gpus-per-node lines before --time in the script
+  # (YAML strips the 2-space indent from literal block scalars, so lines have no leading spaces)
+  _gpu_lines = "#SBATCH --gpus-per-node=\#{gpu_any}:\#{number_of_gpus_any} \n" \
+               "#SBATCH --gpus-per-node=\#{gpu_genoa}:\#{number_of_gpus_genoa}\n" \
+               "#SBATCH --gpus-per-node=\#{gpu_milan}:\#{number_of_gpus_milan}\n"
+  _base["script"] = _base["script"].gsub(/(#SBATCH --time=)/) { _gpu_lines + _1 }
+-%>
+<%= _base.to_yaml %>

@@ -4,3 +4,4 @@ description: CP2K is a freely available (GPL) program, written in Fortran 95, to
 homepage: https://www.cp2k.org/
 icon: icon.png
 hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/CP2K/

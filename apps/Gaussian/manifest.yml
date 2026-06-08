@@ -1,5 +1,7 @@
 name: Gaussian
 category: Chemistry
-description: Gaussian application.
+description: Gaussian is a general purpose computational chemistry software package.
 icon: icon.png
 hidden: true
+homepage: https://gaussian.com/
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/Gaussian/

@@ -193,6 +193,13 @@
     <strong>sacct error:</strong> <%= escape_html(@sacct_error) %>
   </div>
 <% end %>
+<% if @squeue_error %>
+  <div class="alert alert-warning mx-3 mt-2 mb-0">
+    <strong>squeue error:</strong> <%= escape_html(@squeue_error) %>
+  </div>
+<% end %>
+
+<% _has_file_link_col = (@conf_history_cols || []).any? { |c| c["type"] == "file_link" } %>
 
 <% if @jobs.nil? || @jobs.empty? %>
   <div class="mt-3 ms-2">
@@ -229,18 +236,13 @@
             <span>Script Name</span>
             <%= output_history_sort_controls(HEADER_SCRIPT_NAME) %>
           </th>
-          <th class="text-wrap text-break">
-            <span>Job Name</span>
-            <%= output_history_sort_controls(JOB_NAME) %>
+          <% (@conf_history_cols || []).each do |col| %>
+          <% _col_cls = col["responsive"] ? " d-none d-lg-table-cell" : "" %>
+          <th class="text-wrap text-break<%= _col_cls %>">
+            <span><%= escape_html(col["label"]) %></span>
+            <% if col["sortable"] %><%= output_history_sort_controls(col["job_key"]) %><% end %>
           </th>
-          <th class="text-wrap text-break d-none d-lg-table-cell">
-            <span>Start Time</span>
-            <%= output_history_sort_controls("Start") %>
-          </th>
-          <th class="text-wrap text-break d-none d-lg-table-cell">
-            <span>End Time</span>
-            <%= output_history_sort_controls("End") %>
-          </th>
+          <% end %>
           <th class="text-wrap text-break">
             <span>Status</span>
             <%= output_history_sort_controls(JOB_STATUS_ID) %>
@@ -296,9 +298,22 @@
                 <a href="#" data-bs-toggle="modal" data-bs-target="#_historyJobScript<%= job[JOB_ID] %>">Job</a>
               <% end %>
             </td>
-            <td class="text-wrap text-break"><%= output_text(job[JOB_NAME], job_name_filter) %></td>
-            <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["Start"].to_s) %></td>
-            <td class="text-wrap text-break d-none d-lg-table-cell"><%= escape_html(job["End"].to_s) %></td>
+            <% (@conf_history_cols || []).each do |col| %>
+            <% _col_cls = col["responsive"] ? " d-none d-lg-table-cell" : "" %>
+            <% case col["type"] %>
+            <% when "job_name" %>
+            <td class="text-wrap text-break<%= _col_cls %>"><%= output_text(job[col["job_key"]], job_name_filter) %></td>
+            <% when "file_link" %>
+            <td class="text-wrap text-break<%= _col_cls %>">
+              <% _fp = job[col["job_key"]].to_s.strip %>
+              <% unless _fp.empty? %>
+                <a href="#" title="<%= escape_html(_fp) %>" onclick="ocHistory.openFileOverlay('<%= escape_html(_fp) %>'); return false;"><%= escape_html(File.basename(_fp)) %></a>
+              <% end %>
+            </td>
+            <% else %>
+            <td class="text-wrap text-break<%= _col_cls %>"><%= escape_html(job[col["job_key"]].to_s) %></td>
+            <% end %>
+            <% end %>
             <td class="text-wrap text-break"><%= output_status(job[JOB_STATUS_ID]) %></td>
           </tr>
         <% end %>
@@ -323,4 +338,22 @@
 </div>
 <% end %>
 
+<% if _has_file_link_col %>
+<div class="modal" id="_historyFileOverlay" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content" style="resize: horizontal; padding-right: 16px;">
+      <div class="modal-header">
+        <h5 class="text-break" id="_historyFileOverlayTitle">File</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="_historyFileOverlayBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<% end %>
+
 <script src="<%= @script_name %>/history.js"></script>
+<script>ocHistory.cancelCommandPrefix = <%= @cancel_command_prefix.to_json %>;</script>

@@ -5,8 +5,8 @@
 git add .
 git commit -m 'update version of the NeSI OOD OpenComposer App'
 # For commiting to github for the first time
-git branch -M main
-git remote add origin git@github.com:geoffreyweal/OpenComposer.git
-git push -uf origin main
+#git branch -M main
+#git remote add origin git@github.com:geoffreyweal/OpenComposer.git
+#git push -uf origin main
 # push your new commit:
-#git push -u origin main
+git push -u origin main

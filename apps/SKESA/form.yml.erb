@@ -1,6 +1,6 @@
 <%
 base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
-base = YAML.load_file(base_path)
+base = read_yaml(base_path)
 
 new_form = {}
 base['form'].each do |k, v|

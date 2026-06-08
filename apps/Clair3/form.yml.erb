@@ -1,6 +1,6 @@
 <%
 base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
-base = YAML.load_file(base_path)
+base = read_yaml(base_path)
 
 new_form = {}
 base['form'].each do |k, v|
@@ -18,6 +18,19 @@ base['form']   = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{clair3_module}
+
+  INPUT_DIR=/path/to/input/data         # e.g. /nesi/nobackup/nesi12345/input (absolute path needed)
+  OUTPUT_DIR=/path/to/save/outputs      # /nesi/nobackup/nesi12345/output (absolute path needed)
+  REF=/path/to/reference/genomes        # use the suggested Slurm variable which will read the value from `--cpus-per-task`
+  MODEL_NAME=/model/name                # e.g. r941_prom_hac_g360+g422
+
+  run_clair3.sh \
+  --bam_fn=${INPUT_DIR} \
+  --ref_fn=${REF} \
+  --threads=$SLURM_CPUS_PER_TASK \
+  --platform=ont \
+  --model_path=${CONDA_PREFIX}/bin/models/${MODEL_NAME} \
+  --output=${OUTPUT_DIR} --enable_phasing
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

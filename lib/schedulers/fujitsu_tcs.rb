@@ -73,7 +73,7 @@ class Fujitsu_tcs < Scheduler
   # Historical window is the maximum pjstat supports: 365 days.
   def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
     pjstat   = get_command_path("pjstat", bin, bin_overrides)
-    choose   = "--choose=jid,jnam,rscg,st,adt"
+    choose   = "--choose=jid,jnam,rscg,st,adt,std,stde"
     command1 = [ssh_wrapper, pjstat, "-s -E --data", choose].compact.join(" ")
     stdout1, stderr1, status1 = Open3.capture3(command1)
     return nil, [stdout1, stderr1].join(" ").strip, command1 unless status1.success?
@@ -92,7 +92,9 @@ class Fujitsu_tcs < Scheduler
           "JobName"   => f[2],
           "Partition" => f[3],
           "State"     => f[4],
-          "Submit"    => f[5]
+          "Submit"    => f[5],
+          "StdOut"    => f[6].to_s.strip,
+          "StdErr"    => f[7].to_s.strip
         }
       end
     end

@@ -24,7 +24,7 @@
       }
       #<%= OC_SCRIPT_CONTENT %>_highlight_container, #<%= SUBMIT_CONTENT %>_highlight_container {
         position: absolute;
-        inset: 0;
+        top: 0; right: 0; bottom: 0; left: 0;
         margin: 0;
         padding: 0;
         overflow: hidden;
@@ -90,16 +90,51 @@
       }
       #<%= OC_SCRIPT_CONTENT %>_editor:focus-within #<%= OC_SCRIPT_CONTENT %>_highlight_container,
       #<%= SUBMIT_CONTENT %>_editor:focus-within #<%= SUBMIT_CONTENT %>_highlight_container {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        border-color: #00B9E4;
+        box-shadow: 0 0 0 0.25rem rgba(0, 185, 228, 0.25);
       }
+      /* ── REANNZ brand ── */
       body {
         min-width: 768px;
+        color: #191919;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        color: #001C36;
+      }
+      a { color: #00B9E4; }
+      a:hover { color: #001C36; }
+      .footer a { color: inherit; text-decoration: none; }
+      .footer a:hover { text-decoration: underline; }
+      .btn-primary {
+        background-color: #00B9E4;
+        border-color: #00B9E4;
+        color: #fff;
+        border-radius: 4px;
+      }
+      .btn-primary:hover, .btn-primary:focus {
+        background-color: #001C36;
+        border-color: #001C36;
+        color: #fff;
+      }
+      .form-control:focus, .form-select:focus {
+        border-color: #00B9E4;
+        box-shadow: 0 0 0 0.25rem rgba(0, 185, 228, 0.25);
+      }
+      .form-check-input:checked {
+        background-color: #00B9E4;
+        border-color: #00B9E4;
+      }
+      .form-check-input:focus {
+        box-shadow: 0 0 0 0.25rem rgba(0, 185, 228, 0.25);
       }
       #_form_container {
         display: flex;
         flex-direction: column;
         min-height: 100vh;
+      }
+      #oc-search-results {
+        font-size: 1rem;
+        line-height: 1.5;
       }
       .ood-logo {
         filter: invert(1) grayscale(100%);
@@ -130,7 +165,7 @@
       }
 
       .history-sort-link {
-        color: rgba(70, 48, 32, 0.82);
+        color: #C3C8C8;
         display: block;
         font-size: 0.62rem;
         font-weight: 700;
@@ -149,11 +184,11 @@
       }
 
       .history-sort-link:hover {
-        color: #b85400;
+        color: #00B9E4;
       }
 
       .history-sort-link.history-sort-active {
-        color: #d11f1f;
+        color: #001C36;
       }
 
       .history-modal-match-cell {
@@ -184,40 +219,20 @@
             <ul class="navbar-nav">
               <% if @conf["navbar_logo"].to_s.strip.length > 0 %>
                 <li class="nav-item d-flex align-items-center px-2">
-                  <img src="<%= @script_name %>/<%= @conf["navbar_logo"] %>" alt="Logo" style="height: 30px; vertical-align: middle;">
+                  <a href="<%= @open_ondemand_url %>" target="_blank">
+                    <img src="<%= @script_name %>/<%= @conf["navbar_logo"] %>" alt="Logo" style="height: 30px; vertical-align: middle;">
+                  </a>
                 </li>
               <% end %>
               <li class="nav-item">
-                <a href="<%= @script_name %>/" class="nav-link <%= active?("" == @dir_name) %>">Home</a>
+                <a href="<%= @script_name %>/" class="nav-link <%= active?("" == @dir_name) %>">Selected Templates</a>
               </li>
-              <li class="nav-item dropdown">
-                <a href="#" class="nav-link dropdown-toggle <%= active?("" != @dir_name && "history" != @dir_name && "nodes" != @dir_name) %>" data-bs-toggle="dropdown">
-                  Applications
-                </a>
-                <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>; max-height: 80vh; overflow-y: auto;">
-                  <% @manifests_w_category.group_by(&:category).each do |category, manifests| %>
-                    <li class="dropdown-header"><%= category %></li>
-                    <% manifests.each do |m| %>
-                      <li>
-                        <a href="<%= @script_name %>/<%= m['dirname'] %>" class="dropdown-item <%= active?(m['dirname'] == @dir_name) %>">
-                          <%= m['name'] %>
-                        </a>
-                      </li>
-                    <% end %>
-                    <li><hr class="dropdown-divider"></li>
-                  <% end %>
-                  <% @manifests_wo_category.each do |m| %>
-                    <li>
-                      <a href="<%= @script_name %>/<%= m['dirname'] %>" class="dropdown-item <%= active?(m['dirname'] == @dir_name) %>">
-                        <%= m['name'] %>
-                      </a>
-                    </li>
-                  <% end %>
-                </ul>
+              <li class="nav-item">
+                <a href="<%= @script_name %>/all_templates" class="nav-link <%= active?("all_templates" == @dir_name) %>">All Templates</a>
               </li>
               <li class="nav-item me-1 d-flex align-items-center">
                 <input type="search" id="oc-search" class="form-control form-control-sm"
-                       placeholder="Search apps…" autocomplete="off" style="width:180px;">
+                       placeholder="<%= ERB::Util.h(@conf.fetch("navbar_search_placeholder", "Search apps…")) %>" autocomplete="off" style="width:180px;">
               </li>
               <li class="nav-item">
                 <a href="<%= @script_name %>/history" class="nav-link <%= active?("history" == @dir_name) %>">History</a>
@@ -243,7 +258,7 @@
                       <i class="bi bi-terminal-fill" style="font-size: 20px; vertical-align: middle;"></i>
                       <span class="d-none d-lg-inline ms-1" style="display: inline-block; vertical-align: middle;">Shell Access</span>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-dark bg-gradient" style="background:<%= @conf['dropdown_color'] %>; --bs-dropdown-min-width: 100%;">
+                    <ul class="dropdown-menu" style="background:<%= @conf['dropdown_color'] %>; color:<%= @conf['dropdown_text_color'] %>; --bs-dropdown-link-color:<%= @conf['dropdown_text_color'] %>; --bs-dropdown-min-width: 100%;">
                       <% @conf["login_node"].each do |key, value| %>
                         <li><a target="_blank" href="<%= @my_ood_url %>/pun/sys/shell/ssh/<%= value %>" class="dropdown-item"><%= key %></a></li>
                       <% end %>
@@ -260,7 +275,7 @@
               <% end %>
               <% if @conf["show_open_ondemand"] %>
                 <li class="nav-item">
-                  <a target="_blank" href="<%= @my_ood_url %>" class="nav-link py-0">
+                  <a target="_blank" href="<%= @open_ondemand_url %>" class="nav-link py-0">
                     <i class="bi bi-grid-fill" style="font-size: 20px; display: inline-block; vertical-align: middle;" aria-hidden="true"></i>
                     <span class="ms-1" style="display: inline-block; vertical-align: middle;"><%= ERB::Util.h(@conf["open_ondemand_label"]) %></span>
                   </a>
@@ -271,25 +286,32 @@
         </div>
       </nav>
 
-      <div id="oc-search-results" style="display:none; background:#fff; border-bottom:1px solid #dee2e6; max-height:60vh; overflow-y:auto;"></div>
+      <div id="oc-search-results" style="display:none; background:#F3F4F4; border-top:1px solid #C3C8C8; max-height:60vh; overflow-y:auto;"></div>
 
       <div style="flex: 1;">
         <%= yield %>
       </div>
 
-      <footer class="footer py-1 bg-gradient mx-1 <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>;">
-        <div class="row align-items-center" style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
-          <div class="col text-start"></div> <!-- An empty column to center the middle text -->
-          <div class="col text-center"><%= @conf['footer'] %></div>
-          <div class="col text-end small mx-3">Open Composer version: <%= @version %></div>
+      <% if @conf.fetch('show_footer', true) %>
+      <footer class="footer d-flex justify-content-between align-items-center m-0 <%= @conf.fetch('footer_padding', 'p-3') %> <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>; margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important; margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important;">
+        <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
+          <% if @conf['footer_ood_logo'] != false %>
+            <a href="https://openondemand.org/" target="_blank">
+              <img src="<%= @script_name %>/OpenOnDemand_powered_by_invert.svg" alt="Powered by Open OnDemand" style="height:<%= @conf.fetch('footer_logo_height', '24px') %>; vertical-align: middle;">
+            </a>
+          <% end %>
         </div>
+        <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;"><%= @conf['footer'] %></div>
+        <div class="small" style="color:<%= @conf['footer_text_color'] %>;">Open Composer version: <%= @version %></div>
       </footer>
+      <% end %>
     </div>
 
     <script>
     (function() {
-      var ALL_APPS = <%= @all_manifests.map { |m| { dirname: m.dirname, name: m.name, category: m.category, description: m.description, gpu: @gpu_names.include?(m.name.to_s.downcase) } }.to_json.gsub('</', '<\/') %>;
+      var ALL_APPS = <%= @all_manifests.map { |m| { dirname: m.dirname, name: m.name, category: m.category, description: m.description, gpu: @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") } }.to_json.gsub('</', '<\/') %>;
       var scriptName = '<%= @script_name %>';
+      var CATEGORY_COLORS = <%= (@conf['category_badge_colors'] || {}).to_json %>;
 
       function esc(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -300,15 +322,26 @@
 
       input.addEventListener('input', function() {
         var q = this.value.trim().toLowerCase();
-        var list = document.getElementById('oc-app-list');
+
+        // Hide whichever main content list is on this page.
+        var list = document.getElementById('oc-app-list') || document.getElementById('oc-all-list');
         if (!q) {
           results.style.display = 'none';
+          results.style.height = '';
+          results.style.maxHeight = '';
           results.innerHTML = '';
           if (list) list.style.display = '';
           return;
         }
         if (list) list.style.display = 'none';
         results.style.display = '';
+        if (list && list.id === 'oc-all-list') {
+          results.style.height = 'calc(100vh - 56px)';
+          results.style.maxHeight = 'none';
+        } else {
+          results.style.height = '';
+          results.style.maxHeight = '';
+        }
 
         var matches = ALL_APPS.filter(function(m) {
           return (m.name        || '').toLowerCase().includes(q) ||
@@ -323,8 +356,13 @@
 
         results.innerHTML = matches.map(function(m) {
           var badges = '';
-          if (m.category) badges += '<span class="badge text-bg-secondary me-1">' + esc(m.category) + '</span>';
-          if (m.gpu)      badges += '<span class="badge text-bg-success me-1">GPU</span>';
+          if (m.category) {
+            var catColor = CATEGORY_COLORS[m.category];
+            var catStyle = catColor ? ' style="background-color:' + esc(catColor) + ';"' : '';
+            var catClass = catColor ? 'badge me-1' : 'badge text-bg-secondary me-1';
+            badges += '<span class="' + catClass + '"' + catStyle + '>' + esc(m.category) + '</span>';
+          }
+          if (m.gpu)      badges += '<span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>';
           var desc = m.description ? '<div class="small text-muted">' + esc(m.description) + '</div>' : '';
           return '<a href="' + scriptName + '/' + esc(m.dirname) + '" class="d-block text-decoration-none py-2 px-3 border-bottom">' +
                  '<div>' + badges + '<span class="fw-semibold">' + esc(m.name) + '</span></div>' +

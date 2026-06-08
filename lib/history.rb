@@ -92,12 +92,22 @@ helpers do
   # Output a modal for displaying live job details fetched from scontrol/sacct.
   # Content is lazy-loaded via AJAX when the modal is opened.
   def output_job_id_modal(job, filter)
-    modal_id   = "_historyJobId#{job[JOB_ID]}"
-    job_id_esc = escape_html(job[JOB_ID].to_s)
+    modal_id     = "_historyJobId#{job[JOB_ID]}"
+    job_id_esc   = escape_html(job[JOB_ID].to_s)
+    status_esc   = escape_html(job[JOB_STATUS_ID].to_s)
     cluster_attr = @cluster_name ? " data-cluster=\"#{escape_html(@cluster_name)}\"" : ""
 
+    terminal_statuses = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
+    show_efficiency   = terminal_statuses.include?(job[JOB_STATUS_ID]) && @conf.fetch("history_efficiency", true)
+
+    eff_section = show_efficiency ? <<~EFF : ""
+      <div id="#{modal_id}EffRow" class="px-3 pb-3">
+        <div class="text-center py-2 text-muted small">Loading efficiency&#8230;</div>
+      </div>
+    EFF
+
     <<~HTML
-    <div class="modal" aria-hidden="true" id="#{modal_id}" tabindex="-1">
+    <div class="modal" aria-hidden="true" id="#{modal_id}" tabindex="-1" data-job-status="#{status_esc}">
       <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content" style="resize: horizontal; padding-right: 16px;">
           <div class="modal-header">
@@ -111,6 +121,7 @@ helpers do
               </div>
             </div>
           </div>
+          #{eff_section}
         </div>
       </div>
     </div>
@@ -155,7 +166,7 @@ helpers do
           </div>
           #{body_html}
           <div class="modal-footer">
-            <a href="#{job_link}" class="btn btn-primary text-white text-decoration-none">Load parameters</a>
+            <a href="#{job_link}" class="btn btn-primary text-white text-decoration-none">Load script</a>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">Close</button>
           </div>
         </div>
@@ -186,7 +197,7 @@ helpers do
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="ocHistory.loadExtScript(this)">Load parameters</button>
+            <button type="button" class="btn btn-primary" onclick="ocHistory.loadExtScript(this)">Load script</button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" tabindex="-1">Close</button>
           </div>
         </div>
@@ -477,7 +488,7 @@ helpers do
 
   # Merge sacct data and DB1 metadata into one page of job hashes.
   # All filtering, sorting, and pagination is done in Ruby.
-  def build_merged_history_jobs(sacct_map, db1_map, deleted_ids, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset, scheduler = nil)
+  def build_merged_history_jobs(sacct_map, db1_map, deleted_ids, statuses, filter, filter_column, filter_mode, date_from, date_to, sort, order, limit, offset, scheduler = nil, extra_sacct_fields = [])
     # sacct is the sole source of which jobs exist. DB1 only enriches (app name, script, etc.).
     all_ids = sacct_map.keys
 
@@ -499,8 +510,12 @@ helpers do
         OC_SCRIPT_CONTENT      => db1_row&.[]("_script_content"),
         "Start"                => normalize_time_for_db(sacct_row&.[]("Start")),
         "End"                  => normalize_time_for_db(sacct_row&.[]("End")),
+        "StdOut"               => sacct_row&.[]("StdOut"),
+        "StdErr"               => sacct_row&.[]("StdErr"),
         "_has_db"              => db1_row ? 1 : 0
-      }
+      }.merge(
+        extra_sacct_fields.each_with_object({}) { |f, h| h[f] = sacct_row&.[](f) }
+      )
     end
 
     jobs = filter_history_jobs_by_status(jobs, statuses)
@@ -680,7 +695,8 @@ helpers do
   # Runs once per DB; subsequent calls are no-ops.
   def migrate_history_db_to_v2(db)
     cols = db.table_info("jobs").map { |c| c["name"] }
-    return if cols.include?("_deleted")
+    return if cols.include?("_deleted")       # already V2 or being migrated to V3
+    return if cols.include?("_script_content") # already V3 (fresh DB or post-migration)
 
     # Rename legacy column names if needed (very old databases)
     migrate_history_db_internal_columns(db)
@@ -710,7 +726,7 @@ helpers do
           {}
         end
 
-        script_content = payload[OC_SCRIPT_CONTENT] || payload["_script_content"]
+        script_content = payload[OC_SCRIPT_CONTENT] || payload["_script_content"] || row["_script_content"]
         job_name       = row["_job_name"].to_s.empty? ? payload[JOB_NAME] : row["_job_name"]
 
         db.execute(

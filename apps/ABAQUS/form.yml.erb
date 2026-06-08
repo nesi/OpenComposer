@@ -1,15 +1,19 @@
-<%# AI generated %>
 <%
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
-base = YAML.load_file(base_path)
+base = read_yaml(base_path)
+
+# Remove the generic CPU and memory-toggle fields — replaced by mp_mode_type
+%w[cores_simple cores_advanced show_advanced_cpu_option show_memory_per_cpu_option].each do |k|
+  base['form'].delete(k)
+end
 
 new_form = {}
 base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
     new_form['abaqus_module'] = {
       'widget' => 'module_load',
-      'module' => "ABAQUS",
-      'label'  => "ABAQUS Module"
+      'module' => 'ABAQUS',
+      'label'  => 'ABAQUS Module'
     }
     new_form['abaqus_input'] = {
       'widget' => 'text_field',
@@ -17,7 +21,38 @@ base['form'].each do |k, v|
       'help'   => "Full path to your ABAQUS input file (.inp), e.g. /nesi/project/nesi99999/my_model.inp"
     }
   end
+
+  if k == 'memory_total_gb'
+    new_form['mp_mode_type'] = {
+      'widget'    => 'radio',
+      'label'     => 'Memory Type',
+      'value'     => 'Shared Memory',
+      'direction' => 'horizontal',
+      'options'   => [
+        [ 'Shared Memory',      'threads', 'enable-cpus_per_task', 'enable-memory_total_gb',  'disable-ntasks', 'disable-memory_per_cpu_gb' ],
+        [ 'Distributed Memory', 'mpi',     'disable-cpus_per_task','disable-memory_total_gb', 'enable-ntasks',  'enable-memory_per_cpu_gb'  ]
+      ]
+    }
+    new_form['cpus_per_task'] = {
+      'widget' => 'number',
+      'label'  => 'CPUs per Task',
+      'value'  => 4,
+      'min'    => 1,
+      'step'   => 1
+    }
+  end
+
   new_form[k] = v
+
+  if k == 'memory_total_gb'
+    new_form['ntasks'] = {
+      'widget' => 'number',
+      'label'  => 'Number of Tasks (MPI)',
+      'value'  => 4,
+      'min'    => 1,
+      'step'   => 1
+    }
+  end
 end
 
 base['form'] = new_form
@@ -41,5 +76,19 @@ base['script'] = base['script'].rstrip + "\n\n" + [
   "module load #{abaqus_module}",
   app_cmd
 ].join("\n") + "\n"
+# Replace the SlurmGPU cores lines with ABAQUS-specific CPU lines
+base['script'] = base['script'].sub(
+  '#SBATCH --ntasks=#{cores_simple}',
+  "#SBATCH --cpus-per-task=\#{cpus_per_task}\n#SBATCH --ntasks=\#{ntasks}"
+)
+base['script'].gsub!("#SBATCH --ntasks=\#{cores_advanced_1}\n", "")
+base['script'].gsub!("#SBATCH --cpus-per-task=\#{cores_advanced_2}\n", "")
+
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{abaqus_module}
+
+  abaqus job="example" mp_mode=#{mp_mode_type} cpus=${SLURM_CPUS_PER_TASK:-${SLURM_NTASKS}} verbose=2 interactive
+APP_SCRIPT
 %>
 <%= base.to_yaml -%>

@@ -2,7 +2,7 @@
 require 'json'
 
 base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
-base = YAML.load_file(base_path)
+base = read_yaml(base_path)
 
 # Load AlphaFold/AlphaFold2DB/AlphaFold3DB version lists from the module-list
 # cache (~/.composer/.module-list-cache.json). Falls back to hard-coded defaults
@@ -31,12 +31,12 @@ base['form'].each do |k, v|
       'value'   => af_options.first ? af_options.first[0] : ""
     }
     new_form['alphafold_db_module'] = {
-      'widget'  => 'two_module_widget',
+      'widget'  => 'dependent_module_select',
       'label'   => 'AlphaFold Database Module',
       'driver'  => 'alphafold_module',
-      'modules' => [
-        {'prefix' => 'AlphaFold/2.', 'module' => 'AlphaFold2DB'},
-        {'prefix' => 'AlphaFold/3.', 'module' => 'AlphaFold3DB'}
+      'options' => [
+        {'contains' => 'AlphaFold/2.', 'module' => 'AlphaFold2DB'},
+        {'contains' => 'AlphaFold/3.', 'module' => 'AlphaFold3DB'}
       ]
     }
   end
@@ -48,6 +48,24 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{alphafold_module}
   module load #{alphafold_db_module}
+
+  INPUT=/nesi/project/nesi12345/alphafold/input_data
+  OUTPUT=/nesi/project/nesi12345/alphafold/results
+
+  run_alphafold.py --use_gpu_relax \
+  --data_dir              =$AF2DB \
+  --uniref90_database_path=$AF2DB/uniref90/uniref90.fasta \
+  --mgnify_database_path  =$AF2DB/mgnify/mgy_clusters_2022_05.fa \
+  --bfd_database_path     =$AF2DB/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt \
+  --uniref30_database_path=$AF2DB/uniref30/UniRef30_2021_03 \
+  --pdb70_database_path   =$AF2DB/pdb70/pdb70 \
+  --template_mmcif_dir    =$AF2DB/pdb_mmcif/mmcif_files \
+  --obsolete_pdbs_path    =$AF2DB/pdb_mmcif/obsolete.dat \
+  --model_preset          =monomer \
+  --max_template_date     =2022-6-1 \
+  --db_preset             =full_dbs \
+  --output_dir            =$OUTPUT \
+  --fasta_paths           =${INPUT}/rcsb_pdb_3GKI.fasta
 APP_SCRIPT
 -%>
 <%= base.to_yaml -%>

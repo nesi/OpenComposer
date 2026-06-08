@@ -37,6 +37,8 @@ class Miyabi < Pbspro
           when "start_time"  then cur_job["Start"]     = value
           when "comp_time"   then cur_job["End"]       = value
           when "Exit_status" then cur_job["ExitCode"]  = value
+          when "Output_Path" then cur_job["StdOut"] = value.sub(/\A[^:]+:/, '')
+          when "Error_Path"  then cur_job["StdErr"] = value.sub(/\A[^:]+:/, '')
           end
         end
       end

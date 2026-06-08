@@ -1,8 +1,31 @@
+<%
+  begin
+    _ssh_prefix = @login_node ? "ssh -o BatchMode=yes -o ConnectTimeout=10 #{@login_node}" : ""
+    _accounts = `#{_ssh_prefix} sacctmgr -n -P show user #{ENV['USER']} withassoc format=Account 2>/dev/null`
+                .split("\n").map(&:strip).reject(&:empty?).uniq.sort
+  rescue
+    _accounts = []
+  end
+%>
 ---
 form:
+  account:
+    widget: select
+    label: Project
+    remember_last: true
+<% if _accounts.empty? %>
+    options: []
+<% else %>
+    options:
+<% _accounts.each do |a| %>
+      - ["<%= a %>", "<%= a %>"]
+<% end %>
+<% end %>
+
   partition:
     widget: select
     label: Partition
+    remember_last: true
     options:
       - [ any,   "",    set-max-cores_simple: 166, set-max-memory_total_gb: 1450]
       - [ genoa, genoa, set-max-cores_simple: 166, set-max-memory_total_gb: 1450]
@@ -70,7 +93,7 @@ form:
     widget: checkbox
     label:
     options:
-      - ["Show advanced option", "", show-testing, show-profiling, show-array, show-mail_option, enable-testing, enable-profiling, enable-array, enable-mail_option]
+      - ["Show advanced options", "", show-testing, show-profiling, show-array, show-mail_option, enable-testing, enable-profiling, enable-array, enable-mail_option]
 
   testing:
     widget: checkbox
@@ -79,7 +102,7 @@ form:
     separator: ","
     indent: 1
     options:
-      - [ "Perform a high priority test (15 mins)", 'debug', set-time_days_hours_minutes_1: 0, set-time_days_hours_minutes_2: 0, set-time_days_hours_minutes_3: 15, set-time_days_hours_minutes_4: 0]
+      - [ "Perform a high priority test (max 15 mins)", 'debug', set-max-time_days_hours_minutes_1: 0, set-max-time_days_hours_minutes_2: 0, set-max-time_days_hours_minutes_3: 15, set-max-time_days_hours_minutes_4: 0]
 
   profiling:
     widget: checkbox
@@ -124,6 +147,7 @@ form:
 script: |
   #!/bin/bash -e
   #SBATCH --job-name=#{OC_JOB_NAME}
+  #SBATCH --account=#{account}
   #SBATCH --partition=#{partition}
   #SBATCH --ntasks=#{cores_simple}
   #SBATCH --ntasks=#{cores_advanced_1}

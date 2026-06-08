@@ -1,0 +1,19 @@
+sources:
+  modules_list_url: https://raw.githubusercontent.com/nesi/modules-list/main/module-list.json
+  support_docs_index_url: https://api.github.com/repos/nesi/support-docs/contents/docs/Software/Available_Applications
+  support_docs_raw_base_url: https://raw.githubusercontent.com/nesi/support-docs/main/docs/Software/Available_Applications
+
+claude:
+  command: "claude --output-format json"
+  # Web search command — needs a tool-enabled Claude invocation.
+  # Leave empty to skip web search fallback.
+  web_search_command: "claude --output-format json --allowedTools WebSearch,WebFetch"
+
+generation:
+  default_hidden: true
+  icon_dimension: 256
+  icon_format: png
+
+paths:
+  apps_dir: apps
+

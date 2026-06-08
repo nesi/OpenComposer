@@ -399,16 +399,19 @@ class Slurm < Scheduler
     return [[], nil] if user.empty?
 
     squeue  = get_command_path("squeue", bin, bin_overrides)
+    # Use short -o format (universally supported) with single-quoted format string so
+    # the | field separators are not shell-interpreted as pipe operators.
+    # %i=JOBID %j=NAME %P=PARTITION %T=STATE %V=SUBMIT_TIME %S=START_TIME
     command = [ssh_wrapper, SLURM_ENV, squeue,
-               "--user=#{user}", "--parsable2", "--noheader",
-               "--Format=jobid,name,partition,state,submittime,starttime"].compact.join(" ")
+               "--user=#{user}", "--noheader",
+               "-o '%i|%j|%P|%T|%V|%S'"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     stdout = to_utf8(stdout)
     return [[], [stdout, stderr].join(" ").strip] unless status.success?
 
     jobs = []
     stdout.lines.each do |line|
-      parts = line.chomp.split('|')
+      parts = line.chomp.split('|', 6)
       next if parts.size < 4
       jobs << {
         "JobID"     => parts[0].to_s.strip,

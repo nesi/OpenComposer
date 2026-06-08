@@ -19,4 +19,9 @@
       <% end %>
     </a>
   <% end %>
+  <% if @conf['all_templates_footer'] && !@conf['all_templates_footer'].to_s.strip.empty? %>
+    <div class="px-3 py-3 text-muted small border-top">
+      <%= @conf['all_templates_footer'] %>
+    </div>
+  <% end %>
 </div>

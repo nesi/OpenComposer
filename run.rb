@@ -1085,12 +1085,25 @@ get "/history/active_job_ids" do
   all_jobs, _err, _cmd = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
 
   active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
+  seen_ids = Set.new
   ids = (all_jobs || []).filter_map do |j|
     jid = j["JobID"].to_s.strip
     next unless valid_oc_job_id?(jid, scheduler)
     next if deleted_ids.include?(jid)
+    seen_ids.add(jid)
     oc_status = sacct_state_to_oc_status(j["State"].to_s, scheduler)
     jid if active_statuses.include?(oc_status)
+  end
+
+  # Supplement sacct with squeue to catch PENDING jobs not yet in sacct
+  squeue_jobs, _sq_err = scheduler.squeue_active_jobs(bin, bin_overrides, ssh_wrapper)
+  (squeue_jobs || []).each do |j|
+    jid = j["JobID"].to_s.strip
+    next unless valid_oc_job_id?(jid, scheduler)
+    next if deleted_ids.include?(jid)
+    next if seen_ids.include?(jid)
+    oc_status = sacct_state_to_oc_status(j["State"].to_s, scheduler)
+    ids << jid if active_statuses.include?(oc_status)
   end
 
   JSON.generate(ids)

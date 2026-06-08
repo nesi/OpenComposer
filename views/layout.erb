@@ -318,8 +318,11 @@
       input.addEventListener('input', function() {
         var q = this.value.trim().toLowerCase();
 
-        // All Templates page handles its own search — skip the overlay.
-        if (window._ocAllTemplatesSearch) return;
+        // All Templates page: delegate directly to its filter function.
+        if (typeof window._ocAllTemplatesSearch === 'function') {
+          window._ocAllTemplatesSearch(q);
+          return;
+        }
 
         // All other pages: show the overlay.
         var list = document.getElementById('oc-app-list');

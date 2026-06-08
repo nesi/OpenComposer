@@ -24,8 +24,6 @@
 </div>
 
 <script>
-window._ocAllTemplatesSearch = true;
-
 (function() {
   function filterList(q) {
     var items = document.querySelectorAll('#oc-all-list .oc-all-item');
@@ -38,14 +36,13 @@ window._ocAllTemplatesSearch = true;
     document.getElementById('oc-all-no-results').classList.toggle('d-none', visible > 0);
   }
 
-  // Wire up the navbar search once the layout script has run.
+  // Register with the layout's search handler (runs before layout's script block).
+  window._ocAllTemplatesSearch = function(q) { filterList(q); };
+
+  // Focus the search bar after everything has loaded.
   window.addEventListener('load', function() {
     var input = document.getElementById('oc-search');
-    if (!input) return;
-    input.focus();
-    input.addEventListener('input', function() {
-      filterList(this.value.trim().toLowerCase());
-    });
+    if (input) input.focus();
   });
 })();
 </script>

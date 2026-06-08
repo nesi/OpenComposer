@@ -193,6 +193,11 @@
     <strong>sacct error:</strong> <%= escape_html(@sacct_error) %>
   </div>
 <% end %>
+<% if @squeue_error %>
+  <div class="alert alert-warning mx-3 mt-2 mb-0">
+    <strong>squeue error:</strong> <%= escape_html(@squeue_error) %>
+  </div>
+<% end %>
 
 <% _has_file_link_col = (@conf_history_cols || []).any? { |c| c["type"] == "file_link" } %>
 

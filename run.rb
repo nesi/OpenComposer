@@ -536,7 +536,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     # Supplement sacct with squeue to catch PENDING jobs sacct may not report
     # (e.g. jobs submitted so recently they haven't appeared in sacct yet, or
     # Slurm configurations that omit PENDING jobs from sacct output).
-    squeue_jobs, _squeue_err = scheduler_s.squeue_active_jobs(bin_s, bin_overrides_s, ssh_wrapper_s)
+    squeue_jobs, @squeue_error = scheduler_s.squeue_active_jobs(bin_s, bin_overrides_s, ssh_wrapper_s)
     (squeue_jobs || []).each do |j|
       jid = j["JobID"].to_s.strip
       next unless valid_oc_job_id?(jid, scheduler_s)

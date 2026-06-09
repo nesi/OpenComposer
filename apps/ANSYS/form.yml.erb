@@ -7,20 +7,73 @@ base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
     new_form['ansys_module'] = {
       'widget' => 'module_load',
-      'module' => "ANSYS",
-      'label'  => "ANSYS Module"
+      'module' => 'ANSYS',
+      'label'  => 'ANSYS Module'
+    }
+    new_form['ansys_solver'] = {
+      'widget' => 'select',
+      'label'  => 'ANSYS Solver',
+      'value'  => 'fluent',
+      'options' => [
+        ['Fluent',    'fluent',    'enable-fluent_precision',  'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
+        ['CFX',       'cfx',       'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ' '}, {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
+        ['MAPDL',     'mapdl',     'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ' '}, {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
+        ['LS-DYNA',   'lsdyna',    'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ' '}, {'set-value-ansysedt_hide' => ''}],
+        ['ANSYS EDT', 'ansysedt',  'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ' '}]
+      ]
+    }
+    new_form['fluent_precision'] = {
+      'widget'  => 'select',
+      'label'   => 'Fluent Precision',
+      'value'   => '3ddp',
+      'options' => [['3ddp', '3ddp'], ['3d', '3d'], ['2ddp', '2ddp'], ['2d', '2d']]
+    }
+    new_form['purge_cmd'] = {
+      'widget' => 'text',
+      'label'  => '',
+      'value'  => 'purge'
+    }
+    new_form['cfx_hide'] = {
+      'widget' => 'text',
+      'label'  => '',
+      'value'  => ''
+    }
+    new_form['mapdl_hide'] = {
+      'widget' => 'text',
+      'label'  => '',
+      'value'  => ''
+    }
+    new_form['lsdyna_hide'] = {
+      'widget' => 'text',
+      'label'  => '',
+      'value'  => ''
+    }
+    new_form['ansysedt_hide'] = {
+      'widget' => 'text',
+      'label'  => '',
+      'value'  => ''
+    }
+    new_form['input_file'] = {
+      'widget'      => 'text',
+      'label'       => 'Input File',
+      'placeholder' => 'Path to input/journal/definition file',
+      'value'       => 'EXAMPLE_FILENAME'
     }
   end
   new_form[k] = v
 end
 
-base['form']   = new_form
-base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
-  module -q purge
-  module load #{ansys_module}
+base['form'] = new_form
 
-  JOURNAL_FILE=/share/test/ansys/fluent/wing.in
-  fluent 3ddp -g -i ${JOURNAL_FILE}
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q #{:purge_cmd}
+  module load #{ansys_module}
+  fluent #{fluent_precision} -g -i=#{:input_file}
+  cfx5solve#{cfx_hide} -batch -def 
+  mapdl#{mapdl_hide}-b -i="#{:input_file}"
+  lsdyna#{lsdyna_hide} NCPUS=${SLURM_CPUS_PER_TASK} -i=#{:input_file}
+  startRSM#{ansysedt_hide}
+  ansysedt#{ansysedt_hide} -ng -batchsolve -distributed -machinelistfile=".machinefile" -batchoptions="HFSS/HPCLicenseType=Pool" -i=#{:input_file}
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

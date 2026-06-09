@@ -7,19 +7,37 @@ base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
     new_form['comsol_module'] = {
       'widget' => 'module_load',
-      'module' => "COMSOL",
-      'label'  => "COMSOL Module"
+      'module' => 'COMSOL',
+      'label'  => 'COMSOL Module'
+    }
+    new_form['comsol_input'] = {
+      'widget'      => 'text',
+      'label'       => 'Input File',
+      'placeholder' => 'e.g. my_model.mph'
+    }
+    new_form['comsol_output'] = {
+      'widget'      => 'text',
+      'label'       => 'Output File (optional)',
+      'placeholder' => 'e.g. my_model_out.mph'
     }
   end
   new_form[k] = v
 end
 
-base['form']   = new_form
+base['form'] = new_form
+
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{comsol_module}
 
-  comsol batch -inputfile my_input.mph
+  COMSOL_OUTPUT="#{comsol_output}"
+  OUTPUT_FLAG="${COMSOL_OUTPUT:+-outputfile ${COMSOL_OUTPUT}}"
+
+  if [ "${SLURM_NTASKS:-1}" -gt 1 ] || [ "${SLURM_CPUS_PER_TASK:-1}" -gt 1 ]; then
+    comsol batch -mpibootstrap slurm -inputfile #{comsol_input} ${OUTPUT_FLAG}
+  else
+    comsol batch -inputfile #{comsol_input} ${OUTPUT_FLAG}
+  fi
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

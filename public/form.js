@@ -315,8 +315,11 @@ ocForm.patchScript = function() {
   // Convert rawUser → midUser: consume the first N leading blank lines in each slot
   // (N = blanksBeforePattern[pi]) since those will already be emitted from newLines.
   // Extra blanks beyond N, and all non-blank lines, are user content to preserve.
+  // If a pattern is no longer visible and its slot contains only blank lines, discard
+  // it entirely — those blanks will be re-emitted by newLines before the active pattern.
   const midUser = new Map();
   for (const [pi, lines] of rawUser) {
+    if (patNewLineIdx[pi] < 0 && lines.every(function(l) { return l.trim() === ''; })) continue;
     let blankBudget = blanksBeforePattern.get(pi) || 0;
     const userLines = [];
     for (const line of lines) {
@@ -340,13 +343,11 @@ ocForm.patchScript = function() {
     }
     out.push(newLines[ni]);
   }
+  // Preserve any trailing user-added lines that followed the last template line.
   out.push(...tailLines);
 
-  // Orphaned user lines (anchored to a now-hidden template line) go at the very end.
-  for (const [anchor, lines] of midUser) {
-    if (lines.length > 0) out.push(...lines);
-  }
-
+  // Write the reassembled script back to the textarea (this is what makes a
+  // widget change show up in the Script Content box).
   ocForm.scriptArea.value = out.join('\n');
   ocForm.updateHeight(ocForm.scriptArea);
   ocForm.syncScriptHighlight();

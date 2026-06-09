@@ -2,14 +2,16 @@
 
 This directory contains files that embed Open Composer inside the Open OnDemand (OOD) interface.
 
-When installed, clicking the **Open Composer** app tile in OOD opens it embedded within the OOD page — OOD's navigation bar stays at the top, Open Composer's interface runs in a full-height iframe below it, and OOD's own footer is visible at the bottom — rather than opening in a new window or tab.
+When installed, clicking the **Open Composer** app tile in OOD opens it embedded within the OOD page — OOD's navigation bar stays at the top, Open Composer's interface fills the middle, and OOD's own footer is visible at the bottom — rather than opening in a new window or tab. The page is a single document rendered in OOD's real layout, so the header and footer are OOD's live chrome (dynamic menus, user/help dropdowns, notifications).
 
 ## Contents
 
 | File | Purpose |
-|------|---------|
-| `initializers/opencomposer_embed.rb` | Intercepts `AppsController#show` for Open Composer and renders the embed view instead of the default redirect |
-| `views/apps/opencomposer_embed.html.erb` | Full-height iframe view rendered within OOD's own layout |
+| --- | --- |
+| `initializers/opencomposer_embed.rb` | Mounts a reverse-proxy controller at `/pun/sys/dashboard/oc(/*path)` and intercepts `AppsController#show` for Open Composer to land there |
+| `views/apps/opencomposer_embed.html.erb` | Splices Open Composer's `<head>` assets and `<body>` content into OOD's dashboard layout |
+| `dashboard.env.example` | Commented template of the `OC_EMBED_*` settings, for the dashboard's env file |
+| `ADMIN_CHECKLIST.md` | Deployment & security-review checklist to hand to an OOD administrator |
 
 ## Requirements
 
@@ -19,9 +21,15 @@ When installed, clicking the **Open Composer** app tile in OOD opens it embedded
 
 ## How it works
 
-OOD's dashboard app supports custom Rails initializers placed in `/etc/ood/config/apps/dashboard/initializers/`. The initializer `opencomposer_embed.rb` uses Ruby's `prepend` to intercept the `AppsController#show` action. When the Open Composer tile is clicked, instead of redirecting the user to the app at `/pun/sys/opencomposer/`, OOD renders `opencomposer_embed.html.erb` — a view containing a full-height `<iframe>` that loads Open Composer inside the existing OOD page.
+OOD's dashboard app supports custom Rails initializers placed in `/etc/ood/config/apps/dashboard/initializers/`. The initializer `opencomposer_embed.rb`:
 
-A small JavaScript block measures the heights of OOD's navbar and footer after the page has loaded and positions the iframe container so both remain fully visible.
+1. **Mounts a reverse proxy** at `/pun/sys/dashboard/oc(/*path)` inside the dashboard. Each request is forwarded to the real Open Composer app at `/pun/sys/opencomposer/...` over the loopback through Apache (on the same port the browser used), forwarding the user's OIDC session cookie so the call is authenticated as that user.
+2. **Rewrites the path prefix.** Open Composer builds every URL from its Rack `script_name`, so the whole app self-references the single prefix `/pun/sys/opencomposer`. The proxy rewrites that to `/pun/sys/dashboard/oc` in every text response — links, form actions, assets and inline path variables — so every page, navigation and form submission stays on the proxy path and therefore stays wrapped in OOD's chrome. (Open Composer's own AJAX derives its base from `window.location.pathname`, so it follows the proxy path automatically.)
+3. **Wraps HTML in OOD's layout.** For HTML responses the proxy splices Open Composer's `<head>` assets and `<body>` content into the dashboard's `application` layout via `opencomposer_embed.html.erb`, giving the live OOD navbar and footer. CSS/JS/JSON are streamed through (prefix-rewritten); images and fonts pass through unchanged. Redirects are relayed to the browser with their `Location` rewritten onto the proxy path.
+4. **De-duplicates Bootstrap and isolates CSS.** OOD's dashboard and Open Composer both ship Bootstrap, and they share one page now:
+   - *Bootstrap JS* — two copies each bind Bootstrap's click data-api, which makes OOD's navbar dropdowns toggle open-then-shut and never appear. The proxy strips Open Composer's Bootstrap `<script>` and lets OOD's single Bootstrap drive both apps (Open Composer's components are declarative `data-bs-*`); a tiny shim supplies `window.bootstrap.Modal` for the one imperative call (the history file-overlay).
+   - *Bootstrap CSS* — Open Composer's stylesheet, loaded after OOD's, would override OOD's themed navbar/footer, so it is dropped too (OOD's Bootstrap styles Open Composer's markup).
+   - *Open Composer's own inline CSS* — its global rules (`a`, `.nav-link`, `.btn-primary`, `.footer a`, `body`, …) are rewritten to apply only inside the embed container (`#oc-embed-root`) so they can't restyle OOD's chrome.
 
 ## Installation
 
@@ -56,7 +64,7 @@ navbar_logo: ~               # OOD's navbar already shows the site logo
 # Hide the Templates dropdown — the home page tile grid already shows them
 show_navbar_apps: false
 
-# Hide Open Composer's own footer — OOD's footer is shown below the iframe
+# Hide Open Composer's own footer — OOD's footer is shown instead
 show_footer: false
 ```
 
@@ -103,28 +111,21 @@ sudo systemctl reload httpd
 
 Clicking the Open Composer tile will now open it embedded within OOD.
 
-## Content Security Policy (CSP)
+## Configuration (other OOD sites)
 
-If Open Composer is served from a different origin than OOD's main page (for example when testing locally with Docker where OOD runs on port 443 but you access it via port 8080), the browser may block the iframe with an error such as:
+All settings are optional and read from the dashboard's env file `/etc/ood/config/apps/dashboard/env`. The defaults work for a standard single-host OOD serving HTTPS on port 443 with Open Composer installed as the sys app `opencomposer`. See [`dashboard.env.example`](dashboard.env.example) for the full, commented template.
 
-```
-Refused to display '...' in a frame because an ancestor violates the
-following Content Security Policy directive: "frame-ancestors https://localhost;"
-```
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `OC_EMBED_APP_NAME` | Open Composer's sys-app directory name — the `<name>` in `/pun/sys/<name>` (the install directory, **not** the tile's display name). e.g. NeSI/Mahuika uses `slurm_composer`. | `opencomposer` |
+| `OC_EMBED_UPSTREAM_HOST` | Hostname used for TLS SNI + the `Host` header on the upstream call. | the request's host |
+| `OC_EMBED_UPSTREAM_PORT` | Port the proxy connects to. | the request's port |
+| `OC_EMBED_UPSTREAM_SCHEME` | `http` or `https` for the upstream call. | the request's scheme |
+| `OC_EMBED_UPSTREAM_IP` | IP actually connected to (TCP), independent of the SNI host — keeps the call on the loopback. Set empty to resolve the host via DNS instead. | `127.0.0.1` |
 
-To fix this, add your origin to the `frame-ancestors` directive in `/etc/httpd/conf.d/ood-portal.conf`:
+The `OC_EMBED_UPSTREAM_*` knobs exist so administrators can point the upstream call at whatever fronts their OOD — for example a TLS-terminating load balancer where the portal vhost listens on a plain-HTTP port. For a standard 443 host none of them are needed.
 
-```apache
-Header always set Content-Security-Policy "frame-ancestors https://your-ood-host https://your-ood-host:8080;"
-```
-
-Then reload Apache:
-
-```sh
-sudo httpd -k graceful
-```
-
-In production OOD deployments where the browser accesses OOD on the standard HTTPS port (443), both the outer page and the iframe share the same origin and the default CSP is fine.
+After editing the env file, restart the web server (**Help → Restart Web Server**, or `sudo systemctl reload httpd`).
 
 ## Uninstalling
 
@@ -147,7 +148,6 @@ The Docker setup:
 - Runs OOD and a Slurm compute node in containers
 - Volume-mounts the Open Composer repo into the OOD container at `/var/www/ood/apps/sys/opencomposer/`
 - On container start, `startup.sh` automatically copies the integration files from the mounted directory into `/etc/ood/config/apps/dashboard/`
-- Patches the OOD Apache CSP to allow iframe embedding from the host browser
 
 ```sh
 cd docker_open_ondemand/ondemand-compose
@@ -155,7 +155,7 @@ docker-compose build
 docker-compose up -d
 ```
 
-Open `https://localhost:8080` in your browser (accept the self-signed certificate) and log in as `hpc.user` / `ilovelinux`.
+Open `https://localhost:8080` in your browser (accept the self-signed certificate) and log in as user / password.
 
 > **Apple Silicon (ARM64):** The Slurm compute node Dockerfile downloads an AMD64 TurboVNC package by default. Change `amd64` to `arm64` on lines 22–25 of `docker_open_ondemand/ondemand-compose/slurm-compute-node-1/Dockerfile` before building.
 

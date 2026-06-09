@@ -273,11 +273,24 @@ url: https://&lt;your Open OnDemand URL&gt;/pun/sys/OpenComposer/Slurm</pre>
       <h2 id="ood-integration">4. OOD-Integrated Installation</h2>
       <p>
         By default, clicking the Open Composer tile in Open OnDemand opens the application in a new tab.
-        The files in <code>ood_integration/</code> enable an embedded mode where Open Composer runs inside an iframe within the OOD page — OOD's navigation bar and footer remain visible, and the user never leaves the OOD interface.
+        The files in <code>ood_integration/</code> enable an <strong>embedded mode</strong> where Open Composer is rendered directly inside the OOD page — OOD's real navigation bar stays at the top, Open Composer fills the middle, and OOD's own footer is shown at the bottom. The user never leaves the OOD interface.
+      </p>
+      <p>
+        The page is a single document rendered in OOD's own dashboard layout, so the header and footer are OOD's live chrome — dynamic menus, user/help dropdowns and notifications — and no Content-Security-Policy changes are needed.
       </p>
       <p>
         This requires Open OnDemand 3.x or later and administrator access to <code>/etc/ood/config/</code>.
       </p>
+
+      <h3>How it works</h3>
+      <p>
+        The initializer <code>opencomposer_embed.rb</code> mounts a small reverse-proxy controller inside the OOD dashboard at <code>/pun/sys/dashboard/oc</code> and intercepts the Open Composer tile so it lands there. For each request the proxy:
+      </p>
+      <ol>
+        <li>Forwards the request to the real Open Composer app at <code>/pun/sys/opencomposer/…</code> over the loopback through Apache (on the same port the browser used), forwarding the user's session cookie so the call is authenticated as that user.</li>
+        <li>Rewrites Open Composer's URL prefix <code>/pun/sys/opencomposer</code> → <code>/pun/sys/dashboard/oc</code> in every text response, so all links, form actions, assets and AJAX stay on the proxy path — every page therefore stays wrapped in OOD's chrome.</li>
+        <li>Splices Open Composer's <code>&lt;head&gt;</code> assets and <code>&lt;body&gt;</code> into the dashboard's layout via <code>opencomposer_embed.html.erb</code>, giving the live OOD navbar and footer. CSS/JS are streamed through (prefix-rewritten); images and fonts pass through unchanged; redirects are relayed with their <code>Location</code> rewritten onto the proxy path.</li>
+      </ol>
 
       <h3>Step 1 — Install Open Composer as a sys app (same as section 1)</h3>
       <pre>$ cd /var/www/ood/apps/sys/
@@ -306,7 +319,7 @@ show_shell_access:   false   # OOD's Clusters menu provides shell access
 show_open_ondemand:  false   # No need to link back to OOD from inside OOD
 navbar_logo: ~               # OOD's navbar already shows the site logo
 show_navbar_apps: false      # The home page tile grid already shows templates
-show_footer: false           # OOD's footer is shown below the iframe</pre>
+show_footer: false           # OOD's footer is shown below the embedded view</pre>
 
       <h3>Step 3 — Force same-tab navigation</h3>
       <p>
@@ -335,6 +348,33 @@ $ sudo cp /var/www/ood/apps/sys/opencomposer/ood_integration/views/apps/opencomp
       <pre>$ sudo httpd -k graceful</pre>
       <p>
         Clicking the Open Composer tile will now open it embedded within OOD's page.
+      </p>
+
+      <h3>Deploying to another OOD facility</h3>
+      <p>
+        The integration uses only standard OOD mechanisms (a dashboard initializer and the normal <code>/pun</code> request flow) and is multi-user-safe — each request forwards the requesting user's own session cookie, so Apache authenticates and routes to that user's instance. It should port to other Open OnDemand sites, but a few environment assumptions are worth checking. Overrides are read from the dashboard's env file <code>/etc/ood/config/apps/dashboard/env</code>; a fully commented template is provided at <code>ood_integration/dashboard.env.example</code>:
+      </p>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Assumption</th><th>If your site differs</th></tr>
+        <tr>
+          <td>Open Composer is installed as the sys app <code>opencomposer</code> (i.e. served at <code>/pun/sys/opencomposer</code>).</td>
+          <td>Set <code>OC_EMBED_APP_NAME</code> to your install directory name (for example <code>OpenComposer</code>).</td>
+        </tr>
+        <tr>
+          <td>OOD's Apache (the portal vhost) is reachable on the loopback at the same port/scheme the browser used — true for a standard host serving HTTPS on 443.</td>
+          <td>If a TLS-terminating load balancer fronts OOD and the portal vhost actually listens on a different port/scheme, set <code>OC_EMBED_UPSTREAM_HOST</code>, <code>OC_EMBED_UPSTREAM_PORT</code>, <code>OC_EMBED_UPSTREAM_SCHEME</code> (<code>http</code>/<code>https</code>) and/or <code>OC_EMBED_UPSTREAM_IP</code> accordingly.</td>
+        </tr>
+        <tr>
+          <td>Authentication is <code>mod_auth_openidc</code>; its session cookie is sent to the dashboard on <code>/pun</code> (the stock <code>ood-portal.conf</code> only strips it on <code>/node</code> and <code>/rnode</code>).</td>
+          <td>If your site uses a different auth module or strips cookies more aggressively, confirm the dashboard still receives the auth cookie so the proxy's upstream call is authenticated.</td>
+        </tr>
+        <tr>
+          <td>You may install a custom Rails initializer under <code>/etc/ood/config/apps/dashboard/initializers/</code>.</td>
+          <td>Managed/locked-down deployments may not permit this, or may require a security review (the initializer makes a server-side HTTP call). Confirm with the facility's OOD administrators.</td>
+        </tr>
+      </table>
+      <p>
+        <strong>Performance note.</strong> Every Open Composer response — including CSS, JS, images and fonts — is proxied through the dashboard Ruby process. This is fine for typical interactive use; if you expect heavy concurrent load, account for the extra dashboard traffic.
       </p>
 
       <h3>Uninstalling OOD-integrated mode</h3>

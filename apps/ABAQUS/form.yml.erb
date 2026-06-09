@@ -10,6 +10,11 @@ end
 new_form = {}
 base['form'].each do |k, v|
   if k == 'time_days_hours_minutes'
+    new_form['abaqus_input'] = {
+      'widget'      => 'text',
+      'label'       => 'ABAQUS Input File',
+      'placeholder' => 'e.g. my_job.inp'
+    }
     new_form['abaqus_module'] = {
       'widget' => 'module_load',
       'module' => 'ABAQUS',
@@ -24,8 +29,8 @@ base['form'].each do |k, v|
       'value'     => 'Shared Memory',
       'direction' => 'horizontal',
       'options'   => [
-        [ 'Shared Memory',      'threads', 'enable-cpus_per_task', 'enable-memory_total_gb',  'disable-ntasks', 'disable-memory_per_cpu_gb' ],
-        [ 'Distributed Memory', 'mpi',     'disable-cpus_per_task','disable-memory_total_gb', 'enable-ntasks',  'enable-memory_per_cpu_gb'  ]
+        [ 'Shared Memory',      'threads', 'enable-cpus_per_task', 'enable-memory_total_gb',  'disable-ntasks', 'disable-memory_per_cpu_gb', 'hide-cpus_slurm_var', {'set-value-cpus_slurm_var' => '${SLURM_CPUS_PER_TASK}'} ],
+        [ 'Distributed Memory', 'mpi',     'disable-cpus_per_task','disable-memory_total_gb', 'enable-ntasks',  'enable-memory_per_cpu_gb',  'hide-cpus_slurm_var', {'set-value-cpus_slurm_var' => '${SLURM_NTASKS}'}        ]
       ]
     }
     new_form['cpus_per_task'] = {
@@ -35,6 +40,31 @@ base['form'].each do |k, v|
       'min'    => 1,
       'step'   => 1
     }
+    new_form['cpus_slurm_var'] = {
+      'widget' => 'text',
+      'label'  => '',
+      'value'  => '${SLURM_CPUS_PER_TASK}'
+    }
+  end
+
+  # Insert gpu_arg_str hidden field before the first GPU selector, then wire
+  # all three GPU selectors to drive it via set-value actions.
+  if k == 'gpu_any'
+    new_form['gpu_arg_str'] = {
+      'widget'  => 'text',
+      'label'   => '',
+      'value'   => '',
+      'canHide' => true
+    }
+  end
+
+  if %w[gpu_any gpu_genoa gpu_milan].include?(k)
+    v = v.dup
+    v['options'] = v['options'].map do |opt|
+      opt[1].to_s.empty? \
+        ? opt + ['hide-gpu_arg_str', {'set-value-gpu_arg_str' => ''}] \
+        : opt + ['hide-gpu_arg_str', {'set-value-gpu_arg_str' => 'gpus=${SLURM_GPUS_PER_NODE}'}]
+    end
   end
 
   new_form[k] = v
@@ -61,10 +91,13 @@ base['script'].gsub!("#SBATCH --ntasks=\#{cores_advanced_1}\n", "")
 base['script'].gsub!("#SBATCH --cpus-per-task=\#{cores_advanced_2}\n", "")
 
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  INPUT_FILE="#{abaqus_input}"
+  JOB_NAME="${INPUT_FILE%.inp}"
+
   module -q purge
   module load #{abaqus_module}
 
-  abaqus job="example" mp_mode=#{mp_mode_type} cpus=${SLURM_CPUS_PER_TASK:-${SLURM_NTASKS}} verbose=2 interactive
+  abaqus input=${INPUT_FILE} job=${JOB_NAME} mp_mode=#{mp_mode_type} cpus=#{cpus_slurm_var} #{:gpu_arg_str} verbose=2 interactive
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

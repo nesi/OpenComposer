@@ -13,12 +13,8 @@ base['form'].each do |k, v|
     new_form['comsol_input'] = {
       'widget'      => 'text',
       'label'       => 'Input File',
-      'placeholder' => 'e.g. my_model.mph'
-    }
-    new_form['comsol_output'] = {
-      'widget'      => 'text',
-      'label'       => 'Output File (optional)',
-      'placeholder' => 'e.g. my_model_out.mph'
+      'placeholder' => 'e.g. my_model.mph',
+      'value'       => 'my_model.mph'
     }
   end
   new_form[k] = v
@@ -30,14 +26,7 @@ base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q purge
   module load #{comsol_module}
 
-  COMSOL_OUTPUT="#{comsol_output}"
-  OUTPUT_FLAG="${COMSOL_OUTPUT:+-outputfile ${COMSOL_OUTPUT}}"
-
-  if [ "${SLURM_NTASKS:-1}" -gt 1 ] || [ "${SLURM_CPUS_PER_TASK:-1}" -gt 1 ]; then
-    comsol batch -mpibootstrap slurm -inputfile #{comsol_input} ${OUTPUT_FLAG}
-  else
-    comsol batch -inputfile #{comsol_input} ${OUTPUT_FLAG}
-  fi
+  comsol batch -mpibootstrap slurm -inputfile=#{:comsol_input}
 APP_SCRIPT
 %>
 <%= base.to_yaml -%>

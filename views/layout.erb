@@ -293,17 +293,24 @@
       </div>
 
       <% if @conf.fetch('show_footer', true) %>
-      <footer class="footer d-flex justify-content-between align-items-center m-0 <%= @conf.fetch('footer_padding', 'p-3') %> <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>; margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important; margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important;">
-        <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
-          <% if @conf['footer_ood_logo'] != false %>
-            <a href="https://openondemand.org/" target="_blank">
-              <img src="<%= @script_name %>/OpenOnDemand_powered_by_invert.svg" alt="Powered by Open OnDemand" style="height:<%= @conf.fetch('footer_logo_height', '24px') %>; vertical-align: middle;">
-            </a>
-          <% end %>
-        </div>
-        <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;"><%= @conf['footer'] %></div>
-        <div class="small" style="color:<%= @conf['footer_text_color'] %>;">Open Composer version: <%= @version %></div>
-      </footer>
+      <div style="<%= @show_all_templates_subfooter ? 'position:sticky; bottom:0; z-index:100;' : '' %>">
+        <% if @show_all_templates_subfooter && @conf['all_templates_footer'] && !@conf['all_templates_footer'].to_s.strip.empty? %>
+          <div class="px-3 py-3 text-muted small" style="background:#F3F4F4; border-top:1px solid #C3C8C8; margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important; margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important;">
+            <%= @conf['all_templates_footer'] %>
+          </div>
+        <% end %>
+        <footer class="footer d-flex justify-content-between align-items-center m-0 <%= @conf.fetch('footer_padding', 'p-3') %> <%= @dir_name == '' ? 'mt-3' : '' %>" style="background:<%= @conf['footer_color'] %>; margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important; margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) * 0.5) !important;">
+          <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;">
+            <% if @conf['footer_ood_logo'] != false %>
+              <a href="https://openondemand.org/" target="_blank">
+                <img src="<%= @script_name %>/OpenOnDemand_powered_by_invert.svg" alt="Powered by Open OnDemand" style="height:<%= @conf.fetch('footer_logo_height', '24px') %>; vertical-align: middle;">
+              </a>
+            <% end %>
+          </div>
+          <div style="color:<%= @conf['footer_text_color'] %>; --bs-link-color: <%= @conf['footer_text_color'] %>; --bs-link-hover-color: <%= @conf['footer_text_color'] %>; --bs-link-opacity: 1;"><%= @conf['footer'] %></div>
+          <div class="small" style="color:<%= @conf['footer_text_color'] %>;">Open Composer version: <%= @version %></div>
+        </footer>
+      </div>
       <% end %>
     </div>
 

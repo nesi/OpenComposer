@@ -622,6 +622,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   when "all_templates"
     @name = "All Templates"
     @all_manifests = @all_manifests.sort_by { |m| m.name.downcase }
+    @show_all_templates_subfooter = true
     return erb :all_templates
   when "templates/new"
     @name = "New Template"

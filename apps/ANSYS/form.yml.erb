@@ -15,11 +15,11 @@ base['form'].each do |k, v|
       'label'  => 'ANSYS Solver',
       'value'  => 'fluent',
       'options' => [
-        ['Fluent',    'fluent',    'enable-fluent_precision',  'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
-        ['CFX',       'cfx',       'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ' '}, {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
-        ['MAPDL',     'mapdl',     'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ' '}, {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
-        ['LS-DYNA',   'lsdyna',    'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ' '}, {'set-value-ansysedt_hide' => ''}],
-        ['ANSYS EDT', 'ansysedt',  'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ' '}]
+        ['Fluent',    'fluent',    'enable-fluent_precision',  'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', 'hide-mapdl_shared_or_distributed_memory', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
+        ['CFX',       'cfx',       'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', 'hide-mapdl_shared_or_distributed_memory', {'set-value-cfx_hide' => ' '}, {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
+        ['MAPDL',     'mapdl',     'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide',                                             {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ' '}, {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ''}],
+        ['LS-DYNA',   'lsdyna',    'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', 'hide-mapdl_shared_or_distributed_memory', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ' '}, {'set-value-ansysedt_hide' => ''}],
+        ['ANSYS EDT', 'ansysedt',  'disable-fluent_precision', 'hide-purge_cmd', 'hide-cfx_hide', 'hide-mapdl_hide', 'hide-lsdyna_hide', 'hide-ansysedt_hide', 'hide-mapdl_shared_or_distributed_memory', {'set-value-cfx_hide' => ''},  {'set-value-mapdl_hide' => ''},  {'set-value-lsdyna_hide' => ''},  {'set-value-ansysedt_hide' => ' '}]
       ]
     }
     new_form['fluent_precision'] = {
@@ -42,6 +42,15 @@ base['form'].each do |k, v|
       'widget' => 'text',
       'label'  => '',
       'value'  => ''
+    }
+    new_form['mapdl_shared_or_distributed_memory'] = {
+      'widget'  => 'radio',
+      'label'   => 'MAPDL Memory',
+      'value'   => 'Shared Memory',
+      'options' => [
+        ['Shared Memory',      '-np ${SLURM_CPUS_PER_TASK}'],
+        ['Distributed Memory', '-np ${SLURM_NTASKS}']
+      ]
     }
     new_form['lsdyna_hide'] = {
       'widget' => 'text',
@@ -68,9 +77,9 @@ base['form'] = new_form
 base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
   module -q #{:purge_cmd}
   module load #{ansys_module}
-  fluent #{fluent_precision} -g -i=#{:input_file}
-  cfx5solve#{cfx_hide} -batch -def 
-  mapdl#{mapdl_hide}-b -i="#{:input_file}"
+  fluent #{fluent_precision} -g -t=${SLURM_NTASKS} -i=#{:input_file}
+  cfx5solve#{cfx_hide} -batch -def=#{:input_file}
+  mapdl#{mapdl_hide}-b #{:mapdl_shared_or_distributed_memory} -i="#{:input_file}"
   lsdyna#{lsdyna_hide} NCPUS=${SLURM_CPUS_PER_TASK} -i=#{:input_file}
   startRSM#{ansysedt_hide}
   ansysedt#{ansysedt_hide} -ng -batchsolve -distributed -machinelistfile=".machinefile" -batchoptions="HFSS/HPCLicenseType=Pool" -i=#{:input_file}

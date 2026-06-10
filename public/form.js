@@ -49,6 +49,35 @@ ocForm.autoEnable = function(fieldKey, visited) {
   }
 };
 
+// True if `line` is also matched by a pattern whose field is currently enabled
+// (visible), ignoring excludeKey. Used to avoid auto-enabling a hidden field
+// from an ambiguous template line that an already-visible field also produces —
+// e.g. SlurmBasic emits "#SBATCH --ntasks=" for BOTH the simple "Number of
+// Cores" field and the advanced "Number of Tasks" field, so loading a simple
+// script (which has no "--cpus-per-task=") must not flip on "Show advanced CPU
+// options". A genuinely advanced script also has "--cpus-per-task=", a line no
+// visible field matches, so it still expands the advanced section correctly.
+ocForm.lineClaimedByEnabledField = function(line, excludeKey) {
+  if (!ocForm.scriptLinePatterns) return false;
+  for (const pat of ocForm.scriptLinePatterns) {
+    if (!pat.regex || !pat.regex.test(line)) continue;
+    for (var i = 0; i < pat.keys.length; i++) {
+      var key = pat.keys[i];
+      if (key === excludeKey) continue;
+      var el = document.getElementById(key);
+      if (el) {
+        if (!el.disabled) return true;
+      } else {
+        var radios = document.getElementsByName(key);
+        for (var r = 0; r < radios.length; r++) {
+          if (!radios[r].disabled) return true;
+        }
+      }
+    }
+  }
+  return false;
+};
+
 // Parse #SBATCH / scheduler directives in the script textarea into form widgets
 // using the patterns registered in ocForm.scriptLinePatterns by form.rb.
 //
@@ -90,7 +119,12 @@ ocForm.parseScriptToWidgets = function(allowEnable) {
         // enable it. In live-edit mode a disabled field is left untouched so
         // typing never expands a hidden section.
         if (el && (!el.disabled || allowEnable)) {
-          if (el.disabled) ocForm.autoEnable(key);
+          if (el.disabled) {
+            // Don't enable a hidden field from a line a visible field also
+            // matches (ambiguous template lines) — leave it untouched.
+            if (ocForm.lineClaimedByEnabledField(matchingLine, key)) break;
+            ocForm.autoEnable(key);
+          }
           el.value = value;
         }
         break;

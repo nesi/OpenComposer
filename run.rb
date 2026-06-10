@@ -38,7 +38,7 @@ configure :development do
 end
 
 # Internal Constants
-VERSION                ||= "2.1.0"
+VERSION                ||= "3.0.0"
 SCHEDULERS_DIR_PATH    ||= "./lib/schedulers"
 HISTORY_ROWS           ||= 10
 JOB_STATUS             ||= { "queued" => "QUEUED", "running" => "RUNNING", "completed" => "COMPLETED", "failed" => "FAILED", "cancelled" => "CANCELLED", "unknown" => "UNKNOWN" }
@@ -307,17 +307,31 @@ def parse_sbatch_into_cache(script_content, body, app_name, dir_name)
     end
   end
 
-  # Match each #SBATCH line in the script against the template patterns
+  # Match each #SBATCH line in the script against the template patterns.
+  # Also record which fields were identified by an UNAMBIGUOUS line — one that
+  # maps to a single widget. A line that several fields share (e.g.
+  # "#SBATCH --ntasks=", emitted by BOTH the simple "Number of Cores" field and
+  # the advanced "Number of Tasks" field) is ambiguous and must not, on its own,
+  # auto-expand a hidden section. The advanced CPU section is identified
+  # unambiguously only by its own "#SBATCH --cpus-per-task=" line.
   raw_cache = {}
+  unambiguous_fields = Set.new
   script_content.each_line do |sline|
     sline = sline.strip
     next unless sline.start_with?('#SBATCH')
+    line_fields = []
     directive_patterns.each do |dp|
       next unless (m = dp[:regex].match(sline))
       dp[:fields].each_with_index do |field, idx|
         val = m[idx + 1]&.strip
         raw_cache[field] = val if val && !val.empty? && !raw_cache.key?(field)
+        line_fields << field
       end
+    end
+    # Unambiguous when every field this single line maps to belongs to one widget
+    # (same base key once the _1/_2 suffix is stripped).
+    if line_fields.map { |f| f.sub(/_\d+$/, '') }.uniq.length == 1
+      line_fields.each { |f| unambiguous_fields << f }
     end
   end
 
@@ -346,7 +360,16 @@ def parse_sbatch_into_cache(script_content, body, app_name, dir_name)
     (field_def["options"] || []).each_with_index do |opt, idx|
       next unless opt.is_a?(Array) && opt.length > 2
       enabled_fields = opt[2..-1].grep(/^enable-/).map { |a| a.sub(/^enable-/, '') }
-      next unless enabled_fields.any? { |f| cache.keys.any? { |k| k == f || k.start_with?("#{f}_") } }
+      # Only auto-expand the section if one of its fields was identified by an
+      # UNAMBIGUOUS script line — never from a line shared with another field.
+      # This is what makes "Show advanced CPU options" tick only when
+      # "--cpus-per-task" is present, not merely because a shared "--ntasks="
+      # line happened to match the hidden advanced field too.
+      next unless enabled_fields.any? do |f|
+        present     = cache.keys.any? { |k| k == f || k.start_with?("#{f}_") }
+        unambiguous = unambiguous_fields.any? { |uf| uf == f || uf.start_with?("#{f}_") }
+        present && unambiguous
+      end
       cache["#{key}_#{idx + 1}"] ||= opt[0].to_s
     end
   end

@@ -1,5 +1,39 @@
 # Changelog
 
+## [3.0.0] - 2026-06-11
+
+### Added
+
+#### Open OnDemand integration
+
+- **OOD-integrated (embedded) mode** — Open Composer can render inside Open OnDemand's own
+  chrome (live OOD navbar and footer) via a reverse-proxy dashboard initializer under
+  `ood_integration/`, with no iframe. Toggleable per deployment; runs full-width.
+
+#### Navbar, branding & layout
+
+- **Configurable navbar items** — the label and icon of the File/Home Directory, Shell Access,
+  and Return to OnDemand links are now set in `conf.yml.erb`
+  (`home_directory_label`/`_icon`, `shell_access_label`/`_icon`, `open_ondemand_label`/`_icon`).
+- **Search box** can be shown/hidden (`show_search`) and now sits on the right of the navbar.
+- **`favicon`**, **footer brand logo** (`footer_brand_logo`/`footer_brand_url`/`footer_brand_alt`,
+  replacing the fixed OnDemand logo), an **app description** blurb (`app_description`), and a
+  **gradient separator** under the top bar (`show_navbar_separator`) are all configurable.
+- **Return to OnDemand / navbar logo** auto-derive to `<this host>/pun/sys/dashboard` when
+  `open_ondemand_url` is unset, so no per-site URL is required.
+- **Multiple categories per app** — a manifest `category` may be a list; the app then appears
+  under each category and shows a badge per category.
+
+### Fixed
+
+- **Script Content box not updating** when changing widgets on a template form.
+- **Syntax-highlight overlay misaligned** with the typed text in the embedded editor.
+- **"Show advanced CPU options" (and similar toggles) wrongly auto-ticked when loading a script.**
+  A hidden section is now expanded only by a directive line **unique** to it (e.g. the advanced CPU
+  section's `#SBATCH --cpus-per-task=`), never by a line it shares with a visible field (e.g.
+  `#SBATCH --ntasks=`). Applied to both the client-side parser (`parseScriptToWidgets`) and the
+  server-side sacct -B parser (`parse_sbatch_into_cache`).
+
 ## [2.1.0] - 2026-06-01
 
 ### Added

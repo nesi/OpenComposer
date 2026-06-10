@@ -7,7 +7,7 @@ Open Composer is a web application to generate batch job scripts and submit batc
 Open Composer is an Open OnDemand app in the "Jobs" category. Unlike Batch Connect interactive apps, Open Composer provides a graphical interface for creating, previewing, editing, and submitting batch job scripts. It supports multiple job schedulers and can be configured for different HPC applications.
 
 - **App type:** Workflow Composer (Jobs category)
-- **Latest release:** [`v2.1.0`](https://github.com/RIKEN-RCCS/OpenComposer/releases/tag/v2.1.0) (see [Changelog](CHANGELOG.md))
+- **Latest release:** [`v3.0.0`](https://github.com/RIKEN-RCCS/OpenComposer/releases/tag/v3.0.0) (see [Changelog](CHANGELOG.md))
 - **License:** MIT (see [LICENSE file](https://github.com/RIKEN-RCCS/OpenComposer/blob/main/LICENSE))
 - **Requirements:** Open OnDemand 3.0 or later
 - **Supported job schedulers:** Slurm, PBS Pro, Grid Engine, Fujitsu TCS

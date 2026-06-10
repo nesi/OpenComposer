@@ -1,0 +1,110 @@
+---
+# Required settings
+apps_dir: "./apps"
+
+# Scheduler type — controls job submission, history, cancellation, and
+# which generic script template appears under "New Template".
+# Valid values: slurm, pbspro, miyabi, sge, fujitsu_tcs
+#
+# Single-cluster (no "clusters:" block):
+#   scheduler: "slurm"
+#
+# Multi-cluster: set per cluster under "clusters:" (see below).
+clusters:
+  mahuika:
+    scheduler: "slurm"
+
+# Optional settings
+# General
+data_dir:  <%= ENV['HOME'] %>/composer
+login_node: "login.hpc.nesi.org.nz"
+ssh_wrapper: "ssh login.hpc.nesi.org.nz"
+bin: "/usr/bin"
+bin_overrides:
+  sbatch:   "/usr/bin/sbatch"
+  scontrol: "/usr/bin/scontrol"
+  scancel:  "/usr/bin/scancel"
+  sacct:    "/usr/bin/sacct"
+#sge_root: "/apps/t4/rhel9/uge/latest"
+
+# Directory containing hidden generic apps (not shown in the main app listing).
+generic_apps_dir: "./generic_apps"
+
+# When loading an external/generic job (one not submitted through Open Composer)
+# from the History page, open this subfolder inside generic_apps_dir.
+external_reload_app: "Slurm"
+
+## History
+# Set to false to never store the batch script in the DB.
+# When false, "Load parameters" always fetches the script live via sacct -B.
+history_store_script: false
+# Set to true to show the Job Efficiency section in the history job details modal.
+# Requires sacct --json support (Slurm 20.11+). Defaults to false.
+history_efficiency: true
+history:
+  OC_HISTORY_JOB_NAME:
+  OC_HISTORY_START_TIME:
+    label: "Start Time"
+  OC_HISTORY_END_TIME:
+    label: "End Time"
+  OC_HISTORY_OUTPUT_FILE:
+    label: "Output File"
+  OC_HISTORY_ERROR_FILE:
+    label: "Error File"
+  
+## Layout
+footer:                  'Copyright &copy; 2026 &middot; REANNZ | <a href="https://www.nesi.org.nz/disclaimer" target="_blank">Disclaimer</a> | <a href="https://www.nesi.org.nz/about-us/security-privacy/privacy-policy" target="_blank">Privacy</a>'
+home_format:             "big"
+thumbnail_width:         "100"
+highlight_theme:         "vs"
+directive_color:         "#001C36"
+navbar_color:            "#FFFFFF"
+navbar_text_color:       "#191919"
+dropdown_color:          "#FFFFFF"
+dropdown_text_color:     "#191919"
+show_footer:             false                     # Set to true to show the footer
+footer_color:            "#191919"
+footer_text_color:       "#FFFFFF"
+footer_padding:          "p-3"       # Bootstrap padding class: p-1, p-2, p-3, p-4, p-5
+footer_ood_logo:         true        # Set to false to hide the OpenOnDemand logo
+footer_logo_height:      "50px"      # Height of the OpenOnDemand logo in the footer
+category_color:          "#FFFFFF"
+category_text_color:     "#191919"
+description_color:       "#FFFFFF"
+description_text_color:  "#191919"
+form_color:              "#F3F4F4"
+non_script_color:        "#FFFFFF"
+non_script_button_color: "#00B9E4"
+submit_color:            "#EBF8FD"
+submit_button_color:     "#25545E"
+history_action_color:    "#DC3545"
+
+## Submission warnings
+empty_script_warning: true                        # Set to false to disable the warning when submitting a script with no real commands
+
+## Navbar links (set to false to hide)
+show_home_directory: false
+show_shell_access:   false
+show_navbar_apps:    false                        # Set to true to show the Templates dropdown menu
+navbar_apps_label:          "Templates"
+navbar_search_placeholder:  "Search templates…"
+category_badge_colors:                             # Background colours for category badges
+  Application:        "#495057"
+  Astronomy:          "#5a189a"
+  Biology:            "#198754"
+  Chemistry:          "#0097a7"
+  Climate Science:    "#0277bd"
+  Data Analytics:     "#e65100"
+  Earth Science:      "#5d4037"
+  Engineering:        "#1565c0"
+  Language:           "#ad1457"
+  Machine Learning:   "#6f42c1"
+  Mathematics:        "#c62828"
+  Others:             "#6c757d"
+  Physics:            "#283593"
+  Workflow Management: "#2e7d32"
+all_templates_footer: "If you cannot find the template you are looking for, use either <strong>Job Script</strong> or <strong>GPU Job Script</strong>."
+show_open_ondemand:  false
+open_ondemand_url:   "https://ondemand.nesi.org.nz/pun/sys/dashboard/"
+open_ondemand_label: "Return to Mahuika Ondemand"
+navbar_logo: ~                                    # Set to e.g. "REANNZ_logo.svg" to show a logo

@@ -72,17 +72,31 @@ Rails.application.config.after_initialize do
       SCOPE_ROOT = "oc-embed-root"
 
       # Open Composer's script editor overlays a transparent <textarea> on a
-      # <pre><code> highlight layer; they line up only if their box metrics
-      # match. Open Composer zeroes the <pre>'s padding, but OOD's CSS re-adds
-      # padding to it (the highlight then sits offset from the typed text). Pin
-      # the three layers to identical, explicit metrics so the overlay aligns
-      # regardless of OOD's form-control styling. Structural selectors (not the
-      # content ids) cover both the script and submit editors.
+      # <pre><code> highlight layer; they line up only if BOTH the box metrics
+      # (padding/border) and the text metrics (font, line-height, letter/word
+      # spacing, wrapping) are identical between the two layers. Open Composer
+      # leaves the highlight's font-size to inherit, which is fine standalone
+      # but not here: OOD's Bootstrap applies `pre, code { font-size: .875em }`,
+      # shrinking the highlight layer to 87.5% of the textarea so the two drift
+      # apart (the gap grows the further down/right the text goes). Pin every
+      # metric that affects glyph advance and line advance to identical, explicit
+      # values on all three layers so the overlay aligns regardless of OOD's
+      # form-control/pre/code styling. Structural selectors (not the content ids)
+      # cover both the script and submit editors.
       EDITOR_OVERLAY_FIX = <<~'HTML'.freeze
         <style>
         :where(#oc-embed-root) [id$="_editor"] > pre.form-control { padding: 0 !important; }
         :where(#oc-embed-root) [id$="_editor"] > textarea.form-control,
-        :where(#oc-embed-root) [id$="_editor"] > pre.form-control > code { padding: 0.375rem 0.75rem !important; }
+        :where(#oc-embed-root) [id$="_editor"] > pre.form-control > code {
+          padding: 0.375rem 0.75rem !important;
+          font-family: 'JetBrains Mono', monospace !important;
+          font-size: 1rem !important;
+          line-height: 1.5 !important;
+          letter-spacing: normal !important;
+          tab-size: 8 !important;
+          white-space: pre-wrap !important;
+          word-break: break-word !important;
+        }
         </style>
       HTML
 

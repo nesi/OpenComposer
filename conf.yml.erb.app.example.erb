@@ -40,14 +40,18 @@ external_reload_app: "Slurm"
 history_store_script: false
 # Set to true to show the Job Efficiency section in the history job details modal.
 # Requires sacct --json support (Slurm 20.11+). Defaults to false.
-history_efficiency: false
+history_efficiency: true
 history:
   OC_HISTORY_JOB_NAME:
   OC_HISTORY_START_TIME:
     label: "Start Time"
   OC_HISTORY_END_TIME:
     label: "End Time"
-
+  OC_HISTORY_OUTPUT_FILE:
+    label: "Output File"
+  OC_HISTORY_ERROR_FILE:
+    label: "Error File"
+  
 ## Layout
 footer:                  'Copyright &copy; 2026 &middot; REANNZ | <a href="https://www.nesi.org.nz/disclaimer" target="_blank">Disclaimer</a> | <a href="https://www.nesi.org.nz/about-us/security-privacy/privacy-policy" target="_blank">Privacy</a>'
 home_format:             "big"
@@ -58,6 +62,7 @@ navbar_color:            "#FFFFFF"
 navbar_text_color:       "#191919"
 dropdown_color:          "#FFFFFF"
 dropdown_text_color:     "#191919"
+show_footer:             false                     # Set to true to show the footer
 footer_color:            "#191919"
 footer_text_color:       "#FFFFFF"
 footer_padding:          "p-3"       # Bootstrap padding class: p-1, p-2, p-3, p-4, p-5
@@ -74,12 +79,32 @@ submit_color:            "#EBF8FD"
 submit_button_color:     "#25545E"
 history_action_color:    "#DC3545"
 
+## Submission warnings
+empty_script_warning: true                        # Set to false to disable the warning when submitting a script with no real commands
+
 ## Navbar links (set to false to hide)
-show_home_directory: true
-show_shell_access:   true
+show_home_directory: false
+show_shell_access:   false
+show_navbar_apps:    false                        # Set to true to show the Templates dropdown menu
 navbar_apps_label:          "Templates"
 navbar_search_placeholder:  "Search templates…"
-show_open_ondemand:  true
+category_badge_colors:                             # Background colours for category badges
+  Application:        "#495057"
+  Astronomy:          "#5a189a"
+  Biology:            "#198754"
+  Chemistry:          "#0097a7"
+  Climate Science:    "#0277bd"
+  Data Analytics:     "#e65100"
+  Earth Science:      "#5d4037"
+  Engineering:        "#1565c0"
+  Language:           "#ad1457"
+  Machine Learning:   "#6f42c1"
+  Mathematics:        "#c62828"
+  Others:             "#6c757d"
+  Physics:            "#283593"
+  Workflow Management: "#2e7d32"
+all_templates_footer: "If you cannot find the template you are looking for, use either <strong>Job Script</strong> or <strong>GPU Job Script</strong>."
+show_open_ondemand:  false
 open_ondemand_url:   "https://ondemand.nesi.org.nz/pun/sys/dashboard/"
 open_ondemand_label: "Return to Mahuika Ondemand"
-navbar_logo: "REANNZ_logo.svg"
+navbar_logo: ~                                    # Set to e.g. "REANNZ_logo.svg" to show a logo

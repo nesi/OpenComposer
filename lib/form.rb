@@ -129,7 +129,7 @@ helpers do
       else
         html += "<div class=\"col mt-0\">\n"
       end
-      html += "<input type=\"#{value['widget']}\" autocomplete=\"off\" class=\"form-control\" tabindex=\"#{@table_index}\" id=\"#{id}\" name=\"#{id}\" "
+      html += "<input type=\"#{value['widget']}\" autocomplete=\"off\" spellcheck=\"false\" class=\"form-control\" tabindex=\"#{@table_index}\" id=\"#{id}\" name=\"#{id}\" "
       html += output_attribute(value, i, 'min')  if value['widget'] == "number"
       html += output_attribute(value, i, 'max')  if value['widget'] == "number"
       html += output_attribute(value, i, 'step') if value['widget'] == "number"
@@ -386,7 +386,7 @@ helpers do
     html += "</ul>\n"
 
     html += "<div class=\"input-group\">\n"
-    html += "<input type=\"text\" autocomplete=\"off\" tabindex=\"#{@table_index}\" class=\"form-control\" id=\"#{key}\" data-widget=\"multi_select\" oninput=\"ocForm.showSuggestions('#{key}')\" onfocus=\"ocForm.showSuggestions('#{key}', true)\" onblur=\"ocForm.hideSuggestions('#{key}')\" data-required=\"#{required}\" "
+    html += "<input type=\"text\" autocomplete=\"off\" spellcheck=\"false\" tabindex=\"#{@table_index}\" class=\"form-control\" id=\"#{key}\" data-widget=\"multi_select\" oninput=\"ocForm.showSuggestions('#{key}')\" onfocus=\"ocForm.showSuggestions('#{key}', true)\" onblur=\"ocForm.hideSuggestions('#{key}')\" data-required=\"#{required}\" "
     script_flag = references_key_or_has_flag?(key, nil, script_content, app_name, dir_name)
     submit_flag = references_key_or_has_flag?(key, nil, submit_content, app_name, dir_name)
     html += "data-script-flag=#{script_flag} data-submit-flag=#{submit_flag} "
@@ -535,7 +535,7 @@ helpers do
     required     = value['required'].to_s == "true" ? "required" : ""
     html  = output_label_with_span_tag(key, value)
     html += "<div class=\"d-flex align-items-center\">\n"
-    html += "<input type=\"text\" autocomplete=\"off\" tabindex=\"#{@table_index}\" value=\"#{current_value}\" id=\"#{key}\" name=\"#{key}\" #{required} class=\"form-control mt-0\" "
+    html += "<input type=\"text\" autocomplete=\"off\" spellcheck=\"false\" tabindex=\"#{@table_index}\" value=\"#{current_value}\" id=\"#{key}\" name=\"#{key}\" #{required} class=\"form-control mt-0\" "
     script_flag = references_key_or_has_flag?(key, nil, script_content, app_name, dir_name)
     submit_flag = references_key_or_has_flag?(key, nil, submit_content, app_name, dir_name)
     type = if script_flag && submit_flag

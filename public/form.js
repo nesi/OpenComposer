@@ -51,7 +51,17 @@ ocForm.autoEnable = function(fieldKey, visited) {
 
 // Parse #SBATCH / scheduler directives in the script textarea into form widgets
 // using the patterns registered in ocForm.scriptLinePatterns by form.rb.
-ocForm.parseScriptToWidgets = function() {
+//
+// allowEnable (default true): when true, a matched line belonging to a disabled
+// field auto-enables it (and opens its parent toggle) — wanted when loading a
+// saved/external script so the form reconstructs its full state. The live
+// two-way sync (typing in the editor) passes false: it updates only the widgets
+// that are already active and never flips toggles or expands hidden sections.
+// Without this, an ambiguous template line (e.g. two "#SBATCH --ntasks=" lines,
+// one for a simple field and one for an advanced field) would let the visible
+// line match the hidden field's pattern and spuriously tick "Show advanced …".
+ocForm.parseScriptToWidgets = function(allowEnable) {
+  if (allowEnable === undefined) allowEnable = true;
   if (!ocForm.scriptArea || !ocForm.scriptLinePatterns) return;
 
   const lines = ocForm.scriptArea.value.split('\n');
@@ -76,7 +86,10 @@ ocForm.parseScriptToWidgets = function() {
       case 'text':
       case 'email': {
         var el = document.getElementById(key);
-        if (el) {
+        // Only touch the field if it is already active, or we are allowed to
+        // enable it. In live-edit mode a disabled field is left untouched so
+        // typing never expands a hidden section.
+        if (el && (!el.disabled || allowEnable)) {
           if (el.disabled) ocForm.autoEnable(key);
           el.value = value;
         }
@@ -110,8 +123,8 @@ ocForm.parseScriptToWidgets = function() {
         while (true) {
           var optEl = document.getElementById(key + '_' + n);
           if (!optEl) break;
-          if (vals.indexOf(optEl.dataset.value) >= 0) {
-            ocForm.autoEnable(key);
+          if (vals.indexOf(optEl.dataset.value) >= 0 && (!optEl.disabled || allowEnable)) {
+            if (allowEnable) ocForm.autoEnable(key);
             optEl.checked = true;
           }
           n++;
@@ -147,7 +160,7 @@ ocForm.debouncedParseScript = (function() {
   var timer = null;
   return function() {
     clearTimeout(timer);
-    timer = setTimeout(function() { ocForm.parseScriptToWidgets(); }, 500);
+    timer = setTimeout(function() { ocForm.parseScriptToWidgets(false); }, 500);
   };
 })();
 

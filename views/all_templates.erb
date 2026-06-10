@@ -4,11 +4,11 @@
       <a href="<%= @script_name %>/<%= ERB::Util.h(m.dirname) %>" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
          data-name="<%= ERB::Util.h(m.name.to_s.downcase) %>"
          data-desc="<%= ERB::Util.h(m.description.to_s.downcase) %>"
-         data-cat="<%= ERB::Util.h(m.category.to_s.downcase) %>">
+         data-cat="<%= ERB::Util.h(Array(m.category).join(' ').downcase) %>">
         <div>
-          <% if m.category %>
-            <% cat_color = (@conf['category_badge_colors'] || {}).fetch(m.category, nil) %>
-            <span class="badge me-1" style="background-color:<%= ERB::Util.h(cat_color || '#6c757d') %>; color:#fff;"><%= ERB::Util.h(m.category) %></span>
+          <% Array(m.category).each do |cat| %>
+            <% cat_color = (@conf['category_badge_colors'] || {}).fetch(cat, nil) %>
+            <span class="badge me-1" style="background-color:<%= ERB::Util.h(cat_color || '#6c757d') %>; color:#fff;"><%= ERB::Util.h(cat) %></span>
           <% end %>
           <% if @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") %>
             <span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>

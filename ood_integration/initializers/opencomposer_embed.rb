@@ -85,7 +85,14 @@ Rails.application.config.after_initialize do
       # cover both the script and submit editors.
       EDITOR_OVERLAY_FIX = <<~'HTML'.freeze
         <style>
-        :where(#oc-embed-root) [id$="_editor"] > pre.form-control { padding: 0 !important; }
+        /* The highlight <pre> must have no padding (the <code> inside carries it,
+           matching the textarea) or the highlighted text sits offset from the
+           typed text. OOD's dashboard ships `.p-2, .app-card, pre:not(#editor)
+           { padding: .5rem !important }`; its `:not(#editor)` gives it ID-level
+           specificity (1,0,1) plus !important, which beats a plain class/element
+           rule. Mirror the `:not(#editor)` here for equal ID-weight, so the extra
+           class/element selectors win the tie (1,2,1 > 1,0,1). */
+        :where(#oc-embed-root) [id$="_editor"] > pre.form-control:not(#editor) { padding: 0 !important; }
         :where(#oc-embed-root) [id$="_editor"] > textarea.form-control,
         :where(#oc-embed-root) [id$="_editor"] > pre.form-control > code {
           padding: 0.375rem 0.75rem !important;
@@ -97,6 +104,18 @@ Rails.application.config.after_initialize do
           white-space: pre-wrap !important;
           word-break: break-word !important;
         }
+        </style>
+      HTML
+
+      # OOD's dashboard wraps page content in `#main_container.container-md`, a
+      # fixed max-width centred column. Open Composer's pages are built for the
+      # full viewport width (they use `.container-fluid`), so the embedded form
+      # otherwise renders squeezed into the middle of the page. Lift the cap so
+      # the embedded app spans the full width. This style is only injected on the
+      # embedded OC pages, so every other dashboard app keeps its centred column.
+      CONTENT_FULLWIDTH_FIX = <<~'HTML'.freeze
+        <style>
+        #main_container.container-md { max-width: none; }
         </style>
       HTML
 
@@ -260,7 +279,7 @@ Rails.application.config.after_initialize do
         end
 
         body_html = doc.at_css("body") ? doc.at_css("body").inner_html : html
-        @oc_head = (BOOTSTRAP_MODAL_SHIM + head_html + EDITOR_OVERLAY_FIX).html_safe
+        @oc_head = (BOOTSTRAP_MODAL_SHIM + head_html + EDITOR_OVERLAY_FIX + CONTENT_FULLWIDTH_FIX).html_safe
         @oc_body = %(<div id="#{SCOPE_ROOT}">#{body_html}</div>).html_safe
         render template: "apps/opencomposer_embed", layout: "application"
       end

@@ -53,6 +53,17 @@ history:
     label: "Error File"
   
 ## Layout
+favicon:                 "favicon.ico"             # Browser tab icon (file in the public/ dir). Set to "" to disable.
+
+# A horizontal separator line drawn directly under the top navbar, above the
+# template list / page content. Set to false to hide it.
+show_navbar_separator:   true
+
+# Optional descriptive blurb shown under the separator line and above the
+# template categories on the Selected Templates page. HTML is allowed. Leave
+# empty ("") to hide it.
+app_description:         '<p class="mb-2">Slurm Composer is designed to allow you to write slurm scripts on OnDemand directly. These can be submitted to slurm without using a terminal.</p><p class="mb-0">See <strong>History</strong> to see what jobs you have run/are running on slurm.</p>'
+
 footer:                  'Copyright &copy; 2026 &middot; REANNZ | <a href="https://www.nesi.org.nz/disclaimer" target="_blank">Disclaimer</a> | <a href="https://www.nesi.org.nz/about-us/security-privacy/privacy-policy" target="_blank">Privacy</a>'
 home_format:             "big"
 thumbnail_width:         "100"
@@ -62,12 +73,19 @@ navbar_color:            "#FFFFFF"
 navbar_text_color:       "#191919"
 dropdown_color:          "#FFFFFF"
 dropdown_text_color:     "#191919"
-show_footer:             true                      # Set to true to show the footer
+show_footer:             true                       # Set to true to show the footer
 footer_color:            "#191919"
 footer_text_color:       "#FFFFFF"
 footer_padding:          "p-3"       # Bootstrap padding class: p-1, p-2, p-3, p-4, p-5
-footer_ood_logo:         true        # Set to false to hide the OpenOnDemand logo
-footer_logo_height:      "50px"      # Height of the OpenOnDemand logo in the footer
+footer_ood_logo:         false       # Set to false to hide the OpenOnDemand logo
+footer_logo_height:      "50px"      # Height of the footer brand logo
+# Footer brand logo (the "Powered by …" image, bottom-left of the footer).
+# Image file lives in the public/ dir. Clicking it opens footer_brand_url.
+# Leave footer_brand_logo empty ("") to fall back to the OpenOnDemand logo
+# (controlled by footer_ood_logo above).
+footer_brand_logo:       "RIKEN_powered_by.svg"
+footer_brand_url:        "https://github.com/RIKEN-RCCS/OpenComposer"
+footer_brand_alt:        "Powered by RIKEN"
 category_color:          "#FFFFFF"
 category_text_color:     "#191919"
 description_color:       "#FFFFFF"
@@ -83,8 +101,21 @@ history_action_color:    "#DC3545"
 empty_script_warning: true                        # Set to false to disable the warning when submitting a script with no real commands
 
 ## Navbar links (set to false to hide)
-show_home_directory: true
-show_shell_access:   true
+# Each navbar item's label and icon can be customised. Icons accept either a
+# Font Awesome class (e.g. "fas fa-folder") or a Bootstrap Icons class
+# (e.g. "bi bi-terminal-fill") — both icon sets are loaded.
+show_home_directory:        true
+home_directory_label:       "File Directory"
+home_directory_icon:        "fas fa-folder"        # "file directory" icon (use "fas fa-file" for a document icon)
+
+show_shell_access:          true
+shell_access_label:         "Mahuika SSH"
+shell_access_icon:          "bi bi-terminal-fill"  # terminal icon
+
+# Search box. Set show_search to false to hide it. It is rendered just to the
+# left of the File/Home Directory item on the right-hand side of the navbar.
+show_search:                true
+
 show_navbar_apps:    false                        # Set to true to show the Templates dropdown menu
 navbar_apps_label:          "Templates"
 navbar_search_placeholder:  "Search templates…"
@@ -103,9 +134,14 @@ category_badge_colors:                             # Background colours for cate
   Others:             "#6c757d"
   Physics:            "#283593"
   Workflow Management: "#2e7d32"
+  Slurm Submit Templates: "#25545E"
 all_templates_footer: "If you cannot find the template you are looking for, use either <strong>Job Script</strong> or <strong>GPU Job Script</strong>."
 show_open_ondemand:      true
-open_ondemand_url:       "https://ondemand.nesi.org.nz/pun/sys/dashboard/"
+# open_ondemand_url is intentionally left unset: the "Return to OnDemand" link
+# and the navbar logo automatically point to <this host>/pun/sys/dashboard
+# (the same host the page is served from). Set open_ondemand_url here only to
+# override that with a fixed URL.
 open_ondemand_label:     "Return to Ondemand"
+open_ondemand_icon:      "fas fa-house"             # house icon
 open_ondemand_new_tab:   false                      # Set to false to open in the same tab
 navbar_logo: "REANNZ_logo.svg"                    # Set to e.g. "REANNZ_logo.svg" to show a logo

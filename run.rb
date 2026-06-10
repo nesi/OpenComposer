@@ -476,7 +476,10 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   @apps_dir      = @conf["apps_dir"]
   @version       = VERSION
   @my_ood_url        = request.base_url
-  @open_ondemand_url = @conf.fetch("open_ondemand_url", @my_ood_url)
+  # Defaults to the OOD dashboard on the same host the request came in on, so the
+  # "Return to OnDemand" link and navbar logo point back to OnDemand automatically
+  # (no open_ondemand_url needed in conf). Admins can still override it.
+  @open_ondemand_url = @conf.fetch("open_ondemand_url", "#{@my_ood_url}/pun/sys/dashboard")
   @script_name   = request.script_name
   @dir_name      = request.path_info.sub(/^\//, '')
   @cluster_name  = if @conf.key?("clusters")
@@ -494,7 +497,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   @current_path  = File.join(@script_name, @dir_name)
   _modules_list  = fetch_modules_list(@conf["data_dir"])
   @gpu_names     = _modules_list.filter_map { |k, v| k.downcase if Array(v["domains"]).include?("gpu") }
-  @all_manifests = create_all_manifests(@apps_dir).sort_by { |m| [m.category&.downcase == "others" ? 1 : 0, (m.category || "").downcase, m.name.downcase] }
+  # category may be a single string or a list; sort by the primary (first) one.
+  @all_manifests = create_all_manifests(@apps_dir).sort_by { |m| _c = Array(m.category).first; [_c&.downcase == "others" ? 1 : 0, (_c || "").downcase, m.name.downcase] }
   @manifests     = @all_manifests.reject(&:hidden)
   @manifests_w_category, @manifests_wo_category = @manifests.partition(&:category)
 

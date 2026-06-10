@@ -3,6 +3,21 @@
 %>
 
 <div id="oc-app-list">
+
+<%# ── Separator line under the top bar (show_navbar_separator) ───────────── %>
+<%# Soft gradient rule: shades downward from a half-strength grey at the top, %>
+<%# fading to transparent at the bottom — a subtle drop-shadow under the top bar. %>
+<% if @conf.fetch('show_navbar_separator', false) %>
+  <div class="mx-1" style="height:6px; background:linear-gradient(to bottom, rgba(195,200,200,0.28) 0%, rgba(195,200,200,0) 100%);"></div>
+<% end %>
+
+<%# ── Optional description of Open Composer, above the template list ─────── %>
+<% if @conf.fetch('app_description', '').to_s.strip.length > 0 %>
+  <div class="mx-1 px-4 py-4 my-2" style="background:<%= @conf.fetch('description_color', '#FFFFFF') %>; color:<%= @conf.fetch('description_text_color', '#191919') %>;">
+    <%= @conf['app_description'] %>
+  </div>
+<% end %>
+
 <% if small_format %>
 <%# ── Small format: letter-grouped pills, no icons ───────────────────────── %>
 

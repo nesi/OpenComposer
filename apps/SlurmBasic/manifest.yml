@@ -1,4 +1,4 @@
 name: Job Script (Slurm)
-category: Application
+category: Slurm Submit Templates
 description: This application generates an arbitrary job script in Slurm.
 icon: Slurm_logo.svg

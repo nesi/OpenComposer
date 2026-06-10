@@ -49,30 +49,23 @@ ocForm.autoEnable = function(fieldKey, visited) {
   }
 };
 
-// True if `line` is also matched by a pattern whose field is currently enabled
-// (visible), ignoring excludeKey. Used to avoid auto-enabling a hidden field
-// from an ambiguous template line that an already-visible field also produces —
-// e.g. SlurmBasic emits "#SBATCH --ntasks=" for BOTH the simple "Number of
-// Cores" field and the advanced "Number of Tasks" field, so loading a simple
-// script (which has no "--cpus-per-task=") must not flip on "Show advanced CPU
-// options". A genuinely advanced script also has "--cpus-per-task=", a line no
-// visible field matches, so it still expands the advanced section correctly.
-ocForm.lineClaimedByEnabledField = function(line, excludeKey) {
+// True if `line` is matched by a pattern belonging to a DIFFERENT field than
+// excludeKey's (comparing base keys, i.e. ignoring the _1/_2 suffix of multi-
+// input widgets). Such a line is ambiguous and must NOT be used to auto-enable a
+// hidden field: SlurmBasic emits "#SBATCH --ntasks=" for BOTH the simple
+// "Number of Cores" field and the advanced "Number of Tasks" field. A hidden
+// field is therefore only auto-enabled from a line UNIQUE to it — for the
+// advanced CPU section that is its "#SBATCH --cpus-per-task=" line. Net effect:
+// "Show advanced CPU options" ticks only when --cpus-per-task is in the script.
+// This is deliberately independent of any field's runtime enabled/disabled state
+// (the form may not have finished initializing when a loaded script is parsed).
+ocForm.lineMatchedByOtherField = function(line, excludeKey) {
   if (!ocForm.scriptLinePatterns) return false;
+  var excludeBase = String(excludeKey).replace(/_\d+$/, '');
   for (const pat of ocForm.scriptLinePatterns) {
     if (!pat.regex || !pat.regex.test(line)) continue;
     for (var i = 0; i < pat.keys.length; i++) {
-      var key = pat.keys[i];
-      if (key === excludeKey) continue;
-      var el = document.getElementById(key);
-      if (el) {
-        if (!el.disabled) return true;
-      } else {
-        var radios = document.getElementsByName(key);
-        for (var r = 0; r < radios.length; r++) {
-          if (!radios[r].disabled) return true;
-        }
-      }
+      if (String(pat.keys[i]).replace(/_\d+$/, '') !== excludeBase) return true;
     }
   }
   return false;
@@ -116,13 +109,15 @@ ocForm.parseScriptToWidgets = function(allowEnable) {
       case 'email': {
         var el = document.getElementById(key);
         // Only touch the field if it is already active, or we are allowed to
-        // enable it. In live-edit mode a disabled field is left untouched so
-        // typing never expands a hidden section.
+        // enable it (load path). In live-edit mode a disabled field is left
+        // untouched so typing never expands a hidden section.
         if (el && (!el.disabled || allowEnable)) {
-          if (el.disabled) {
-            // Don't enable a hidden field from a line a visible field also
-            // matches (ambiguous template lines) — leave it untouched.
-            if (ocForm.lineClaimedByEnabledField(matchingLine, key)) break;
+          // Auto-enable a hidden field only from a line UNIQUE to it; an
+          // ambiguous line (also emitted by another field, e.g. two
+          // "#SBATCH --ntasks=" lines) must not expand a hidden section. The
+          // value is still applied, so if the section is later opened by its
+          // own unique line (e.g. "--cpus-per-task=") it shows the right value.
+          if (el.disabled && !ocForm.lineMatchedByOtherField(matchingLine, key)) {
             ocForm.autoEnable(key);
           }
           el.value = value;

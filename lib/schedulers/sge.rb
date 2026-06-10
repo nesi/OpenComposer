@@ -4,7 +4,7 @@ require 'open3'
 # https://2022.help.altair.com/2022.1.0/AltairGridEngine/AdminsGuideGE.pdf
 class Sge < Scheduler
   # Submit a job to Grid Engine using the 'qsub' command.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil, copy_environment = nil)
     qsub = get_command_path("qsub", bin, bin_overrides)
     job_name_option = "-N #{job_name}" if job_name && !job_name.empty?
     command = [ssh_wrapper, qsub, job_name_option, added_options, script_path].compact.join(" ")

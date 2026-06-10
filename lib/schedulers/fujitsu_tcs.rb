@@ -4,7 +4,7 @@ require 'csv'
 class Fujitsu_tcs < Scheduler
   # Submit a job to the Fujitsu TCS scheduler using the 'pjsub' command.
   # If the submission is successful, it checks for job details using the 'pjstat' command.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil, copy_environment = nil)
     pjsub = get_command_path("pjsub", bin, bin_overrides)
     job_name_option = "-N #{job_name}" if job_name && !job_name.empty?
     command = [ssh_wrapper, pjsub, job_name_option, added_options, script_path].compact.join(" ")

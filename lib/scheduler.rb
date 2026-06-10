@@ -11,8 +11,9 @@ class Scheduler
   # @param bin_overrides [Array] PATH of each command of job scheduler.
   # @param ssh_wrapper [String] SSH wrapper. This is used when the local server does not have a job scheduler (optional).
   # @param scheduler_env [Hash] environment variables for scheduler commands.
+  # @param copy_environment [Boolean] copy the PUN environment to submitted jobs.
   # @return [Array<String, String>] job id and error message. If successful, the error message is nil; otherwise, the job id is nil.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil, copy_environment = nil)
     raise NotImplementedError, "This method should be overridden by a subclass"
   end
 

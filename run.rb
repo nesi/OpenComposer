@@ -65,7 +65,7 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_PARTITION"       => JOB_PARTITION,
   "OC_HISTORY_SUBMISSION_TIME" => JOB_SUBMISSION_TIME
 }.freeze
-CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "scheduler_env", "sge_root"].freeze
+CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "scheduler_env", "copy_environment", "sge_root"].freeze
 
 # Structure of manifest
 Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps)
@@ -560,6 +560,7 @@ post "/*" do
   bin           = conf.key?("clusters") ? conf["bin"][cluster_name] : conf["bin"]
   bin_overrides = conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
   scheduler_env = conf.key?("clusters") ? conf["scheduler_env"][cluster_name] : conf["scheduler_env"]
+  copy_environment = conf.key?("clusters") ? conf["copy_environment"][cluster_name] : conf["copy_environment"]
   history_db    = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
   data_dir      = conf["data_dir"]
   ENV['SGE_ROOT'] ||= conf.key?("clusters") ? conf["sge_root"][cluster_name] : conf["sge_root"]
@@ -719,7 +720,7 @@ post "/*" do
 
     submission_time = nil
     Dir.chdir(script_dir) do
-      job_id, error_msg = scheduler.submit(script_path, escape_html(job_name.strip), submit_options, bin, bin_overrides, ssh_wrapper, scheduler_env)
+      job_id, error_msg = scheduler.submit(script_path, escape_html(job_name.strip), submit_options, bin, bin_overrides, ssh_wrapper, scheduler_env, copy_environment)
       submission_time = Time.now.iso8601
     end
 

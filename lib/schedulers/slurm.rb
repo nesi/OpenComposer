@@ -4,10 +4,10 @@ require 'open3'
 class Slurm < Scheduler
   # Submit a job to the Slurm scheduler using the 'sbatch' command.
   # If the submission is successful, it checks for job details using the 'scontrol' command.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil, copy_environment = nil)
     sbatch = get_command_path("sbatch", bin, bin_overrides)
     job_name_option = "-J #{job_name}" if job_name && !job_name.empty?
-    added_options = "--export=NONE" if added_options.nil?
+    added_options = copy_environment ? "--export=ALL" : "--export=NONE" if added_options.nil?
     command = [ssh_wrapper, sbatch, job_name_option, added_options, script_path].compact.join(" ")
     stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ") unless status.success?

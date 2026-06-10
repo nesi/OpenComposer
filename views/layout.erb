@@ -291,6 +291,13 @@
         </div>
       </nav>
 
+      <%# Soft gradient rule under the header: shades downward from a light grey %>
+      <%# at the top, fading to transparent. Shown on every page except All %>
+      <%# Templates (which has its own full-height bordered list). %>
+      <% if @conf.fetch('show_navbar_separator', false) && @dir_name != 'all_templates' %>
+        <div class="mx-1" style="height:6px; background:linear-gradient(to bottom, rgba(195,200,200,0.28) 0%, rgba(195,200,200,0) 100%);"></div>
+      <% end %>
+
       <div id="oc-search-results" style="display:none; background:#F3F4F4; border-top:1px solid #C3C8C8; max-height:60vh; overflow-y:auto;"></div>
 
       <div style="flex: 1;">

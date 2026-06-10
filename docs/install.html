@@ -110,7 +110,7 @@ clusters:
   For example, this can be used when <code>SLURM_CONF_SERVER</code> is required for a Slurm configless setup.
       </p>
 <pre>scheduler_env:
-  SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"</pre>
+  SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
       <p>
   When using <code>clusters</code>, this can be configured for each cluster.
       </p>
@@ -118,7 +118,7 @@ clusters:
   prepost:
     scheduler: "slurm"
     scheduler_env:
-      SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"</pre>
+      SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
       <p>
   When <code>ssh_wrapper</code> is used to run job scheduler commands on a remote host, <code>scheduler_env</code> is applied to the local <code>ssh</code> command.
   If the environment variables are also required on the remote side, configure SSH or a wrapper script accordingly.

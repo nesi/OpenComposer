@@ -8,7 +8,7 @@ scheduler: "slurm"
 #  prepost:
 #    scheduler: "slurm"
 #    scheduler_env:
-#      SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"
+#      SLURM_CONF_SERVER: "slurmctld.example.com"
 #    copy_environment: false
 #    bin_overrides:
 #      sbatch: "/usr/local/bin/sbatch"
@@ -20,7 +20,7 @@ scheduler: "slurm"
 #ssh_wrapper: "ssh hoge@example.com"
 #bin: "/usr/local/bin"
 #scheduler_env:
-#  SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"
+#  SLURM_CONF_SERVER: "slurmctld.example.com"
 #copy_environment: false
 #bin_overrides:
 #  sbatch:   "/usr/local/bin/sbatch"

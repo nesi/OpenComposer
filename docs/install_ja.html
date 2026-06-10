@@ -109,7 +109,7 @@ clusters:
   例えばSlurmのconfigless構成で<code>SLURM_CONF_SERVER</code>が必要な場合に利用できます。
       </p>
 <pre>scheduler_env:
-  SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"</pre>
+  SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
       <p>
   <code>clusters</code>を利用している場合は、クラスタごとに設定できます。
       </p>
@@ -117,7 +117,7 @@ clusters:
   prepost:
     scheduler: "slurm"
     scheduler_env:
-      SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"</pre>
+      SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
       <p>
   <code>ssh_wrapper</code>を利用してリモートホスト上でジョブスケジューラを実行する場合、<code>scheduler_env</code>はローカルで起動する<code>ssh</code>コマンドの環境変数です。
   リモート側にも環境変数が必要な場合は、SSHの設定またはwrapperスクリプトで設定してください。

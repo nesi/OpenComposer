@@ -1,3 +1,5 @@
+require 'open3'
+
 # This class is a superclass for job schedulers, which provides an
 # interface to interact with different scheduling systems.
 class Scheduler
@@ -8,8 +10,9 @@ class Scheduler
   # @param bin [String] PATH of commands of job scheduler.
   # @param bin_overrides [Array] PATH of each command of job scheduler.
   # @param ssh_wrapper [String] SSH wrapper. This is used when the local server does not have a job scheduler (optional).
+  # @param scheduler_env [Hash] environment variables for scheduler commands.
   # @return [Array<String, String>] job id and error message. If successful, the error message is nil; otherwise, the job id is nil.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     raise NotImplementedError, "This method should be overridden by a subclass"
   end
 
@@ -18,8 +21,9 @@ class Scheduler
   # @param bin [String] Same as submit().
   # @param bin_overrides [Array] Same as submit().
   # @param ssh_wrapper [String] Same as submit().
+  # @param scheduler_env [Hash] Same as submit().
   # @return [String] error message. If successful, the error message is nil.
-  def cancel(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def cancel(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     raise NotImplementedError, "This method should be overridden by a subclass"
   end
 
@@ -28,11 +32,12 @@ class Scheduler
   # @param bin [String] Same as submit().
   # @param bin_overrides [Array] Same as submit().
   # @param ssh_wrapper [String] Same as submit().
+  # @param scheduler_env [Hash] Same as submit().
   # @return [Array<Hash>] a hash array containing job status and error message.
   #         Example: {JOB_NAME => "foo", JOB_SUBMISSION_TIME => "2024-09-21 15:59:14", JOB_PARTITION => "GH100", JOB_STATUS_ID => JOB_STATUS["completed"]}
   #         Status can be one of: JOB_STATUS["completed"], JOB_STATUS["queued"], JOB_STATUS["running"], JOB_STATUS["failed"].
   #         Additional key-value pairs will be displayed in a modal on the History page when clicking on the job ID.
-  def query(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def query(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     raise NotImplementedError, "This method should be overridden by a subclass"
   end
 
@@ -55,5 +60,17 @@ class Scheduler
     end
 
     command
+  end
+
+  def capture_scheduler_command(scheduler_env, command)
+    Open3.capture3(scheduler_command_env(scheduler_env), command)
+  end
+
+  def scheduler_command_env(scheduler_env)
+    return {} unless scheduler_env.is_a?(Hash)
+
+    (scheduler_env || {}).each_with_object({}) do |(key, value), env|
+      env[key.to_s] = value.to_s unless value.nil?
+    end
   end
 end

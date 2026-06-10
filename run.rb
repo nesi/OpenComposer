@@ -65,7 +65,7 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_PARTITION"       => JOB_PARTITION,
   "OC_HISTORY_SUBMISSION_TIME" => JOB_SUBMISSION_TIME
 }.freeze
-CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "sge_root"].freeze
+CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "scheduler_env", "sge_root"].freeze
 
 # Structure of manifest
 Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps)
@@ -328,7 +328,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @bin           = @conf["bin"]
     @bin_overrides = @conf["bin_overrides"]
     @ssh_wrapper   = @conf["ssh_wrapper"]
-    @error_msg     = update_status(@conf, @scheduler, @bin, @bin_overrides, @ssh_wrapper, @cluster_name)
+    @scheduler_env = @conf["scheduler_env"]
+    @error_msg     = update_status(@conf, @scheduler, @bin, @bin_overrides, @ssh_wrapper, @scheduler_env, @cluster_name)
     return erb :error if @error_msg != nil
 
     @statuses     = parse_history_statuses(params["statuses"])
@@ -558,6 +559,7 @@ post "/*" do
   ssh_wrapper   = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name] : conf["ssh_wrapper"]
   bin           = conf.key?("clusters") ? conf["bin"][cluster_name] : conf["bin"]
   bin_overrides = conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
+  scheduler_env = conf.key?("clusters") ? conf["scheduler_env"][cluster_name] : conf["scheduler_env"]
   history_db    = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
   data_dir      = conf["data_dir"]
   ENV['SGE_ROOT'] ||= conf.key?("clusters") ? conf["sge_root"][cluster_name] : conf["sge_root"]
@@ -568,7 +570,7 @@ post "/*" do
 
     case params["action"]
     when "CancelJob"
-      error_msg = scheduler.cancel(job_ids, bin, bin_overrides, ssh_wrapper)
+      error_msg = scheduler.cancel(job_ids, bin, bin_overrides, ssh_wrapper, scheduler_env)
       if error_msg.nil? && File.exist?(history_db)
         db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
         db.transaction do
@@ -717,7 +719,7 @@ post "/*" do
 
     submission_time = nil
     Dir.chdir(script_dir) do
-      job_id, error_msg = scheduler.submit(script_path, escape_html(job_name.strip), submit_options, bin, bin_overrides, ssh_wrapper)
+      job_id, error_msg = scheduler.submit(script_path, escape_html(job_name.strip), submit_options, bin, bin_overrides, ssh_wrapper, scheduler_env)
       submission_time = Time.now.iso8601
     end
 

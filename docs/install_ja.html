@@ -16,8 +16,9 @@
         <li class="nav-item"><a href="#install" class="nav-link">1. インストール</a></li>
         <li class="nav-item"><a href="#setting" class="nav-link">2. 設定</a></li>
         <li class="nav-item ms-3"><a href="#clusters" class="nav-link">2.1. clusters</a></li>
-        <li class="nav-item ms-3"><a href="#bin_overrides" class="nav-link">2.2. bin_overrides</a></li>
-        <li class="nav-item ms-3"><a href="#history" class="nav-link">2.3. history</a></li>
+        <li class="nav-item ms-3"><a href="#scheduler_env" class="nav-link">2.2. scheduler_env</a></li>
+        <li class="nav-item ms-3"><a href="#bin_overrides" class="nav-link">2.3. bin_overrides</a></li>
+        <li class="nav-item ms-3"><a href="#history" class="nav-link">2.4. history</a></li>
         <li class="nav-item"><a href="#registor" class="nav-link">3. Open OnDemandへの登録</a></li>
         <li class="nav-item"><a href="#general" class="nav-link">4. 一般ユーザによるインストール</a></li>
         <li class="nav-item"><a href="#local" class="nav-link">5. ローカルにおける開発方法</a></li>
@@ -52,6 +53,7 @@ $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
         <tr><td>ssh_wrapper</td><td>SSHを用いて他のノードのジョブスケジューラを用いる場合のコマンド</td><td>(None)</td></tr>
         <tr><td>bin</td><td>ジョブスケジューラのコマンドのパス</td><td>(None)</td></tr>
         <tr><td>bin_overrides</td><td>ジョブスケジューラの各コマンドのパス</td><td>(None)</td></tr>
+        <tr><td>scheduler_env</td><td>ジョブスケジューラのコマンド実行時に追加する環境変数</td><td>(None)</td></tr>
         <tr><td>sge_root</td><td>Grid Engineのルート用ディレクトリ（<code>SGE_ROOT</code>）</td><td> (None)</td></tr>
         <tr><td>history</td><td>履歴ページの追加表示項目</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code></td></tr>
         <tr><td>footer</td><td>フッタに記載する文字</td><td>(None)</td></tr>
@@ -76,7 +78,7 @@ $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
 
       <h3 id="clusters">2.1. clusters</h3>
       <p>
-        複数のクラスタを設定します。本設定では、<code>scheduler</code>、<code>login_node</code>、<code>ssh_wrapper</code>、<code>bin</code>、<code>bin_overrides</code>、<code>sge_root</code>がクラスタ毎に設定できます。1つのクラスタのみを使う場合、本設定は省略可能です。
+        複数のクラスタを設定します。本設定では、<code>scheduler</code>、<code>login_node</code>、<code>ssh_wrapper</code>、<code>bin</code>、<code>bin_overrides</code>、<code>scheduler_env</code>、<code>sge_root</code>がクラスタ毎に設定できます。1つのクラスタのみを使う場合、本設定は省略可能です。
       </p>
       <p>
         下記では、<code>fugaku</code>と<code>prepost</code>というクラスタにおいて、それぞれ<code>fujitsu_tcs</code>と<code>slurm</code>のジョブスケジューラを利用することを定義しています。
@@ -99,7 +101,27 @@ clusters:
   prepost:
     ssh_wrapper "ssh prepost.example.net"</pre>
 
-      <h3 id="bin_overrides">2.2. bin_overrides</h3>
+      <h3 id="scheduler_env">2.2. scheduler_env</h3>
+      <p>
+  ジョブスケジューラのコマンドを実行するときに追加する環境変数を設定します。本設定は省略可能です。
+  例えばSlurmのconfigless構成で<code>SLURM_CONF_SERVER</code>が必要な場合に利用できます。
+      </p>
+<pre>scheduler_env:
+  SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"</pre>
+      <p>
+  <code>clusters</code>を利用している場合は、クラスタごとに設定できます。
+      </p>
+      <pre>clusters:
+  prepost:
+    scheduler: "slurm"
+    scheduler_env:
+      SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"</pre>
+      <p>
+  <code>ssh_wrapper</code>を利用してリモートホスト上でジョブスケジューラを実行する場合、<code>scheduler_env</code>はローカルで起動する<code>ssh</code>コマンドの環境変数です。
+  リモート側にも環境変数が必要な場合は、SSHの設定またはwrapperスクリプトで設定してください。
+      </p>
+
+      <h3 id="bin_overrides">2.3. bin_overrides</h3>
       <p>
   各コマンドのパスを設定します。本設定は省略可能です。
       </p>
@@ -137,7 +159,7 @@ clusters:
   pjstat: "/usr/local/bin/pjstat"
   pjdel:  "/usr/local/bin/pjdel"</pre>
 
-      <h3 id="history">2.3. history</h3>
+      <h3 id="history">2.4. history</h3>
       <p>
         履歴ページの必須表示項目は「Job ID」、「Application」、「Script Location」、「Script Name」、「Status」です。それに対して、<code>history</code>では追加表示項目を設定します。本設定を省略した場合、「Job Name」、「Partiton」、「Submission Time」が自動的に設定されます。下記のコードと同じです。<code>OC_HISTORY_JOB_NAME</code>、<code>OC_HISTORY_PARTITION</code>、<code>OC_HISTORY_SUBMISSION_TIME</code>は特殊な変数であり、「Job Name」、「Partiton」、「Submission Time」をそれぞれ指します。
       </p>

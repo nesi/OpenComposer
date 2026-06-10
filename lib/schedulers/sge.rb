@@ -4,11 +4,11 @@ require 'open3'
 # https://2022.help.altair.com/2022.1.0/AltairGridEngine/AdminsGuideGE.pdf
 class Sge < Scheduler
   # Submit a job to Grid Engine using the 'qsub' command.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     qsub = get_command_path("qsub", bin, bin_overrides)
     job_name_option = "-N #{job_name}" if job_name && !job_name.empty?
     command = [ssh_wrapper, qsub, job_name_option, added_options, script_path].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ") unless status.success?
 
     # For a single job, the output will be "Your job 123 ("a.sh") has been submitted".
@@ -30,14 +30,14 @@ class Sge < Scheduler
   end
 
   # Cancel one or more jobs in Grid Engine using the 'qdel' command.
-  def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     qdel = get_command_path("qdel", bin, bin_overrides)
     transformed_jobs = jobs.map do |job_id|
       job_id.include?(".") ? job_id.gsub(".", " -t ") : job_id # "123.4" -> "123 -t 4"
     end
 
     command = [ssh_wrapper, qdel, transformed_jobs.join(' ')].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return status.success? ? nil : [stdout, stderr].join(" ")
   rescue Exception => e
     return e.message
@@ -72,7 +72,7 @@ class Sge < Scheduler
 
   # Query the status of one or more jobs in Grid Engine using 'qstat'.
   # It retrieves job details such as submission time, partition, and status.
-  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     # r  : Running
     # qw : Waiting
     # h  : Holding
@@ -119,7 +119,7 @@ class Sge < Scheduler
 
     qstat = get_command_path("qstat", bin, bin_overrides)
     command = [ssh_wrapper, qstat].compact.join(" ")
-    stdout1, stderr1, status1 = Open3.capture3(command)
+    stdout1, stderr1, status1 = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout1, stderr1].join(" ") unless status1.success?
 
     info = {}
@@ -169,7 +169,7 @@ class Sge < Scheduler
     # If the job was completed more than a week ago, only the status is set to JOB_STATUS["completed"].
     qacct = get_command_path("qacct", bin, bin_overrides)
     command = [ssh_wrapper, qacct, "-j -d 7"].compact.join(" ")
-    stdout2, stderr2, status2 = Open3.capture3(command)
+    stdout2, stderr2, status2 = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout2, stderr2].join(" ") unless status2.success?
 
     # To deal with the case where stdout2 is too large, temporarily save it to a tmpfile.

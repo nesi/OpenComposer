@@ -1050,7 +1050,7 @@ helpers do
   end
 
   # Update the status of all jobs that are not completed
-  def update_status(conf, scheduler, bin, bin_overrides, ssh_wrapper, cluster_name)
+  def update_status(conf, scheduler, bin, bin_overrides, ssh_wrapper, scheduler_env, cluster_name)
     db = open_history_db(conf, cluster_name)
     queried_ids = get_unfinished_job_ids(db)
     return nil if queried_ids.empty?
@@ -1059,9 +1059,10 @@ helpers do
     ssh_wrapper   = cluster_name ? ssh_wrapper[cluster_name]   : ssh_wrapper
     bin           = cluster_name ? bin[cluster_name]           : bin
     bin_overrides = cluster_name ? bin_overrides[cluster_name] : bin_overrides
+    scheduler_env = cluster_name ? scheduler_env[cluster_name] : scheduler_env
     ENV['SGE_ROOT'] ||= cluster_name ? conf["sge_root"][cluster_name] : conf["sge_root"]
 
-    status, error_msg = scheduler.query(queried_ids, bin, bin_overrides, ssh_wrapper)
+    status, error_msg = scheduler.query(queried_ids, bin, bin_overrides, ssh_wrapper, scheduler_env)
     return error_msg if error_msg
 
     db.transaction do

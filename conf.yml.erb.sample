@@ -7,6 +7,8 @@ scheduler: "slurm"
 #    scheduler: "fujitsu_tcs"
 #  prepost:
 #    scheduler: "slurm"
+#    scheduler_env:
+#      SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"
 #    bin_overrides:
 #      sbatch: "/usr/local/bin/sbatch"
 
@@ -16,6 +18,8 @@ scheduler: "slurm"
 #login_node: "example.com"
 #ssh_wrapper: "ssh hoge@example.com"
 #bin: "/usr/local/bin"
+#scheduler_env:
+#  SLURM_CONF_SERVER: "slurmctld01.example.com,slurmctld02.example.com"
 #bin_overrides:
 #  sbatch:   "/usr/local/bin/sbatch"
 #  scontrol: "/usr/local/bin/scontrol"

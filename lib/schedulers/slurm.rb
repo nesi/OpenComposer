@@ -4,12 +4,12 @@ require 'open3'
 class Slurm < Scheduler
   # Submit a job to the Slurm scheduler using the 'sbatch' command.
   # If the submission is successful, it checks for job details using the 'scontrol' command.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     sbatch = get_command_path("sbatch", bin, bin_overrides)
     job_name_option = "-J #{job_name}" if job_name && !job_name.empty?
     added_options = "--export=NONE" if added_options.nil?
     command = [ssh_wrapper, sbatch, job_name_option, added_options, script_path].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ") unless status.success?
     job_id_match = stdout.match(/Submitted batch job (\d+)/)
     return nil, "Job ID not found in output." unless job_id_match
@@ -19,7 +19,7 @@ class Slurm < Scheduler
     # Fetch job details
     scontrol = get_command_path("scontrol", bin, bin_overrides)
     command = [ssh_wrapper, scontrol, "show job", job_id].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ") unless status.success?
 
     unless stdout.include?("ArrayTaskId") # Single Job
@@ -36,10 +36,10 @@ class Slurm < Scheduler
   end
 
   # Cancel one or more jobs in the Slurm scheduler using the 'scancel' command.
-  def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     scancel = get_command_path("scancel", bin, bin_overrides)
     command = [ssh_wrapper, scancel, jobs.join(',')].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return status.success? ? nil : [stdout, stderr].join(" ")
   rescue Exception => e
     return e.message
@@ -47,7 +47,7 @@ class Slurm < Scheduler
 
   # Query the status of one or more jobs in the Slurm system using 'sacct'.
   # It retrieves job details such as submission time, partition, and status.
-  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     # https://slurm.schedmd.com/sacct.html
     # BOOT_FAIL     : Job terminated due to launch failure, typically due to a hardware failure.
     # CANCELLED     : Job was explicitly cancelled by the user or system administrator. The job may or may not have been initiated.
@@ -71,12 +71,12 @@ class Slurm < Scheduler
     # Get the list of all available fields from sacct
     sacct = get_command_path("sacct", bin, bin_overrides)
     command1 = [ssh_wrapper, sacct, "--helpformat"].compact.join(" ")
-    stdout1, stderr1, status1 = Open3.capture3(command1)
+    stdout1, stderr1, status1 = capture_scheduler_command(scheduler_env, command1)
     return nil, [stdout1, stderr1].join(" ") unless status1.success?
 
     # Run sacct with all fields, using --parsable2 for clean pipe-separated output
     command2 = [ssh_wrapper, sacct, "--format=#{stdout1.split.join(",")} --parsable2 -j", jobs.join(",")].compact.join(" ")
-    stdout2, stderr2, status2 = Open3.capture3(command2)
+    stdout2, stderr2, status2 = capture_scheduler_command(scheduler_env, command2)
     return nil, [stdout2, stderr2].join(" ") unless status2.success?
 
     lines = stdout2.lines.map(&:chomp)

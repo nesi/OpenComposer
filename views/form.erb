@@ -491,6 +491,10 @@ window.onload = function() {
         _ocSetField('<%= HEADER_SCRIPT_LOCATION %>', _ocExtPayload.scriptLocation);
         _ocSetField('<%= HEADER_SCRIPT_NAME %>', _ocExtPayload.scriptName);
         _ocSetField('<%= HEADER_JOB_NAME %>', _ocExtPayload.jobName);
+        // A template saved from an externally loaded script should show the
+        // terminal default icon (app_default.svg), not the source app's logo.
+        var _ocTmplIcon = document.querySelector('input[name="_tmpl_icon"]');
+        if (_ocTmplIcon) _ocTmplIcon.value = '';
       } else {
         // Backward compatibility: payload is the raw script string.
         ocForm.scriptArea.value = _ocExtRaw;

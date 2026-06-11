@@ -6,6 +6,14 @@
   Select an application style. Fill in your settings and click <strong>Save as Custom Template</strong>.
 </div>
 
+<%# ── Load Script from Disk (opens a file-browser modal; the chosen script ── %>
+<%# ── is loaded into the generic Slurm script page via the ocExtLoad flow) ── %>
+<div class="px-3 pt-1 pb-2">
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#oc-ls-modal">
+    <i class="bi bi-folder2-open me-1"></i>Load Script from Disk
+  </button>
+</div>
+
 <div class="px-3 pb-3 pt-1">
   <input type="search" id="oc-app-search" class="form-control form-control-lg"
          placeholder="Search all templates…" autocomplete="off">
@@ -95,3 +103,5 @@
   input.focus();
 })();
 </script>
+
+<%= erb :load_script_modal, layout: false, locals: { new_template: true } %>

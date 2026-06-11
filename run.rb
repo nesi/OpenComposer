@@ -485,12 +485,15 @@ def load_templates(conf)
         "name"        => yaml["name"],
         "description" => yaml["description"].to_s,
         "app_path"    => app_path,
-        "icon"        => yaml["icon"].to_s
+        "icon"        => yaml["icon"].to_s,
+        "position"    => yaml["position"].is_a?(Numeric) ? yaml["position"] : nil
       }
     rescue
       nil
     end
-  end.sort_by { |t| t["name"].downcase }
+  end.sort_by { |t| [t["position"] ? 0 : 1, t["position"] || 0, t["name"].downcase] }
+  # Positioned templates first (drag-and-drop order); unpositioned ones
+  # (e.g. newly saved) follow alphabetically.
 end
 
 # Create a website of Home, Application, and History.
@@ -1182,6 +1185,30 @@ get "/nodes/data" do
   end
   content_type :json
   { error: error, rows: rows, fetched_at: Time.now.strftime("%H:%M:%S") }.to_json
+end
+
+# Persist the drag-and-drop order of the My Custom Templates grid.
+# Expects "order" = comma-separated template slugs in their new order;
+# writes a numeric "position" into each template's YAML.
+post "/templates/reorder" do
+  conf = create_conf
+  dir  = templates_dir(conf)
+  content_type :json
+  slugs = params["order"].to_s.split(",").map { |s| s.gsub(/[^a-zA-Z0-9_\-]/, '') }.reject(&:empty?)
+  halt 400, { ok: false, error: "No order given." }.to_json if slugs.empty?
+
+  slugs.each_with_index do |slug, idx|
+    path = File.join(dir, "#{slug}.yml")
+    next unless File.exist?(path)
+    begin
+      data = YAML.safe_load(File.read(path))
+      data = {} unless data.is_a?(Hash)
+      data["position"] = idx
+      File.write(path, data.to_yaml)
+    rescue
+    end
+  end
+  { ok: true }.to_json
 end
 
 post "/templates/:slug/overwrite" do

@@ -12,6 +12,14 @@
   </div>
 <% end %>
 
+<%# ── Load Script from Disk (opens a file-browser modal; the chosen script ── %>
+<%# ── is loaded into the generic Slurm script page via the ocExtLoad flow) ── %>
+<div class="mx-1 px-3 my-2">
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#oc-ls-modal">
+    <i class="bi bi-folder2-open me-1"></i>Load Script from Disk
+  </button>
+</div>
+
 <% if small_format %>
 <%# ── Small format: letter-grouped pills, no icons ───────────────────────── %>
 
@@ -94,6 +102,8 @@
 
 </div><%# /oc-app-list %>
 
+<%= erb :load_script_modal, layout: false %>
+
 <div class="modal fade" id="modal-rename-template" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -140,6 +150,101 @@ function ocRenameTemplate() {
   addHidden('template_description', document.getElementById('rename-tmpl-desc').value.trim());
   form.submit();
 }
+
+// ── Drag-and-drop reordering of My Custom Templates ────────────────────────
+// Cards are reordered live while dragging; on drop the new slug order is
+// POSTed to /templates/reorder, which stores a "position" in each template's
+// YAML (load_templates sorts by it). Hardening:
+//   - drag is disabled while the template search filter is active
+//   - Esc / dropping outside the grid cancels and restores the original order
+//   - a no-op drag (order unchanged) sends no request
+//   - a failed save restores the original order and shows a message
+//   - stale responses from overlapping saves are ignored (monotonic counter)
+(function() {
+  var grid = document.getElementById('oc-tmpl-grid');
+  if (!grid) return;
+  var dragging  = null;
+  var dragSnapshot = null;  // card order at dragstart, for revert
+  var saveSeq   = 0;
+
+  function cardOrder() {
+    return Array.from(grid.querySelectorAll('.oc-tmpl-card'));
+  }
+  function restoreOrder(cards) {
+    cards.forEach(function(c) { grid.appendChild(c); });
+  }
+  function filterActive() {
+    var input = document.getElementById('oc-tmpl-search');
+    return !!(input && input.value.trim());
+  }
+
+  grid.querySelectorAll('.oc-tmpl-card').forEach(function(card) {
+    card.setAttribute('draggable', 'true');
+    card.style.cursor = 'grab';
+    card.addEventListener('dragstart', function(e) {
+      // Reordering while the list is filtered would move cards relative to
+      // hidden ones in surprising ways — disable it.
+      if (filterActive()) { e.preventDefault(); return; }
+      dragging = card;
+      dragSnapshot = cardOrder();
+      card.classList.add('opacity-50');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', card.dataset.slug || ''); } catch (err) {}
+      }
+    });
+    card.addEventListener('dragend', function(e) {
+      card.classList.remove('opacity-50');
+      if (!dragging) return;
+      dragging = null;
+      // dropEffect is 'none' when the drag was cancelled (Esc) or dropped
+      // outside the grid — treat that as cancel and restore the original order.
+      if (e.dataTransfer && e.dataTransfer.dropEffect === 'none' && dragSnapshot) {
+        restoreOrder(dragSnapshot);
+        dragSnapshot = null;
+        return;
+      }
+      saveOrder();
+    });
+    card.addEventListener('dragover', function(e) {
+      if (!dragging || dragging === card) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      var rect = card.getBoundingClientRect();
+      var before = (e.clientX - rect.left) < rect.width / 2;
+      grid.insertBefore(dragging, before ? card : card.nextSibling);
+    });
+  });
+  grid.addEventListener('dragover', function(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+  });
+  grid.addEventListener('drop', function(e) { if (dragging) e.preventDefault(); });
+
+  function saveOrder() {
+    var snapshot = dragSnapshot;
+    dragSnapshot = null;
+    var slugs = cardOrder().map(function(c) { return c.dataset.slug; }).filter(Boolean);
+    if (!slugs.length) return;
+    // No-op drag: nothing moved, nothing to save.
+    if (snapshot && slugs.join(',') === snapshot.map(function(c) { return c.dataset.slug; }).join(',')) return;
+    var seq = ++saveSeq;
+    fetch('<%= @script_name %>/templates/reorder', {
+      method: 'POST',
+      body: new URLSearchParams({ order: slugs.join(',') })
+    }).then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(data) {
+      if (!data.ok) throw new Error(data.error || 'save failed');
+    }).catch(function() {
+      if (seq !== saveSeq) return;  // a newer save superseded this one
+      if (snapshot) restoreOrder(snapshot);
+      alert('Could not save the new template order (your session may have expired). The previous order has been restored — reload the page and try again.');
+    });
+  }
+})();
 
 (function() {
   var input = document.getElementById('oc-tmpl-search');

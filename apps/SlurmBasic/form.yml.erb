@@ -12,7 +12,7 @@ form:
   account:
     widget: select
     label: Project
-    help: 'The project code that this job''s compute usage is charged to. Only the projects you are a member of are listed. If you do not see your project here, see <a href="https://docs.nesi.org.nz/Getting_Started/Projects/Applying_to_Join_a_Project" target="_blank">how to apply to join a project</a>.'
+    help: 'If you do not see your project here, see <a href="https://docs.nesi.org.nz/Getting_Started/Projects/Applying_to_Join_a_Project" target="_blank">how to apply to join a project</a>.'
     remember_last: true
 <% if _accounts.empty? %>
     options: []
@@ -35,17 +35,17 @@ form:
 
   cores_simple:
     widget: number
-    label: Number of Cores
-    help: 'This is the number of CPUs you would like to request. If you need to set MPI or OpenMP flags, tick the "Show advanced CPU options".'
+    label: Number of CPUs
+    help: 'If you need to set MPI or OpenMP flags, tick the "Show advanced CPU options".'
     value: 1
     min:   1
     step:  1
 
   cores_advanced:
     widget: number
-    label: [Number of Tasks, CPUs per Task]
+    label: ["Number of MPI processes (<code>ntasks</code>)", "Number of OpenMP threads (<code>cpus-per-task</code>)"]
     size:  2
-    help: This is the number of CPUs you would like to request. Number of Tasks = number of MPI processes. CPUs per Task = number of OpenMP threads.
+    help: 'See <a href="https://docs.nesi.org.nz/Software/Parallel_Computing/Parallel_Computing" target="_blank">Parallel Computing</a> for more information.'
     value: [ 1, 1]
     min:   [ 1, 1]
     step:  [ 1, 1]
@@ -66,7 +66,6 @@ form:
   memory_total_gb:
     widget: number
     label: Total Memory (GB)
-    help: The total amount of memory (RAM) in gigabytes to allocate to your job across all cores.
     value: 2
     min:   1
     step:  1
@@ -74,7 +73,7 @@ form:
   memory_per_cpu_gb:
     widget: number
     label: Memory per CPU (GB)
-    help: The amount of memory (RAM) in gigabytes to allocate to each CPU core. The total memory for your job is this value multiplied by the number of cores requested.
+    help: The total memory for your job is this value multiplied by the number of cores requested.
     value: 2
     min:   1
     max:   8
@@ -99,7 +98,7 @@ form:
     widget: checkbox
     label:
     options:
-      - ["Show advanced options", "", show-testing, show-profiling, show-array, show-mail_option, enable-testing, enable-profiling, enable-array, enable-mail_option]
+      - ["Show advanced options", "", show-testing, show-profiling, show-ssd, show-multithreading, show-array, show-mail_option, enable-testing, enable-profiling, enable-ssd, enable-multithreading, enable-array, enable-mail_option]
 
   testing:
     widget: checkbox
@@ -116,6 +115,7 @@ form:
     direction: horizontal
     separator: ","
     indent: 1
+    help: 'See <a href="https://docs.nesi.org.nz/Software/Profiling_and_Debugging/Slurm_Native_Profiling" target="_blank">Slurm Native Profiling</a> for more information.'
     options:
       - [ "Profile my Job", "task", show-profiling_time, enable-profiling_time]
 
@@ -128,6 +128,25 @@ form:
     max:  60
     step:  1
 
+  ssd:
+    widget: checkbox
+    label: SSD
+    direction: horizontal
+    separator: ","
+    indent: 1
+    options:
+      - [ "Use 1.5 TB NVMe SSD for Temporary Storage", "ssd", ]
+
+  multithreading:
+    widget: checkbox
+    label: Multithreading
+    direction: horizontal
+    separator: ","
+    indent: 1
+    help: 'See <a href="https://docs.nesi.org.nz/Software/Parallel_Computing/Simultaneous_Multithreading" target="_blank">Simultaneous Multithreading</a> for more information.'
+    options:
+      - [ "Use Multithreading", "2", ]
+
   array:
     widget: number
     label: [ Array Job (start index), Array Job (last index), Array Job (jump) ]
@@ -135,7 +154,7 @@ form:
     indent: 1
     value: [null, null, 1]
     min:  [0, 0, 1]
-    help: Each job executed from an array job is assigned a task ID, which can be referenced in the shell script via the environment variable SLURM_ARRAY_TASK_ID.
+    help: 'Each job executed from an array job is assigned a task ID, which can be referenced in the shell script via the environment variable SLURM_ARRAY_TASK_ID. See <a href="https://docs.nesi.org.nz/Batch_Computing/Job_Arrays" target="_blank">Job Arrays</a> for more information.'
 
   mail_option:
     label: Mail option
@@ -155,7 +174,7 @@ script: |
   #SBATCH --job-name=#{OC_JOB_NAME}
   #SBATCH --account=#{account}
   #SBATCH --partition=#{partition}
-  #SBATCH --ntasks=#{cores_simple}
+  #SBATCH --cpus-per-task=#{cores_simple}
   #SBATCH --ntasks=#{cores_advanced_1}
   #SBATCH --cpus-per-task=#{cores_advanced_2}
   #SBATCH --nodes=#{number_of_nodes}
@@ -166,6 +185,8 @@ script: |
   #SBATCH --qos=#{testing}
   #SBATCH --profile=#{profiling}
   #SBATCH --acctg-freq=#{profiling_time}
+  #SBATCH --gres=#{ssd} # Set paths to ${TMPDIR} to use SSD. SSD is wiped at end of job
+  #SBATCH --threads-per-core=#{multithreading}
   #SBATCH --mail-type=#{mail_option}
 
 

@@ -1,3 +1,27 @@
+<style>
+  /* NeSI: lay out the advanced toggle checkboxes two per row
+     (Testing | Profiling / SSD | Multithreading). Scoped with :has(#multithreading_1)
+     so only the Slurm forms are affected; every other app is untouched.
+     Flexbox is used (not display:inline-block) because show/hide toggles the
+     inline `display` on each field's .mb-3 wrapper — a display rule would fight it,
+     whereas a display:none flex item simply drops out of the flex layout. */
+  #<%= FORM_LAYOUT %> > .col.pt-3:has(#multithreading_1) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  #<%= FORM_LAYOUT %> > .col.pt-3:has(#multithreading_1) > div.mb-3 {
+    flex: 0 0 100%;
+  }
+  #<%= FORM_LAYOUT %> > .col.pt-3:has(#multithreading_1) > div.mb-3:has(#testing_1),
+  #<%= FORM_LAYOUT %> > .col.pt-3:has(#multithreading_1) > div.mb-3:has(#profiling_1),
+  #<%= FORM_LAYOUT %> > .col.pt-3:has(#multithreading_1) > div.mb-3:has(#ssd_1),
+  #<%= FORM_LAYOUT %> > .col.pt-3:has(#multithreading_1) > div.mb-3:has(#multithreading_1) {
+    flex: 0 0 49%;
+  }
+</style>
+
 <% if @script_path %>
   <% script_link = "<a target=\"_blank\" href=\"#{@my_ood_url}/pun/sys/dashboard/files/fs#{File.dirname(@script_path)}\">#{@script_path}</a>" %>
   <% if @login_node %>

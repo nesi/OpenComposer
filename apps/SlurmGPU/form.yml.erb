@@ -26,7 +26,7 @@
         - [ "A100 (40GB)", "a100", show-number_of_gpus_any, set-value-partition: genoa, set-value-gpu_genoa: "A100 (40GB)"]
         - [ "A100 (80GB)", "a100", show-number_of_gpus_any, set-value-partition: milan, set-value-gpu_milan: "A100 (80GB)"]
         - [ "L4",         "l4",   show-number_of_gpus_any, set-value-partition: genoa, set-value-gpu_genoa: L4]
-      help: Selecting a GPU here will change the partition
+      help: 'Selecting a GPU here will change the partition. See more information at <a href="https://docs.nesi.org.nz/Batch_Computing/Using_GPUs" target="_blank">Using GPUs</a>.'
     number_of_gpus_any:
       widget: number
       label: Number of GPUs
@@ -43,7 +43,7 @@
         - [ "H100",       "h100", show-number_of_gpus_genoa]
         - [ "A100 (40GB)", "a100", show-number_of_gpus_genoa]
         - [ "L4",         "l4",   show-number_of_gpus_genoa]
-      help: If you want to use the A100 (80GB) graphic card, switch Partition to milan.
+      help: 'If you want to use the A100 (80GB) graphic card, switch Partition to milan. See more information at <a href="https://docs.nesi.org.nz/Batch_Computing/Using_GPUs" target="_blank">Using GPUs</a>.'
     number_of_gpus_genoa:
       widget: number
       label: Number of GPUs
@@ -58,7 +58,7 @@
       options:
         - [ "None", "", ]
         - [ "A100 (80GB)", "a100", show-number_of_gpus_milan]
-      help: If you want to use the H100, A100 (40GB), or L4 graphic card, switch Partition to genoa.
+      help: 'If you want to use the H100, A100 (40GB), or L4 graphic card, switch Partition to genoa. See more information at <a href="https://docs.nesi.org.nz/Batch_Computing/Using_GPUs" target="_blank">Using GPUs</a>.'
     number_of_gpus_milan:
       widget: number
       label: Number of GPUs

@@ -475,7 +475,16 @@ window.onload = function() {
   var _ocExtKey = new URLSearchParams(window.location.search).get('ocExtLoad');
   if (_ocExtKey) {
     var _ocExtRaw = sessionStorage.getItem(_ocExtKey);
-    sessionStorage.removeItem(_ocExtKey);
+    // Keep the current key so browser Back/Forward (or a reload of this URL)
+    // can restore the loaded script; garbage-collect older payloads instead.
+    // (Previously the key was removed on first use, so Back→Forward lost the
+    // script whenever the page was not served from the back/forward cache.)
+    for (var _ocI = sessionStorage.length - 1; _ocI >= 0; _ocI--) {
+      var _ocK = sessionStorage.key(_ocI);
+      if (_ocK && _ocK.indexOf('_oc_ext_') === 0 && _ocK !== _ocExtKey) {
+        sessionStorage.removeItem(_ocK);
+      }
+    }
     if (_ocExtRaw !== null && ocForm.scriptArea) {
       var _ocExtPayload = null;
       try { _ocExtPayload = JSON.parse(_ocExtRaw); } catch (e) { _ocExtPayload = null; }

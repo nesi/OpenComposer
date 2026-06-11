@@ -176,7 +176,15 @@ ocForm.parseScriptToWidgets = function(allowEnable) {
       const components = [p.days, p.hours, p.minutes, p.seconds];
       for (var i = 0; i < pat.keys.length; i++) {
         var el = document.getElementById(pat.keys[i]);
-        if (el && !el.disabled) el.value = String(components[i] !== undefined ? components[i] : 0);
+        // Mirror the number/text branch above: on the load path (allowEnable)
+        // a hidden time field is auto-enabled from a line unique to it and its
+        // value applied; in live-edit mode a disabled field is left untouched.
+        if (el && (!el.disabled || allowEnable)) {
+          if (el.disabled && !ocForm.lineMatchedByOtherField(matchingLine, pat.keys[i])) {
+            ocForm.autoEnable(pat.keys[i]);
+          }
+          el.value = String(components[i] !== undefined ? components[i] : 0);
+        }
       }
     }
   }
@@ -527,11 +535,15 @@ ocForm.handleKeyDown = function(event, id) {
     }
     else if (event.key === 'Enter') {
       const input = ocForm.getSearchInput(id);
+      // A highlighted suggestion takes priority: copy it into the input BEFORE
+      // adding, so a single Enter adds it as a badge. (Previously the copy
+      // happened after addSelectedItem, so Enter only filled the input and a
+      // second Enter was needed to actually add the highlighted item.)
+      if (currentIndex >= 0) {
+        input.value = items[currentIndex].textContent;
+      }
       if (input.value !== "") {
         ocForm.addSelectedItem(id);
-      }
-      if (currentIndex >= 0) {
-  input.value = items[currentIndex].textContent;
       }
       suggestionsList.innerHTML = '';
     }

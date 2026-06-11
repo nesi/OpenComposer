@@ -832,7 +832,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
               replace_with_cache(@body["form"], sbatch_cache)
             end
           end
-          @submit_content = escape_html(cache[SUBMIT_CONTENT])
+          @submit_content = escape_html(cache[SUBMIT_CONTENT].to_s)
         end
       elsif !error_msg.nil? || !script_path.nil? # When job submission failed or script_path != nil (because after script file has been saved)
         replace_with_cache(@header, error_params)
@@ -952,10 +952,16 @@ get "/_files" do
 
   content_type :json
   if File.exist?(path)
-    entries = Dir.children(path).map do |entry|
-      full_path = File.join(path, entry)
-      { name: entry, path: full_path, type: File.directory?(full_path) ? "directory" : "file" }
-    end.sort_by { |entry| entry[:name].downcase }
+    begin
+      entries = Dir.children(path).map do |entry|
+        full_path = File.join(path, entry)
+        { name: entry, path: full_path, type: File.directory?(full_path) ? "directory" : "file" }
+      end.sort_by { |entry| entry[:name].downcase }
+    rescue SystemCallError
+      # Unreadable directory (e.g. permission denied) — report it the same way
+      # as a non-existent one instead of raising a 500.
+      entries = ""
+    end
   else
     # When a non-existent directory is specified using the set-value statement of the dynamic form widget.
     entries = ""

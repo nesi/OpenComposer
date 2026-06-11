@@ -12,6 +12,7 @@ form:
   account:
     widget: select
     label: Project
+    help: 'The project code that this job''s compute usage is charged to. Only the projects you are a member of are listed. If you do not see your project here, see <a href="https://docs.nesi.org.nz/Getting_Started/Projects/Applying_to_Join_a_Project" target="_blank">how to apply to join a project</a>.'
     remember_last: true
 <% if _accounts.empty? %>
     options: []
@@ -25,6 +26,7 @@ form:
   partition:
     widget: select
     label: Partition
+    help: The architecture of the node you want to use. Select any if you do not have a preference.
     remember_last: true
     options:
       - [ any,   "",    set-max-cores_simple: 166, set-max-memory_total_gb: 1450]
@@ -34,14 +36,16 @@ form:
   cores_simple:
     widget: number
     label: Number of Cores
+    help: 'This is the number of CPUs you would like to request. If you need to set MPI or OpenMP flags, tick the "Show advanced CPU options".'
     value: 1
     min:   1
     step:  1
 
   cores_advanced:
     widget: number
-    label: [Number of Tasks, CPUS per Task]
+    label: [Number of Tasks, CPUs per Task]
     size:  2
+    help: This is the number of CPUs you would like to request. Number of Tasks = number of MPI processes. CPUs per Task = number of OpenMP threads.
     value: [ 1, 1]
     min:   [ 1, 1]
     step:  [ 1, 1]
@@ -62,6 +66,7 @@ form:
   memory_total_gb:
     widget: number
     label: Total Memory (GB)
+    help: The total amount of memory (RAM) in gigabytes to allocate to your job across all cores.
     value: 2
     min:   1
     step:  1
@@ -69,6 +74,7 @@ form:
   memory_per_cpu_gb:
     widget: number
     label: Memory per CPU (GB)
+    help: The amount of memory (RAM) in gigabytes to allocate to each CPU core. The total memory for your job is this value multiplied by the number of cores requested.
     value: 2
     min:   1
     max:   8

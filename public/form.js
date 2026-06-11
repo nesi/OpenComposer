@@ -644,7 +644,15 @@ ocForm.addSelectedItem = function(id) {
         ocForm.updateArea(contentType, id);
       };
 
-      removeBadge();
+      // Mirror the add-path (scriptOverwriteFlag/submitOverwriteFlag) so the
+      // script/submit content is regenerated when a badge is removed.
+      // Previously this was called with no argument, leaving the removed
+      // item's text in the script until another widget changed.
+      const contentType = scriptOverwriteFlag && submitOverwriteFlag ? 'both'
+                        : scriptOverwriteFlag ? 'script'
+                        : submitOverwriteFlag ? 'submit'
+                        : undefined;
+      removeBadge(contentType);
     });
 
     selectedItems.appendChild(badge);

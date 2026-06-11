@@ -1,0 +1,7 @@
+---
+name: MultiSelect Bug Test
+category: Testing
+description: |
+  Scratch app to reproduce the multi_select badge-removal bug
+  (removing a pill does not update the Script Content). Delete this
+  app folder once testing is done.

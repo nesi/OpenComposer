@@ -1,0 +1,18 @@
+---
+form:
+  test_modules:
+    widget: multi_select
+    label: Load modules (multi_select test)
+    separator: " "
+    options:
+      - [AGAT/1.0.0]
+      - [BWA/0.7.18]
+      - [SAMtools/1.19]
+    help: 'To reproduce the bug: add two modules and watch the "module load" line appear in Script Content. Then click one of the pills to remove it — the pill disappears but the script line does NOT update (it still shows the removed module) until you change another field.'
+
+script: |
+  #!/bin/bash -e
+  #SBATCH --job-name=#{OC_JOB_NAME}
+  #SBATCH --time=0-00:05:00
+
+  module load #{test_modules}

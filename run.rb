@@ -1185,12 +1185,16 @@ get "/nodes/data" do
     bin_overrides_s = conf["bin_overrides"]
     ssh_wrapper_s   = conf["ssh_wrapper"]
   end
-  nodes, error = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s)
+  nodes, error, command = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s)
   rows = (nodes || []).map do |cols|
     { node: cols[0], state: cols[1], cpus: cols[2], memory: cols[3], freemem: cols[4], gres: cols[5], gresused: cols[6] }
   end
+  # The command a user could run themselves on the cluster — strip the
+  # ssh wrapper prefix the web app uses to reach the login node.
+  display_cmd = command.to_s
+  display_cmd = display_cmd.sub(/\A#{Regexp.escape(ssh_wrapper_s.to_s)}\s*/, "") unless ssh_wrapper_s.to_s.empty?
   content_type :json
-  { error: error, rows: rows, fetched_at: Time.now.strftime("%H:%M:%S") }.to_json
+  { error: error, rows: rows, command: display_cmd, fetched_at: Time.now.strftime("%H:%M:%S") }.to_json
 end
 
 # Persist the drag-and-drop order of the My Custom Templates grid.

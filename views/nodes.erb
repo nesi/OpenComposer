@@ -2,7 +2,13 @@
 
   <%# ── Header ─────────────────────────────────────────────────── %>
   <div class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="mb-0">Node Status</h4>
+    <div class="d-flex align-items-center gap-2">
+      <h4 class="mb-0">Node Status</h4>
+      <button type="button" class="btn btn-sm btn-link p-0 text-secondary" style="line-height:1;"
+              data-bs-toggle="modal" data-bs-target="#_nodesCmdModal" title="How is this information fetched?">
+        <i class="fas fa-circle-info" style="font-size:18px;vertical-align:middle;"></i>
+      </button>
+    </div>
     <div class="d-flex align-items-center gap-2">
       <% if @conf.key?("clusters") && @conf["clusters"].size > 1 %>
         <% @conf["clusters"].each_key do |name| %>
@@ -86,6 +92,25 @@
 
   </div>
 
+</div>
+
+<%# ── "How this page is generated" popup ──────────────────────── %>
+<div class="modal fade" id="_nodesCmdModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h5 class="modal-title fs-6">Node Information</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small mb-2">This page is built from the output of the following command on the cluster. You can run it yourself in a terminal:</p>
+        <pre class="border rounded p-2 mb-0 small" style="white-space:pre-wrap;word-break:break-all;"><code id="_nodesCmd">Loading…</code></pre>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -380,6 +405,8 @@
         buildSummary(rows);
         buildTable(rows);
         showContent(data.fetched_at, rows.length);
+        var cmdEl = document.getElementById('_nodesCmd');
+        if (cmdEl) cmdEl.textContent = data.command || 'sinfo';
         update();
       })
       .catch(function(err) { showError('Failed to fetch node data: ' + err); });

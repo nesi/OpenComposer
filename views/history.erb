@@ -300,8 +300,8 @@
             </td>
             <% (@conf_history_cols || []).each do |col| %>
             <% _col_cls = col["responsive"] ? " d-none d-lg-table-cell" : "" %>
-            <% case col["type"] %>
-            <% when "job_name" %>
+            <% case col["type"]
+               when "job_name" %>
             <td class="text-wrap text-break<%= _col_cls %>"><%= output_text(job[col["job_key"]], job_name_filter) %></td>
             <% when "file_link" %>
             <td class="text-wrap text-break<%= _col_cls %>">

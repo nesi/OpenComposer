@@ -12,12 +12,12 @@
   </div>
 <% end %>
 
-<%# ── Load Script from Disk (opens a file-browser modal; the chosen script ── %>
-<%# ── is loaded into the generic Slurm script page via the ocExtLoad flow) ── %>
+<%# ── Load Script from Disk (opens the full-page file browser; the chosen ──── %>
+<%# ── script is loaded into the generic Slurm script page via ocExtLoad) ───── %>
 <div class="mx-1 px-3 my-2">
-  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#oc-ls-modal">
-    <i class="bi bi-folder2-open me-1"></i>Load Script from Disk
-  </button>
+  <a href="<%= @script_name %>/load_script" class="btn btn-primary">
+    <i class="bi bi-folder2-open me-1"></i>Load or Create a Script from Disk
+  </a>
 </div>
 
 <% if small_format %>
@@ -103,8 +103,6 @@
 <% end %>
 
 </div><%# /oc-app-list %>
-
-<%= erb :load_script_modal, layout: false %>
 
 <div class="modal fade" id="modal-rename-template" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">

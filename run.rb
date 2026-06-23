@@ -13,6 +13,7 @@ require "json"
 require "pstore"
 require "time"
 require "fileutils"
+require "etc"
 require "./lib/index"
 require "./lib/form"
 require "./lib/history"
@@ -649,9 +650,33 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   when "nodes"
     @name = "Nodes"
     return erb :nodes
+  when "load_script"
+    @name            = "Load or Create a Script"
+    @ls_home         = Dir.home
+    @ls_new_template = params["new_template"] == "1"
+    return erb :load_script
+  when "new_script"
+    @name            = "New Script"
+    @ls_new_template = params["new_template"] == "1"
+    @ns_path         = params["path"].to_s.strip   # directory carried from the file browser
+    # Mirror the All Templates list: every app, INCLUDING hidden ones. Pull the
+    # featured "Slurm Submit Templates" (Job Script (Slurm) + GPU Job Script
+    # (Slurm)) to the top; configurable via conf["new_script_featured_category"].
+    featured_cat = (@conf["new_script_featured_category"] || "Slurm Submit Templates").to_s.downcase
+    featured, rest = @all_manifests.partition do |m|
+      Array(m.category).map { |c| c.to_s.downcase }.include?(featured_cat)
+    end
+    @ns_manifests = sort_featured(featured) + rest.sort_by { |m| m.name.downcase }
+    return erb :new_script
   when "all_templates"
     @name = "All Templates"
-    @all_manifests = @all_manifests.sort_by { |m| m.name.downcase }
+    # Pull the featured Slurm templates (GPU Job Script + Job Script) to the top,
+    # same as the New Script picker; everything else stays alphabetical.
+    featured_cat = (@conf["new_script_featured_category"] || "Slurm Submit Templates").to_s.downcase
+    featured, rest = @all_manifests.partition do |m|
+      Array(m.category).map { |c| c.to_s.downcase }.include?(featured_cat)
+    end
+    @all_manifests = sort_featured(featured) + rest.sort_by { |m| m.name.downcase }
     @show_all_templates_subfooter = true
     return erb :all_templates
   when "templates/new"
@@ -848,6 +873,13 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
                         "Script Content"
                       end
 
+      # Pre-fill the script location from ?path= — the directory the user was
+      # browsing in the Load/Create file browser when they clicked New Script.
+      ns_path = params["path"].to_s.strip
+      if !ns_path.empty? && @header.is_a?(Hash) && @header[HEADER_SCRIPT_LOCATION].is_a?(Hash)
+        @header[HEADER_SCRIPT_LOCATION]["value"] = ns_path
+      end
+
       @job_id      = job_id.is_a?(Array) ? job_id.join(", ") : job_id
       @error_msg   = error_msg&.force_encoding('UTF-8')
       @script_path = script_path
@@ -945,6 +977,21 @@ get "/:apps_dir/:folder/:icon" do
   send_file(icon_path) if File.exist?(icon_path)
 end
 
+# Order the featured Slurm templates so the plain "Job Script" leads and the
+# "GPU Job Script" follows, then any others alphabetically. Used by both the
+# New Script picker and the All Templates list.
+def sort_featured(manifests)
+  manifests.sort_by { |m| [m.name.to_s.downcase.include?("gpu") ? 1 : 0, m.name.to_s.downcase] }
+end
+
+# Render a File::Stat#mode as an ls-style symbolic permission string, e.g.
+# 0o100644 -> "rw-r--r--" (the three owner/group/other rwx triads only).
+def symbolic_mode(mode)
+  [(mode >> 6) & 7, (mode >> 3) & 7, mode & 7].map do |bits|
+    "#{bits & 4 != 0 ? 'r' : '-'}#{bits & 2 != 0 ? 'w' : '-'}#{bits & 1 != 0 ? 'x' : '-'}"
+  end.join
+end
+
 # Return a list of files and/or directories in JSON format.
 get "/_files" do
   path = params[:path] || "."
@@ -955,7 +1002,20 @@ get "/_files" do
     begin
       entries = Dir.children(path).map do |entry|
         full_path = File.join(path, entry)
-        { name: entry, path: full_path, type: File.directory?(full_path) ? "directory" : "file" }
+        is_dir    = File.directory?(full_path)
+        # size/mtime/owner/mode are best-effort: a broken symlink or permission
+        # issue on a single entry must not break the whole listing, so fall back
+        # to nil. owner/mode mirror OOD's optional "Owner"/"Mode" columns.
+        size, mtime, owner, mode =
+          begin
+            st = File.stat(full_path)
+            owner_name = (Etc.getpwuid(st.uid).name rescue st.uid.to_s)
+            [is_dir ? nil : st.size, st.mtime.to_i, owner_name, symbolic_mode(st.mode)]
+          rescue SystemCallError
+            [nil, nil, nil, nil]
+          end
+        { name: entry, path: full_path, type: is_dir ? "directory" : "file",
+          size: size, mtime: mtime, owner: owner, mode: mode }
       end.sort_by { |entry| entry[:name].downcase }
     rescue SystemCallError
       # Unreadable directory (e.g. permission denied) — report it the same way

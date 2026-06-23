@@ -6,12 +6,12 @@
   Select an application style. Fill in your settings and click <strong>Save as Custom Template</strong>.
 </div>
 
-<%# ── Load Script from Disk (opens a file-browser modal; the chosen script ── %>
-<%# ── is loaded into the generic Slurm script page via the ocExtLoad flow) ── %>
+<%# ── Load Script from Disk (opens the full-page file browser in new-template ─ %>
+<%# ── mode; the chosen script is loaded into the generic Slurm script page) ─── %>
 <div class="px-3 pt-1 pb-2">
-  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#oc-ls-modal">
-    <i class="bi bi-folder2-open me-1"></i>Load Script from Disk
-  </button>
+  <a href="<%= @script_name %>/load_script?new_template=1" class="btn btn-primary">
+    <i class="bi bi-folder2-open me-1"></i>Load or Create a Script from Disk
+  </a>
 </div>
 
 <div class="px-3 pb-3 pt-1">
@@ -103,5 +103,3 @@
   input.focus();
 })();
 </script>
-
-<%= erb :load_script_modal, layout: false, locals: { new_template: true } %>

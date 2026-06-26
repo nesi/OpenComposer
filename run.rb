@@ -528,11 +528,13 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   @all_manifests = create_all_manifests(@apps_dir).sort_by { |m| _c = Array(m.category).first; [_c&.downcase == "others" ? 1 : 0, (_c || "").downcase, m.name.downcase] }
   @manifests     = @all_manifests.reject(&:hidden)
   @manifests_w_category, @manifests_wo_category = @manifests.partition(&:category)
+  # User-saved custom templates. Loaded for every page so the navbar search
+  # (ALL_APPS in layout.erb) can include them alongside the app templates.
+  @templates     = load_templates(@conf)
 
   case @dir_name
   when ""
     @name = "Home"
-    @templates = load_templates(@conf)
     return erb :index
   when "history"
     @name          = "History"
@@ -651,7 +653,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @name = "Nodes"
     return erb :nodes
   when "load_script"
-    @name            = "Load or Create a Script"
+    @name            = @conf.fetch("load_script_label", "Load or Create a Script from Disk")
     @ls_home         = Dir.home
     @ls_new_template = params["new_template"] == "1"
     return erb :load_script
@@ -670,13 +672,15 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     return erb :new_script
   when "all_templates"
     @name = "All Templates"
-    # Pull the featured Slurm templates (GPU Job Script + Job Script) to the top,
-    # same as the New Script picker; everything else stays alphabetical.
+    # Order: featured Slurm templates (GPU Job Script + Job Script) first, then
+    # the user's own custom templates, then every other app alphabetically.
     featured_cat = (@conf["new_script_featured_category"] || "Slurm Submit Templates").to_s.downcase
     featured, rest = @all_manifests.partition do |m|
       Array(m.category).map { |c| c.to_s.downcase }.include?(featured_cat)
     end
-    @all_manifests = sort_featured(featured) + rest.sort_by { |m| m.name.downcase }
+    @at_featured = sort_featured(featured)
+    @at_rest     = rest.sort_by { |m| m.name.downcase }
+    # @templates (custom templates) is loaded in the preamble above.
     @show_all_templates_subfooter = true
     return erb :all_templates
   when "templates/new"

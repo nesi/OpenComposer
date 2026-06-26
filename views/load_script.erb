@@ -32,7 +32,7 @@
 <div id="oc-ls-page" class="mx-1 my-2 oc-ls-hide-ownermode">
   <%# ── Toolbar row 1: title + path box + actions ───────────────────────── %>
   <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-    <h5 class="mb-0 me-2 text-nowrap"><i class="bi bi-folder2-open me-1"></i>Load or Create a Script</h5>
+    <h5 class="mb-0 me-2 text-nowrap"><i class="bi bi-folder2-open me-1"></i><%= ERB::Util.h(@conf.fetch('load_script_label', 'Load or Create a Script from Disk')) %></h5>
     <button type="button" id="oc-ls-home" class="btn btn-sm btn-outline-secondary text-nowrap" title="Go to home directory">
       <i class="bi bi-house"></i>
     </button>

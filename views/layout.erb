@@ -319,9 +319,21 @@
 
     <script>
     (function() {
-      var ALL_APPS = <%= @all_manifests.map { |m| { dirname: m.dirname, name: m.name, categories: Array(m.category), description: m.description, gpu: @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") } }.to_json.gsub('</', '<\/') %>;
+      var ALL_APPS = <%=
+        (
+          @all_manifests.map { |m|
+            { name: m.name, description: m.description, categories: Array(m.category),
+              gpu: @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu"),
+              href: "#{@script_name}/#{m.dirname}" }
+          } +
+          Array(@templates).map { |t|
+            { name: t["name"], description: t["description"], categories: ["My Template"], gpu: false,
+              href: "#{@script_name}/#{t["app_path"]}?template=#{ERB::Util.u(t["slug"])}" }
+          }
+        ).to_json.gsub('</', '<\/')
+      %>;
       var scriptName = '<%= @script_name %>';
-      var CATEGORY_COLORS = <%= (@conf['category_badge_colors'] || {}).to_json %>;
+      var CATEGORY_COLORS = <%= (@conf['category_badge_colors'] || {}).merge("My Template" => "#6f42c1").to_json %>;
 
       function esc(s) {
         return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -375,7 +387,7 @@
           });
           if (m.gpu)      badges += '<span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>';
           var desc = m.description ? '<div class="small text-muted">' + esc(m.description) + '</div>' : '';
-          return '<a href="' + scriptName + '/' + esc(m.dirname) + '" class="d-block text-decoration-none py-2 px-3 border-bottom">' +
+          return '<a href="' + esc(m.href) + '" class="d-block text-decoration-none py-2 px-3 border-bottom">' +
                  '<div>' + badges + '<span class="fw-semibold">' + esc(m.name) + '</span></div>' +
                  desc + '</a>';
         }).join('');

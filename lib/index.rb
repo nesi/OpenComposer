@@ -98,6 +98,40 @@ helpers do
     HTML
   end
 
+  # A single row in the All Templates list for an application manifest:
+  # category/GPU badges, name and description, linking to the app's form.
+  def output_all_template_row(m)
+    badges = Array(m.category).map do |cat|
+      color = (@conf['category_badge_colors'] || {}).fetch(cat, nil) || '#6c757d'
+      %(<span class="badge me-1" style="background-color:#{ERB::Util.h(color)}; color:#fff;">#{ERB::Util.h(cat)}</span>)
+    end.join
+    if @gpu_names.include?(m.name.to_s.downcase) || Array(m.tags).map(&:downcase).include?("gpu")
+      badges += %(<span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>)
+    end
+    desc = (m.description && m.description.to_s.strip != '') ? %(<div class="small text-muted">#{ERB::Util.h(m.description)}</div>) : ''
+    <<~HTML
+      <a href="#{@script_name}/#{ERB::Util.h(m.dirname)}" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
+         data-name="#{ERB::Util.h(m.name.to_s.downcase)}" data-desc="#{ERB::Util.h(m.description.to_s.downcase)}" data-cat="#{ERB::Util.h(Array(m.category).join(' ').downcase)}">
+        <div>#{badges}<span class="fw-semibold">#{ERB::Util.h(m.name)}</span></div>
+        #{desc}
+      </a>
+    HTML
+  end
+
+  # A single row in the All Templates list for a user's saved custom template,
+  # tagged "My Template" and linking to its app form pre-filled (?template=slug).
+  def output_custom_template_row(t)
+    desc = t["description"].to_s.strip.empty? ? '' : %(<div class="small text-muted">#{ERB::Util.h(t["description"])}</div>)
+    href = "#{@script_name}/#{ERB::Util.h(t["app_path"])}?template=#{ERB::Util.u(t["slug"])}"
+    <<~HTML
+      <a href="#{href}" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
+         data-name="#{ERB::Util.h(t["name"].to_s.downcase)}" data-desc="#{ERB::Util.h(t["description"].to_s.downcase)}" data-cat="my template">
+        <div><span class="badge me-1" style="background-color:#6f42c1; color:#fff;">My Template</span><span class="fw-semibold">#{ERB::Util.h(t["name"])}</span></div>
+        #{desc}
+      </a>
+    HTML
+  end
+
   # Create an HTML snippet for displaying a thumbnail image.
   # The image source can either be a URL, a bootstrap icon, a fontawesome icon or a local path.
   # If the icon is not provided. a placeholder image is used.

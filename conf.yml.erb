@@ -34,6 +34,13 @@ generic_apps_dir: "./generic_apps"
 # from the History page, open this subfolder inside generic_apps_dir.
 external_reload_app: "Slurm"
 
+# "Load or Create a Script from Disk" button (shown on the Selected Templates
+# and New Custom Template pages — it opens the full-page file browser).
+# Set show_load_script to false to hide the button, or change load_script_label
+# to rename it to whatever you like.
+show_load_script:   true
+load_script_label:  "Load or Create a Script from Disk"
+
 ## History
 # Set to false to never store the batch script in the DB.
 # When false, "Load parameters" always fetches the script live via sacct -B.

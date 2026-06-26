@@ -1,24 +1,10 @@
 <div style="display:flex; flex-direction:column; height:calc(100vh - 56px);">
   <div id="oc-all-list" style="background:#F3F4F4; border-top:1px solid #C3C8C8; flex:1; overflow-y:auto;">
-    <% @all_manifests.each do |m| %>
-      <a href="<%= @script_name %>/<%= ERB::Util.h(m.dirname) %>" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
-         data-name="<%= ERB::Util.h(m.name.to_s.downcase) %>"
-         data-desc="<%= ERB::Util.h(m.description.to_s.downcase) %>"
-         data-cat="<%= ERB::Util.h(Array(m.category).join(' ').downcase) %>">
-        <div>
-          <% Array(m.category).each do |cat| %>
-            <% cat_color = (@conf['category_badge_colors'] || {}).fetch(cat, nil) %>
-            <span class="badge me-1" style="background-color:<%= ERB::Util.h(cat_color || '#6c757d') %>; color:#fff;"><%= ERB::Util.h(cat) %></span>
-          <% end %>
-          <% if @gpu_names.include?(m.name.to_s.downcase) || m.tags.map(&:downcase).include?("gpu") %>
-            <span class="badge me-1" style="background-color:#000; color:#fff;">GPU</span>
-          <% end %>
-          <span class="fw-semibold"><%= ERB::Util.h(m.name) %></span>
-        </div>
-        <% if m.description && m.description.strip != '' %>
-          <div class="small text-muted"><%= ERB::Util.h(m.description) %></div>
-        <% end %>
-      </a>
-    <% end %>
+    <%# Featured Slurm submit templates first … %>
+    <% @at_featured.each do |m| %><%= output_all_template_row(m) %><% end %>
+    <%# … then the user's own custom templates … %>
+    <% @templates.each do |t| %><%= output_custom_template_row(t) %><% end %>
+    <%# … then every other application, alphabetically. %>
+    <% @at_rest.each do |m| %><%= output_all_template_row(m) %><% end %>
   </div>
 </div>

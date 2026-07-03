@@ -988,6 +988,40 @@ def sort_featured(manifests)
   manifests.sort_by { |m| [m.name.to_s.downcase.include?("gpu") ? 1 : 0, m.name.to_s.downcase] }
 end
 
+# Ensure the current user has an SSH key in ~/.ssh, generating a passphrase-less
+# one if none exists. On typical HPC/OOD deployments the user's home is shared
+# with the login node, so the freshly generated public key is also appended to
+# ~/.ssh/authorized_keys — that lets Open Composer submit jobs over SSH without
+# a password prompt. Returns :exists, :created or :failed.
+def ensure_user_ssh_key(key_type = "ed25519")
+  ssh_dir = File.join(Dir.home, ".ssh")
+  FileUtils.mkdir_p(ssh_dir)
+  File.chmod(0o700, ssh_dir)
+
+  # Leave any existing key in place — never overwrite a key the user already has.
+  existing = %w[id_ed25519 id_rsa id_ecdsa id_dsa].map { |k| File.join(ssh_dir, k) }
+  return :exists if existing.any? { |k| File.exist?(k) }
+
+  key_type = "ed25519" unless %w[ed25519 rsa ecdsa].include?(key_type.to_s)
+  key_path = File.join(ssh_dir, "id_#{key_type}")
+  args = ["ssh-keygen", "-t", key_type, "-N", "", "-f", key_path, "-C", "Open Composer auto-generated key"]
+  args += ["-b", "4096"] if key_type == "rsa"
+  _out, _err, status = Open3.capture3(*args)
+  return :failed unless status.success? && File.exist?(key_path)
+
+  File.chmod(0o600, key_path)
+  File.chmod(0o644, "#{key_path}.pub") if File.exist?("#{key_path}.pub")
+
+  # Authorize the new key for passwordless SSH to the (shared-home) login node.
+  pub  = File.read("#{key_path}.pub").strip
+  auth = File.join(ssh_dir, "authorized_keys")
+  unless File.exist?(auth) && File.read(auth).include?(pub)
+    File.open(auth, "a") { |f| f.puts(pub) }
+  end
+  File.chmod(0o600, auth) if File.exist?(auth)
+  :created
+end
+
 # Render a File::Stat#mode as an ls-style symbolic permission string, e.g.
 # 0o100644 -> "rw-r--r--" (the three owner/group/other rwx triads only).
 def symbolic_mode(mode)
@@ -1581,6 +1615,15 @@ post "/*" do
     if form_action == "save" || form_action == "confirm-save"
       output_log("Save job file", scheduler, cluster: cluster_name, app_dir: manifest["dirname"], app_name: manifest["name"], category: manifest["category"], script_path: script_path)
       return show_website(nil, nil, params, script_path)
+    end
+
+    # Optionally make sure the user has an SSH key before we submit over SSH.
+    # If none exists we generate (and authorize) one so submission does not fail
+    # on a missing/unauthorized key. A failure here is logged but not fatal — the
+    # submit below still runs and surfaces any real SSH error to the user.
+    if conf.fetch("ensure_ssh_key", false)
+      ssh_key_result = ensure_user_ssh_key(conf.fetch("ssh_key_type", "ed25519"))
+      output_log("Ensure SSH key", scheduler, cluster: cluster_name, result: ssh_key_result) unless ssh_key_result == :exists
     end
 
     Dir.chdir(script_dir) do

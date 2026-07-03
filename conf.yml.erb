@@ -19,6 +19,14 @@ clusters:
 data_dir:  <%= ENV['HOME'] %>/composer
 login_node: "login.hpc.nesi.org.nz"
 ssh_wrapper: "ssh login.hpc.nesi.org.nz"
+
+# SSH key check on Submit. When true, clicking Submit first checks for an SSH
+# key in the user's ~/.ssh. If none exists, Open Composer generates a
+# passphrase-less key and authorizes it (appends the public key to
+# ~/.ssh/authorized_keys) so the job can be submitted over SSH to the login
+# node without a password prompt. Set to false to disable.
+ensure_ssh_key: true
+ssh_key_type:   "ed25519"      # Key type generated when missing: ed25519 (recommended) or rsa
 bin: "/usr/bin"
 bin_overrides:
   sbatch:   "/usr/bin/sbatch"

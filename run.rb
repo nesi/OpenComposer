@@ -992,18 +992,27 @@ end
 # one if none exists. On typical HPC/OOD deployments the user's home is shared
 # with the login node, so the freshly generated public key is also appended to
 # ~/.ssh/authorized_keys — that lets Open Composer submit jobs over SSH without
-# a password prompt. Returns :exists, :created or :failed.
-def ensure_user_ssh_key(key_type = "ed25519")
+# a password prompt. Because the key uses a non-default name (e.g.
+# opencomposer_ed25519), an IdentityFile line is also added to ~/.ssh/config so
+# ssh actually offers it. Returns :exists, :created or :failed.
+def ensure_user_ssh_key(key_type = "ed25519", key_name = "opencomposer")
   ssh_dir = File.join(Dir.home, ".ssh")
   FileUtils.mkdir_p(ssh_dir)
   File.chmod(0o700, ssh_dir)
 
-  # Leave any existing key in place — never overwrite a key the user already has.
-  existing = %w[id_ed25519 id_rsa id_ecdsa id_dsa].map { |k| File.join(ssh_dir, k) }
+  key_type = "ed25519" unless %w[ed25519 rsa ecdsa].include?(key_type.to_s)
+  key_name = key_name.to_s.gsub(/[^A-Za-z0-9_.-]/, "")
+  key_name = "opencomposer" if key_name.empty?
+  base     = "#{key_name}_#{key_type}"
+
+  # Leave any existing key in place — never overwrite a key the user already has
+  # (standard default names or a previously generated Open Composer key).
+  existing = (%w[id_ed25519 id_rsa id_ecdsa id_dsa] +
+              %w[ed25519 rsa ecdsa dsa].map { |t| "#{key_name}_#{t}" })
+             .map { |k| File.join(ssh_dir, k) }
   return :exists if existing.any? { |k| File.exist?(k) }
 
-  key_type = "ed25519" unless %w[ed25519 rsa ecdsa].include?(key_type.to_s)
-  key_path = File.join(ssh_dir, "id_#{key_type}")
+  key_path = File.join(ssh_dir, base)
   args = ["ssh-keygen", "-t", key_type, "-N", "", "-f", key_path, "-C", "Open Composer auto-generated key"]
   args += ["-b", "4096"] if key_type == "rsa"
   _out, _err, status = Open3.capture3(*args)
@@ -1019,6 +1028,13 @@ def ensure_user_ssh_key(key_type = "ed25519")
     File.open(auth, "a") { |f| f.puts(pub) }
   end
   File.chmod(0o600, auth) if File.exist?(auth)
+
+  # ssh only auto-offers id_* keys, so point it at our named key for all hosts.
+  cfg = File.join(ssh_dir, "config")
+  unless File.exist?(cfg) && File.read(cfg).include?(base)
+    File.open(cfg, "a") { |f| f.write("\n# Added by Open Composer so ssh offers its auto-generated key\nHost *\n    IdentityFile ~/.ssh/#{base}\n") }
+  end
+  File.chmod(0o600, cfg) if File.exist?(cfg)
   :created
 end
 
@@ -1622,7 +1638,7 @@ post "/*" do
     # on a missing/unauthorized key. A failure here is logged but not fatal — the
     # submit below still runs and surfaces any real SSH error to the user.
     if conf.fetch("ensure_ssh_key", false)
-      ssh_key_result = ensure_user_ssh_key(conf.fetch("ssh_key_type", "ed25519"))
+      ssh_key_result = ensure_user_ssh_key(conf.fetch("ssh_key_type", "ed25519"), conf.fetch("ssh_key_name", "opencomposer"))
       output_log("Ensure SSH key", scheduler, cluster: cluster_name, result: ssh_key_result) unless ssh_key_result == :exists
     end
 

@@ -344,6 +344,14 @@
     });
   });
 
+  // Reset the load guard whenever the page is shown — including when the browser
+  // restores it from the back/forward cache after opening a script. Without this,
+  // `loading` stays true from the previous open and clicks are silently ignored.
+  window.addEventListener('pageshow', function() {
+    loading = false;
+    statusEl.textContent = '';
+  });
+
   // Browser Back/Forward walk the directory history.
   window.addEventListener('popstate', function(e) {
     var p = (e.state && e.state.path) ||

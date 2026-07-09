@@ -98,9 +98,10 @@ helpers do
     HTML
   end
 
-  # A single row in the All Templates list for an application manifest:
-  # category/GPU badges, name and description, linking to the app's form.
-  def output_all_template_row(m)
+  # A single row in the All Templates / New Script list for an application
+  # manifest: category/GPU badges, name and description, linking to the app's
+  # form. href_suffix is appended to the link (e.g. "?path=…&new_template=1").
+  def output_all_template_row(m, href_suffix = "")
     badges = Array(m.category).map do |cat|
       color = (@conf['category_badge_colors'] || {}).fetch(cat, nil) || '#6c757d'
       %(<span class="badge me-1" style="background-color:#{ERB::Util.h(color)}; color:#fff;">#{ERB::Util.h(cat)}</span>)
@@ -110,7 +111,7 @@ helpers do
     end
     desc = (m.description && m.description.to_s.strip != '') ? %(<div class="small text-muted">#{ERB::Util.h(m.description)}</div>) : ''
     <<~HTML
-      <a href="#{@script_name}/#{ERB::Util.h(m.dirname)}" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
+      <a href="#{@script_name}/#{ERB::Util.h(m.dirname)}#{href_suffix}" class="d-block text-decoration-none py-2 px-3 border-bottom oc-all-item"
          data-name="#{ERB::Util.h(m.name.to_s.downcase)}" data-desc="#{ERB::Util.h(m.description.to_s.downcase)}" data-cat="#{ERB::Util.h(Array(m.category).join(' ').downcase)}">
         <div>#{badges}<span class="fw-semibold">#{ERB::Util.h(m.name)}</span></div>
         #{desc}

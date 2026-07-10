@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.0.1] - 2026-07-10
+### Add
+- Allow custom values to be entered in multi_select widgets, in addition to the predefined suggestions.
+- Add a `scheduler_env` setting in conf.yml to customize environment variables passed to scheduler commands.
+- Add a `copy_environment` setting for Slurm to control whether `--export=ALL` or `--export=NONE` is used.
+
+### Changed
+- Disable spellcheck on generated form inputs and filter inputs.
+- Shorten the Slurm configless host example in the documentation and sample conf.yml.
+- Prefix internal history columns with underscores to avoid conflicts with user-defined history fields.
+
+### Fixed
+- Fix a modal that could fail to show job details on the history page in [31](https://github.com/RIKEN-RCCS/OpenComposer/issues/31).
+- Fix history not updating immediately after canceling a job.
+- Fix caching conflicts caused by internal history keys.
+- Fix a SyntaxError that could break the Script Content editor layout when multiple multi_select widgets retained submitted values after a failed job submission.
+
 ## [2.0.0] - 2026-05-11
 ### Add
 - Add side-by-side syntax highlighting overlays for the script and submit textareas.

@@ -8,7 +8,7 @@ interface for creating, previewing, editing, and submitting batch job scripts. I
 supports multiple job schedulers and can be configured for different HPC applications.
 
 - **App type:** Workflow Composer (Jobs category)
-- **Latest release:** [`v2.0.0`](https://github.com/RIKEN-RCCS/OpenComposer/releases/tag/v2.0.0) (see [Changelog](https://github.com/RIKEN-RCCS/OpenComposer/blob/main/CHANGELOG.md))
+- **Latest release:** [`v2.0.1`](https://github.com/RIKEN-RCCS/OpenComposer/releases/tag/v2.0.1) (see [Changelog](https://github.com/RIKEN-RCCS/OpenComposer/blob/main/CHANGELOG.md))
 - **License:** MIT (see [LICENSE file](https://github.com/RIKEN-RCCS/OpenComposer/blob/main/LICENSE))
 - **Requirements:** Open OnDemand 3.0 or later.
 - **Supported job schedulers:** Slurm, PBS Pro, Grid Engine, Fujitsu TCS

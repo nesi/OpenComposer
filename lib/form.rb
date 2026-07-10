@@ -416,12 +416,16 @@ helpers do
     return "" unless value.key?('value') && !value['value'].to_s.empty?
 
     values = value['value'].is_a?(Array) ? value['value'] : [value['value']]
-    js = "  const textarea = document.createElement('textarea');\n"
+    # Wrapped in its own block so `const textarea` doesn't collide when this snippet
+    # is concatenated with the output of other multi_select widgets in the same function.
+    js = "  {\n"
+    js += "  const textarea = document.createElement('textarea');\n"
     values.each do |v|
       js += "  textarea.innerHTML = '#{escape_html(v)}';\n"
       js += "  ocForm.getSearchInput('#{key}').value = textarea.value;\n"
       js += "  ocForm.addSelectedItem('#{key}');\n"
     end
+    js += "  }\n"
 
     return js
   end

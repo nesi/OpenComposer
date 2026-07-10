@@ -601,7 +601,7 @@ helpers do
                     </div>
                     <div class="input-group input-group-sm" style="max-width: 250px;">
                       <span class="input-group-text">Filter</span>
-                      <input type="text" autocomplete="off" class="form-control" aria-label="Filter" id="oc-modal-filter-#{key}" oninput="ocForm.filterRows('#{key}')">
+                      <input type="text" autocomplete="off" spellcheck="false" class="form-control" aria-label="Filter" id="oc-modal-filter-#{key}" oninput="ocForm.filterRows('#{key}')">
                     </div>
                   </div>
                   <table class='table table-bordered table-hover table-sm'>

@@ -268,6 +268,8 @@ script: |
       <p>
   Displays an input field where multiple items can be selected.
   The <code>options</code> key specifies the available choices.
+  Values that are not listed in <code>options</code> can also be entered directly.
+  Items selected from <code>options</code> are replaced with the second element of each option array, while directly entered items are replaced with the entered text itself.
       </p>
       <pre>form:
   load_modules:

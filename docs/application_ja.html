@@ -242,6 +242,8 @@ script: |
       <h3 id="multi_select">2.5. multi_selectウィジット</h3>
       <p>
   複数の項目を選択できる入力欄を表示します。<code>options</code>に選択肢を配列形式で記述します。
+  <code>options</code>にない値を入力欄に直接入力して追加することもできます。
+  <code>options</code>から選択した項目は配列の2つ目の要素に置き換えられ、直接入力した項目は入力した文字列そのものに置き換えられます。
       </p>
       <pre>form:
   load_modules:

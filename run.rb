@@ -22,7 +22,7 @@ configure :development do
 end
 
 # Internal Constants
-VERSION                ||= "2.0.0"
+VERSION                ||= "2.0.1"
 SCHEDULERS_DIR_PATH    ||= "./lib/schedulers"
 HISTORY_ROWS           ||= 10
 JOB_STATUS             ||= { "queued" => "QUEUED", "running" => "RUNNING", "completed" => "COMPLETED", "failed" => "FAILED" }
@@ -30,6 +30,8 @@ JOB_ID                 ||= "id"
 JOB_APP_NAME           ||= "appName"
 JOB_DIR_NAME           ||= "appPath"
 JOB_STATUS_ID          ||= "status"
+INTERNAL_APP_NAME      ||= "_app_name"
+INTERNAL_DIR_NAME      ||= "_app_dir_name"
 HEADER_SCRIPT_LOCATION ||= "_script_location"
 HEADER_SCRIPT_NAME     ||= "_script_1"
 HEADER_JOB_NAME        ||= "_script_2"
@@ -63,7 +65,7 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_PARTITION"       => JOB_PARTITION,
   "OC_HISTORY_SUBMISSION_TIME" => JOB_SUBMISSION_TIME
 }.freeze
-CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "sge_root"].freeze
+CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "scheduler_env", "copy_environment", "sge_root"].freeze
 
 # Structure of manifest
 Manifest ||= Struct.new(:dirname, :name, :category, :description, :icon, :related_apps)
@@ -326,7 +328,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @bin           = @conf["bin"]
     @bin_overrides = @conf["bin_overrides"]
     @ssh_wrapper   = @conf["ssh_wrapper"]
-    @error_msg     = update_status(@conf, @scheduler, @bin, @bin_overrides, @ssh_wrapper, @cluster_name)
+    @scheduler_env = @conf["scheduler_env"]
+    @error_msg     = update_status(@conf, @scheduler, @bin, @bin_overrides, @ssh_wrapper, @scheduler_env, @cluster_name)
     return erb :error if @error_msg != nil
 
     @statuses     = parse_history_statuses(params["statuses"])
@@ -423,7 +426,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
           return erb :error
         end
         record = find_job(db, id)
-        cache = job_record_to_legacy_hash(record)
+        cache = job_record_to_legacy_hash(record, internal_values: false)
 
         if cache.nil?
           @error_msg = "Specified Job ID (#{id}) is not found."
@@ -556,6 +559,8 @@ post "/*" do
   ssh_wrapper   = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name] : conf["ssh_wrapper"]
   bin           = conf.key?("clusters") ? conf["bin"][cluster_name] : conf["bin"]
   bin_overrides = conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
+  scheduler_env = conf.key?("clusters") ? conf["scheduler_env"][cluster_name] : conf["scheduler_env"]
+  copy_environment = conf.key?("clusters") ? conf["copy_environment"][cluster_name] : conf["copy_environment"]
   history_db    = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
   data_dir      = conf["data_dir"]
   ENV['SGE_ROOT'] ||= conf.key?("clusters") ? conf["sge_root"][cluster_name] : conf["sge_root"]
@@ -566,7 +571,7 @@ post "/*" do
 
     case params["action"]
     when "CancelJob"
-      error_msg = scheduler.cancel(job_ids, bin, bin_overrides, ssh_wrapper)
+      error_msg = scheduler.cancel(job_ids, bin, bin_overrides, ssh_wrapper, scheduler_env)
       if error_msg.nil? && File.exist?(history_db)
         db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
         db.transaction do
@@ -654,7 +659,9 @@ post "/*" do
         elsif ["multi_select", "checkbox"].include?(widget)
           separator = form["form"][base_key]["separator"]
           option = form["form"][base_key]["options"].find { |x| x[0].to_s == value }
-          if option.size == 1
+          if option.nil?
+            set_check_value(base_key, value, separator) if widget == "multi_select"
+          elsif option.size == 1
             set_check_value(base_key, option[0], separator)
           else
             set_check_value(base_key, option[1], separator)
@@ -711,22 +718,22 @@ post "/*" do
       return show_website(nil, nil, params, script_path)
     end
 
+    submission_time = nil
     Dir.chdir(script_dir) do
-      job_id, error_msg = scheduler.submit(script_path, escape_html(job_name.strip), submit_options, bin, bin_overrides, ssh_wrapper)
-      params[JOB_SUBMISSION_TIME] = Time.now.iso8601
+      job_id, error_msg = scheduler.submit(script_path, escape_html(job_name.strip), submit_options, bin, bin_overrides, ssh_wrapper, scheduler_env, copy_environment)
+      submission_time = Time.now.iso8601
     end
 
     # Save a job history
     FileUtils.mkdir_p(data_dir)
     db = open_history_db(conf, conf.key?("clusters") ? cluster_name : nil)
-    submission_time = params[JOB_SUBMISSION_TIME]
     submit_data = params.to_h.merge(
-      "_app_name" => params[JOB_APP_NAME],
-      "_app_dir_name" => params[JOB_DIR_NAME],
+      INTERNAL_APP_NAME => params[INTERNAL_APP_NAME] || manifest["name"],
+      INTERNAL_DIR_NAME => params[INTERNAL_DIR_NAME] || manifest["dirname"],
       "_script_location" => params[HEADER_SCRIPT_LOCATION],
       "_script_name" => params[HEADER_SCRIPT_NAME],
       "_job_name" => params[HEADER_JOB_NAME].to_s,
-      "_partition" => params[JOB_PARTITION].to_s,
+      "_partition" => "",
       "_submission_time" => submission_time,
       "_updated_time" => submission_time,
       "_status" => JOB_STATUS["queued"]

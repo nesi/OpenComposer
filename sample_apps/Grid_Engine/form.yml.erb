@@ -103,7 +103,7 @@ form:
     options:
       - [ "Show advanced option", "", show-module, show-log, show-logname, show-mail, show-premium, show-array ]
 
-  # for i in `module avail | grep -v "\-\-\-\-\-\-\-\-" | tr -s '[:space:]' '\n'`; do echo "      - [$i]"; done
+  # for i in `module -t avail | sed 's/(.*)$//' | grep -v ':' | grep -v '^$'`; do echo "      - [$i]"; done
   module:
     widget: multi_select
     indent: 1

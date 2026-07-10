@@ -4,18 +4,18 @@ require 'csv'
 class Fujitsu_tcs < Scheduler
   # Submit a job to the Fujitsu TCS scheduler using the 'pjsub' command.
   # If the submission is successful, it checks for job details using the 'pjstat' command.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil, copy_environment = nil)
     pjsub = get_command_path("pjsub", bin, bin_overrides)
     job_name_option = "-N #{job_name}" if job_name && !job_name.empty?
     command = [ssh_wrapper, pjsub, job_name_option, added_options, script_path].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ") unless status.success?
     return nil, "Job ID not found in output." unless stdout.match?(/Job (\d+) submitted/)
 
     job_id = stdout.match(/Job (\d+) submitted/)[1]
     pjstat = get_command_path("pjstat", bin, bin_overrides)
     command = [ssh_wrapper, pjstat, "-E --data --choose=jid,jmdl", job_id].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ") unless status.success?
 
     # Example 1 : stdout of single job
@@ -44,10 +44,10 @@ class Fujitsu_tcs < Scheduler
   end
 
   # Cancel one or more jobs in the Fujitsu TCS scheduler using the 'pjdel' command.
-  def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     pjdel = get_command_path("pjdel", bin, bin_overrides)
     command = [ssh_wrapper, pjdel, jobs.join(" ")].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return status.success? ? nil : stderr
   rescue Exception => e
     return e.message
@@ -55,7 +55,7 @@ class Fujitsu_tcs < Scheduler
 
   # Query the status of one or more jobs in the Fujitsu TCS system using 'pjstat'.
   # It retrieves job details and combines information for both active and completed jobs.
-  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     # j2ul-2549-01z0.pdf
     # -s: Display additional items (e.g. edt)
     # -E: Display subjob
@@ -130,7 +130,7 @@ class Fujitsu_tcs < Scheduler
 
     pjstat = get_command_path("pjstat", bin, bin_overrides)
     command = [ssh_wrapper, pjstat, "-s -E --data --choose=#{fields.keys.join(",")}", jobs.join(" ")].compact.join(" ")
-    stdout1, stderr1, status1 = Open3.capture3(command)
+    stdout1, stderr1, status1 = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout1, stderr1].join(" ") unless status1.success?
     # Example of stdout1 (pjstat -s -E --data --choose=jid,rscg,st 34716159 34716160 34716168 34716168[1] 34716168[2])
     # H,JOB_ID,ACCEPT,RSC_GRP,ST
@@ -144,7 +144,7 @@ class Fujitsu_tcs < Scheduler
     # Retrieve completed jobs using the same command with '-H' flag
     # Outputs a list of jobs that were completed within the past 365 days, which is the maximum value.
     # If a job was completed before 366 days, it will be displayed as "Queued."
-    stdout2, stderr2, status2 = Open3.capture3(command + " -H day=365")
+    stdout2, stderr2, status2 = capture_scheduler_command(scheduler_env, command + " -H day=365")
     return nil, [stdout2, stderr2].join(" ") unless status2.success?
     # -H: Display only information about jobs that have completed
     # ---

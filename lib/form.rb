@@ -129,7 +129,7 @@ helpers do
       else
         html += "<div class=\"col mt-0\">\n"
       end
-      html += "<input type=\"#{value['widget']}\" autocomplete=\"off\" class=\"form-control\" tabindex=\"#{@table_index}\" id=\"#{id}\" name=\"#{id}\" "
+      html += "<input type=\"#{value['widget']}\" autocomplete=\"off\" spellcheck=\"false\" class=\"form-control\" tabindex=\"#{@table_index}\" id=\"#{id}\" name=\"#{id}\" "
       html += output_attribute(value, i, 'min')  if value['widget'] == "number"
       html += output_attribute(value, i, 'max')  if value['widget'] == "number"
       html += output_attribute(value, i, 'step') if value['widget'] == "number"
@@ -386,7 +386,7 @@ helpers do
     html += "</ul>\n"
 
     html += "<div class=\"input-group\">\n"
-    html += "<input type=\"text\" autocomplete=\"off\" tabindex=\"#{@table_index}\" class=\"form-control\" id=\"#{key}\" data-widget=\"multi_select\" oninput=\"ocForm.showSuggestions('#{key}')\" onfocus=\"ocForm.showSuggestions('#{key}', true)\" onblur=\"ocForm.hideSuggestions('#{key}')\" data-required=\"#{required}\" "
+    html += "<input type=\"text\" autocomplete=\"off\" spellcheck=\"false\" tabindex=\"#{@table_index}\" class=\"form-control\" id=\"#{key}\" data-widget=\"multi_select\" oninput=\"ocForm.showSuggestions('#{key}')\" onfocus=\"ocForm.showSuggestions('#{key}', true)\" onblur=\"ocForm.hideSuggestions('#{key}')\" data-required=\"#{required}\" "
     script_flag = references_key_or_has_flag?(key, nil, script_content, app_name, dir_name)
     submit_flag = references_key_or_has_flag?(key, nil, submit_content, app_name, dir_name)
     html += "data-script-flag=#{script_flag} data-submit-flag=#{submit_flag} "
@@ -416,12 +416,16 @@ helpers do
     return "" unless value.key?('value') && !value['value'].to_s.empty?
 
     values = value['value'].is_a?(Array) ? value['value'] : [value['value']]
-    js = "  const textarea = document.createElement('textarea');\n"
+    # Wrapped in its own block so `const textarea` doesn't collide when this snippet
+    # is concatenated with the output of other multi_select widgets in the same function.
+    js = "  {\n"
+    js += "  const textarea = document.createElement('textarea');\n"
     values.each do |v|
       js += "  textarea.innerHTML = '#{escape_html(v)}';\n"
       js += "  ocForm.getSearchInput('#{key}').value = textarea.value;\n"
       js += "  ocForm.addSelectedItem('#{key}');\n"
     end
+    js += "  }\n"
 
     return js
   end
@@ -535,7 +539,7 @@ helpers do
     required     = value['required'].to_s == "true" ? "required" : ""
     html  = output_label_with_span_tag(key, value)
     html += "<div class=\"d-flex align-items-center\">\n"
-    html += "<input type=\"text\" autocomplete=\"off\" tabindex=\"#{@table_index}\" value=\"#{current_value}\" id=\"#{key}\" name=\"#{key}\" #{required} class=\"form-control mt-0\" "
+    html += "<input type=\"text\" autocomplete=\"off\" spellcheck=\"false\" tabindex=\"#{@table_index}\" value=\"#{current_value}\" id=\"#{key}\" name=\"#{key}\" #{required} class=\"form-control mt-0\" "
     script_flag = references_key_or_has_flag?(key, nil, script_content, app_name, dir_name)
     submit_flag = references_key_or_has_flag?(key, nil, submit_content, app_name, dir_name)
     type = if script_flag && submit_flag
@@ -601,7 +605,7 @@ helpers do
                     </div>
                     <div class="input-group input-group-sm" style="max-width: 250px;">
                       <span class="input-group-text">Filter</span>
-                      <input type="text" autocomplete="off" class="form-control" aria-label="Filter" id="oc-modal-filter-#{key}" oninput="ocForm.filterRows('#{key}')">
+                      <input type="text" autocomplete="off" spellcheck="false" class="form-control" aria-label="Filter" id="oc-modal-filter-#{key}" oninput="ocForm.filterRows('#{key}')">
                     </div>
                   </div>
                   <table class='table table-bordered table-hover table-sm'>

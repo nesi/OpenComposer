@@ -16,8 +16,10 @@
         <li class="nav-item"><a href="#install" class="nav-link">1. Installation</a></li>
         <li class="nav-item"><a href="#setting" class="nav-link">2. Setting</a></li>
         <li class="nav-item ms-3"><a href="#clusters" class="nav-link">2.1. clusters</a></li>
-        <li class="nav-item ms-3"><a href="#bin_overrides" class="nav-link">2.2. bin_overrides</a></li>
-        <li class="nav-item ms-3"><a href="#history" class="nav-link">2.3. history</a></li>
+        <li class="nav-item ms-3"><a href="#scheduler_env" class="nav-link">2.2. scheduler_env</a></li>
+        <li class="nav-item ms-3"><a href="#copy_environment" class="nav-link">2.3. copy_environment</a></li>
+        <li class="nav-item ms-3"><a href="#bin_overrides" class="nav-link">2.4. bin_overrides</a></li>
+        <li class="nav-item ms-3"><a href="#history" class="nav-link">2.5. history</a></li>
         <li class="nav-item"><a href="#registor" class="nav-link">3. Registration</a></li>
         <li class="nav-item"><a href="#general" class="nav-link">4. Installation by general user</a></li>
         <li class="nav-item"><a href="#local" class="nav-link">5. Local Development</a></li>
@@ -52,6 +54,8 @@ $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
         <tr><td>ssh_wrapper</td><td>Command for using the job scheduler of another node using SSH</td><td>(None)</td></tr>
         <tr><td>bin</td><td>PATH of commands of job scheduler</td><td>(None)</td></tr>
         <tr><td>bin_overrides</td><td>PATH of each command of job scheduler</td><td>(None)</td></tr>
+        <tr><td>scheduler_env</td><td>Environment variables added when running job scheduler commands</td><td>(None)</td></tr>
+        <tr><td>copy_environment</td><td>Whether Slurm submits jobs with the PUN environment copied</td><td><code>false</code></td></tr>
         <tr><td>sge_root</td><td>Directory for the Grid Engine root (<code>SGE_ROOT</code>)</td><td>(None)</td></tr>
         <tr><td>history</td><td>Additional display fields on the history page</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code></td></tr>
         <tr><td>footer</td><td>Text in the footer</td><td>(None)</td></tr>
@@ -76,7 +80,7 @@ $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
       <h3 id="clusters">2.1. clusters</h3>
       <p>
   Set this when using multiple clusters.
-  You can set <code>scheduler</code>, <code>login_node</code>, <code>ssh_wrapper</code>, <code>bin</code>, <code>bin_overrides</code>, and <code>sge_root</code> for each cluster.
+  You can set <code>scheduler</code>, <code>login_node</code>, <code>ssh_wrapper</code>, <code>bin</code>, <code>bin_overrides</code>, <code>scheduler_env</code>, <code>copy_environment</code>, and <code>sge_root</code> for each cluster.
   This setting is optional if you use only a single cluster.
       </p>
       <p>
@@ -100,7 +104,44 @@ clusters:
   prepost:
     ssh_wrapper "ssh prepost.example.net"</pre>
 
-      <h3 id="bin_overrides">2.2. bin_overrides</h3>
+      <h3 id="scheduler_env">2.2. scheduler_env</h3>
+      <p>
+  Set environment variables added when running job scheduler commands. This setting is optional.
+  For example, this can be used when <code>SLURM_CONF_SERVER</code> is required for a Slurm configless setup.
+      </p>
+<pre>scheduler_env:
+  SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
+      <p>
+  When using <code>clusters</code>, this can be configured for each cluster.
+      </p>
+      <pre>clusters:
+  prepost:
+    scheduler: "slurm"
+    scheduler_env:
+      SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
+      <p>
+  When <code>ssh_wrapper</code> is used to run job scheduler commands on a remote host, <code>scheduler_env</code> is applied to the local <code>ssh</code> command.
+  If the environment variables are also required on the remote side, configure SSH or a wrapper script accordingly.
+      </p>
+
+      <h3 id="copy_environment">2.3. copy_environment</h3>
+      <p>
+  Set this to <code>true</code> to submit Slurm jobs with <code>--export=ALL</code>. The default is <code>false</code>, which keeps the existing behavior of submitting Slurm jobs with <code>--export=NONE</code>.
+  This setting is only used by Slurm.
+      </p>
+      <pre>copy_environment: false</pre>
+      <p>
+  When using <code>clusters</code>, this can be configured for each cluster.
+      </p>
+      <pre>clusters:
+  prepost:
+    scheduler: "slurm"
+    copy_environment: true</pre>
+      <p>
+  This copies the PUN environment when issuing Slurm commands. Be careful because the PUN environment can be different from a regular login shell environment.
+      </p>
+
+      <h3 id="bin_overrides">2.4. bin_overrides</h3>
       <p>
   Set the path for each command. This setting is optional.
       </p>
@@ -138,7 +179,7 @@ clusters:
   pjstat: "/usr/local/bin/pjstat"
   pjdel:  "/usr/local/bin/pjdel"</pre>
 
-      <h3 id="history">2.3. history</h3>
+      <h3 id="history">2.5. history</h3>
       <p>
         The mandatory fields to be displayed on the history page are "Job ID", "Application", "Script Location", "Script Name", and "Status".
         In addition to these, the <code>history</code> allows you to set additional fields to display.

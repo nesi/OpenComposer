@@ -5,7 +5,7 @@ require 'open3'
 require './lib/schedulers/pbspro'
 
 class Miyabi < Pbspro
-  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     # http://nusc.nsu.ru/wiki/lib/exe/fetch.php/doc/pbs/pbsprorefguide13.0.pdf
     # B : Job arrays only: job array is begun
     # E : Job is exiting after having run
@@ -25,7 +25,7 @@ class Miyabi < Pbspro
 
     # Try to get info for running jobs
     command = [ssh_wrapper, qstat, "-f -t", jobs.join(" ")].compact.join(" ")
-    stdout1, stderr1, status1 = Open3.capture3(command)
+    stdout1, stderr1, status1 = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout1, stderr1].join(" ") unless status1.success?
 
     info = {}
@@ -35,7 +35,7 @@ class Miyabi < Pbspro
 
     # Try to get info for completed jobs ("-H" and "--hday" are Miyabi-specific options.)
     command = [ssh_wrapper, qstat, "-f -t -H --hday 7", remaining_jobs.join(" ")].compact.join(" ")
-    stdout2, stderr2, status2 = Open3.capture3(command)
+    stdout2, stderr2, status2 = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout2, stderr2].join(" ") unless status2.success?
 
     parse_qstat_output(stdout2, info)

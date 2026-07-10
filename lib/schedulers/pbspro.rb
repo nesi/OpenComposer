@@ -2,11 +2,11 @@ require 'open3'
 
 class Pbspro < Scheduler
   # Submit a job to PBS using the 'qsub' command.
-  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def submit(script_path, job_name = nil, added_options = nil, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil, copy_environment = nil)
     qsub = get_command_path("qsub", bin, bin_overrides)
     job_name_option = "-N #{job_name}" if job_name && !job_name.empty?
     command = [ssh_wrapper, qsub, job_name_option, added_options, script_path].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ") unless status.success?
 
     # For a normal job, the output will be "123.opbs".
@@ -18,7 +18,7 @@ class Pbspro < Scheduler
     if (job_id_match = stdout.match(/^(\d+)\[\]\..+$/))
       qstat = get_command_path("qstat", bin, bin_overrides)
       command = [ssh_wrapper, qstat, "-t", "#{job_id_match[1]}[]"].compact.join(" ") # "-t" option also shows array jobs.
-      stdout, stderr, status = Open3.capture3(command)
+      stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
       return nil, [stdout, stderr].join(" ") unless status.success?
 
       job_ids = stdout.lines.map do |line|
@@ -35,10 +35,10 @@ class Pbspro < Scheduler
   end
 
   # Cancel one or more jobs in PBS using the 'qdel' command.
-  def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def cancel(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     qdel = get_command_path("qdel", bin, bin_overrides)
     command = [ssh_wrapper, qdel, jobs.join(' ')].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return status.success? ? nil : [stdout, stderr].join(" ")
   rescue Exception => e
     return e.message
@@ -93,7 +93,7 @@ class Pbspro < Scheduler
 
   # Query the status of one or more jobs in PBS using 'qstat'.
   # It retrieves job details such as submission time, partition, and status.
-  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def query(jobs, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     # http://nusc.nsu.ru/wiki/lib/exe/fetch.php/doc/pbs/pbsprorefguide13.0.pdf
     # B : Job arrays only: job array is begun
     # E : Job is exiting after having run
@@ -115,7 +115,7 @@ class Pbspro < Scheduler
     # Try to get info for both running and completed jobs
     # command = [ssh_wrapper, qstat, "-f -t -x", jobs.join(" ")].compact.join(" ")
     command = [ssh_wrapper, qstat, "-f -t -x"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ") unless status.success?
 
     parse_qstat_output(stdout, info)

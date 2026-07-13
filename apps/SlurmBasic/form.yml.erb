@@ -99,7 +99,7 @@ form:
     widget: checkbox
     label:
     options:
-      - ["Show advanced options", "", show-testing, show-profiling, show-ssd, show-multithreading, show-array, show-mail_option, show-email, enable-testing, enable-profiling, enable-ssd, enable-multithreading, enable-array, enable-mail_option, enable-email]
+      - ["Show advanced options", "", show-testing, show-profiling, show-ssd, show-multithreading, show-array, show-mail_option, enable-testing, enable-profiling, enable-ssd, enable-multithreading, enable-array, enable-mail_option]
 
   testing:
     widget: checkbox
@@ -167,11 +167,11 @@ form:
     separator: ","
     indent: 1
     options:
-      - [ "Beginning of job execution", 'BEGIN',   ]
-      - [ "End of job execution",       'END',     ]
-      - [ "Fail of job",                'FAIL',    ]
-      - [ "When the job is requeued",   'REQUEUE', ]
-      - [ "All",                        'ALL',     ]
+      - [ "Beginning of job execution", 'BEGIN',   enable-email ]
+      - [ "End of job execution",       'END',     enable-email ]
+      - [ "Fail of job",                'FAIL',    enable-email ]
+      - [ "When the job is requeued",   'REQUEUE', enable-email ]
+      - [ "All",                        'ALL',     enable-email ]
 
   email:
     widget: email

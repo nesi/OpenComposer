@@ -26,7 +26,7 @@ form:
   partition:
     widget: select
     label: Partition
-    help: The architecture of the node you want to use. Select any if you do not have a preference. <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer/#building-a-job-script" target="_blank"> See here to learn more about partitions</a>.
+    help: The architecture of the node you want to use. Select any if you do not have a preference. <a href="https://docs.nesi.org.nz/Batch_Computing/Hardware/#compute-nodes" target="_blank"> See here to learn more about the computer nodes that make up the different partitions</a>.
     remember_last: true
     options:
       - [ any,   "",    set-max-cores_simple: 166, set-max-memory_total_gb: 1450]
@@ -61,7 +61,7 @@ form:
     label: Number of Nodes
     min:   1
     step:  1
-    help: This is the number of computer nodes you want to run your calculation over. Leave empty if you don't want to specify the number of nodes you want to use. <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer/#building-a-job-script" target="_blank"> See here to learn more about nodes</a>.
+    help: This is the number of computer nodes you want to run your calculation over. Leave empty if you don't want to specify the number of nodes you want to use. <a href="https://docs.nesi.org.nz/Tutorials/Introduction_To_HPC/What_is_an_HPC/#nodes" target="_blank"> See here to learn more about nodes</a>.
 
   memory_total_gb:
     widget: number

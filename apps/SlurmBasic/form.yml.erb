@@ -26,7 +26,7 @@ form:
   partition:
     widget: select
     label: Partition
-    help: The architecture of the node you want to use. Select any if you do not have a preference.
+    help: The architecture of the node you want to use. Select any if you do not have a preference. <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer/#building-a-job-script" target="_blank"> See here to learn more</a>.'
     remember_last: true
     options:
       - [ any,   "",    set-max-cores_simple: 166, set-max-memory_total_gb: 1450]
@@ -36,7 +36,7 @@ form:
   cores_simple:
     widget: number
     label: Number of CPUs
-    help: 'If you need to set MPI or OpenMP flags, tick the "Show advanced CPU options".'
+    help: If you need to set MPI or OpenMP flags, tick the "Show advanced CPU options". <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer/#advanced-cpu-options" target="_blank"> See here to learn more</a>.
     value: 1
     min:   1
     step:  1
@@ -61,11 +61,12 @@ form:
     label: Number of Nodes
     min:   1
     step:  1
-    help: Leave empty if you don't want to specify the number of nodes you want to use.
+    help: This is the number of computer nodes you want to run your calculation over. Leave empty if you don't want to specify the number of nodes you want to use. <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer/#building-a-job-script" target="_blank"> See here to learn more</a>.'
 
   memory_total_gb:
     widget: number
     label: Total Memory (GB)
+    help: This is the total amount of memory you want to use. If you want to specify this per cpu you want to use, tick the "Show Memory per CPU" tickbox. 
     value: 2
     min:   1
     step:  1
@@ -103,6 +104,7 @@ form:
   testing:
     widget: checkbox
     label: Testing
+    help: '<a href="https://docs.nesi.org.nz/Software/Profiling_and_Debugging/Slurm_Native_Profiling" target="_blank">See here for more information about how to test your jobs</a>.'
     direction: horizontal
     separator: ","
     indent: 1
@@ -131,6 +133,7 @@ form:
   ssd:
     widget: checkbox
     label: SSD
+    help: <a href="https://docs.nesi.org.nz/Batch_Computing/Temporary_directories/#on-ssd" target="_blank">See here for more information on using the SSD for temporary storage</a>.'
     direction: horizontal
     separator: ","
     indent: 1
@@ -159,6 +162,7 @@ form:
   mail_option:
     label: Mail option
     widget: checkbox
+    help: If you would like Slurm to send you an email about your job(s), click the options below for sending job information to your email.
     direction: horizontal
     separator: ","
     indent: 1

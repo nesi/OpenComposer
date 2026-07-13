@@ -7,7 +7,7 @@
   _base["form"]["partition"] = YAML.safe_load(<<~YAML)
     widget: select
     label: Partition
-    help: The architecture of the node you want to use. Select any if you do not have a preference. <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer/#building-a-job-script" target="_blank"> See here to learn more</a>.
+    help: The architecture of the node you want to use. Select any if you do not have a preference. <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer/#building-a-job-script" target="_blank"> See here to learn more about partitions</a>.
     options:
       - [ any,   "",    set-max-cores_simple: 166, set-max-memory_total_gb: 1450, show-gpu_any,   disable-gpu_genoa, disable-number_of_gpus_genoa, disable-gpu_milan, disable-number_of_gpus_milan, set-value-gpu_any: None]
       - [ genoa, genoa, set-max-cores_simple: 166, set-max-memory_total_gb: 1450, show-gpu_genoa, disable-gpu_any,   disable-number_of_gpus_any,   disable-gpu_milan, disable-number_of_gpus_milan, set-value-gpu_genoa: None]

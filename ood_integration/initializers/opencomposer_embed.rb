@@ -232,7 +232,7 @@ Rails.application.config.after_initialize do
 
         http = Net::HTTP.new(host, port)
         http.ipaddr = self.class.upstream_ip if self.class.upstream_ip.present? && http.respond_to?(:ipaddr=)
-        http.use_ssl      = (scheme == "https")
+        http.use_ssl      = false # http.use_ssl      = (scheme == "https")
         http.verify_mode  = OpenSSL::SSL::VERIFY_NONE if http.use_ssl?
         http.open_timeout = 10
         http.read_timeout = 120

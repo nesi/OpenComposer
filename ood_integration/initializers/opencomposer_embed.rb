@@ -57,6 +57,17 @@ Rails.application.config.after_initialize do
   oc_upstream_prefix = "/pun/sys/#{oc_app}"
   oc_proxy_prefix    = "/pun/sys/dashboard/oc"
 
+  # Boot-time record of what the proxy resolved, so admins can confirm the
+  # OC_EMBED_* overrides actually reached this process (grep the dashboard
+  # log for "[opencomposer_embed]" after a PUN restart).
+  Rails.logger.info(
+    "[opencomposer_embed] upstream config: " \
+    "scheme=#{oc_upstream_scheme || '(request)'} " \
+    "host=#{oc_upstream_host || '(request)'} " \
+    "port=#{oc_upstream_port || '(request)'} " \
+    "ip=#{oc_upstream_ip.presence || '(dns)'} app=#{oc_app}"
+  )
+
   unless defined?(::OpencomposerProxyController)
     proxy = Class.new(::ApplicationController) do
       # Open Composer posts its own forms; they carry no Rails CSRF token.
@@ -234,6 +245,15 @@ Rails.application.config.after_initialize do
         # Composer derives the right base_url for any absolute links.
         req["Cookie"] = request.headers["Cookie"] if request.headers["Cookie"]
         req["Host"]   = request.host_with_port
+
+        # Present the browser's original scheme/host/port so the upstream
+        # behaves as if this call came through the front end. Behind a
+        # TLS-offloading load balancer the loopback hop may be plain HTTP;
+        # without these headers Apache's https rewrites / OIDC URL building /
+        # the app's scheme detection would treat the call as http.
+        req["X-Forwarded-Proto"] = request.scheme
+        req["X-Forwarded-Host"]  = request.host_with_port
+        req["X-Forwarded-Port"]  = request.port.to_s
         %w[Accept Accept-Language X-Requested-With].each do |h|
           v = request.headers[h]
           req[h] = v if v.present?

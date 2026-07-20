@@ -220,10 +220,12 @@
         <div class="container-fluid">
           <div class="collapse navbar-collapse">
             <% logo_shown = @conf.fetch("show_navbar_logo", true) && @conf["navbar_logo"].to_s.strip.length > 0 %>
-            <%# When the logo is hidden the first link becomes the left-most item; %>
-            <%# ps-1 (0.25rem) nudges it so its text lines up with the page content %>
-            <%# column (mx-1 px-4), which sits 0.25rem right of the bare nav inset. %>
-            <ul class="navbar-nav<%= logo_shown ? '' : ' ps-1' %>">
+            <%# Pull the nav group 0.25rem left so its first item (the logo when %>
+            <%# shown, otherwise the first link) lines up with the page content %>
+            <%# column, which uses mx-1 px-3 (the blue button, category titles). The %>
+            <%# bare nav inset is 0.25rem wider than px-3 (the nested container-fluid %>
+            <%# adds 0.75rem and each nav-link adds 0.5rem, vs px-3's 1rem). %>
+            <ul class="navbar-nav" style="margin-left: -0.25rem;">
               <% if logo_shown %>
                 <li class="nav-item d-flex align-items-center px-2">
                   <a href="<%= @open_ondemand_url %>" target="<%= @conf["open_ondemand_new_tab"] == false ? "_self" : "_blank" %>">

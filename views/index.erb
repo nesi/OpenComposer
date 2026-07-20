@@ -7,7 +7,7 @@
 <%# ── Optional description of Open Composer, above the template list ─────── %>
 <%# (The gradient separator under the header is rendered globally in layout.erb.) %>
 <% if @conf.fetch('app_description', '').to_s.strip.length > 0 %>
-  <div class="mx-1 px-4 py-4 my-2" style="background:<%= @conf.fetch('description_color', '#FFFFFF') %>; color:<%= @conf.fetch('description_text_color', '#191919') %>;">
+  <div class="mx-1 px-3 py-4 my-2" style="background:<%= @conf.fetch('description_color', '#FFFFFF') %>; color:<%= @conf.fetch('description_text_color', '#191919') %>;">
     <%= @conf['app_description'] %>
   </div>
 <% end %>

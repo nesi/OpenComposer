@@ -74,8 +74,15 @@ history:
 favicon:                 "favicon.ico"             # Browser tab icon (file in the public/ dir). Set to "" to disable.
 
 # A horizontal separator line drawn directly under the top navbar, above the
-# template list / page content. Set to false to hide it.
-show_navbar_separator:   false
+# template list / page content. Choose a style:
+#   false             hide it (default)
+#   true / gradient   a soft 6px gradient rule that fades to transparent
+#   solid / line      a normal 1px solid rule
+#   accent            a thicker 3px coloured accent bar
+show_navbar_separator:   solid
+
+# Colour of the solid / accent separator styles above (ignored for gradient).
+navbar_separator_color:  "#C3C8C8"
 
 # Optional descriptive blurb shown under the separator line and above the
 # template categories on the Selected Templates page. HTML is allowed. Leave

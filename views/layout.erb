@@ -219,8 +219,12 @@
       <nav class="navbar navbar-expand mx-1 bg-gradient" style="background:<%= @conf['navbar_color'] %>; --bs-navbar-color: <%= @conf['navbar_text_color'] %>; --bs-navbar-hover-color: <%= @conf['navbar_text_color'] %>; --bs-navbar-active-color: <%= @conf['navbar_text_color'] %>; --bs-navbar-brand-color: <%= @conf['navbar_text_color'] %>; --bs-navbar-brand-hover-color: <%= @conf['navbar_text_color'] %>;">
         <div class="container-fluid">
           <div class="collapse navbar-collapse">
-            <ul class="navbar-nav">
-              <% if @conf.fetch("show_navbar_logo", true) && @conf["navbar_logo"].to_s.strip.length > 0 %>
+            <% logo_shown = @conf.fetch("show_navbar_logo", true) && @conf["navbar_logo"].to_s.strip.length > 0 %>
+            <%# When the logo is hidden the first link becomes the left-most item; %>
+            <%# ps-1 (0.25rem) nudges it so its text lines up with the page content %>
+            <%# column (mx-1 px-4), which sits 0.25rem right of the bare nav inset. %>
+            <ul class="navbar-nav<%= logo_shown ? '' : ' ps-1' %>">
+              <% if logo_shown %>
                 <li class="nav-item d-flex align-items-center px-2">
                   <a href="<%= @open_ondemand_url %>" target="<%= @conf["open_ondemand_new_tab"] == false ? "_self" : "_blank" %>">
                     <img src="<%= @script_name %>/<%= @conf["navbar_logo"] %>" alt="Logo" style="height: 30px; vertical-align: middle;">

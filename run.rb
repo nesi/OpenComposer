@@ -40,6 +40,11 @@ end
 
 # Internal Constants
 VERSION                ||= "3.0.0"
+# App root captured once at load time. File lookups resolve against this instead
+# of the live process working directory, which Dir.chdir (used in the submit
+# path) mutates process-wide — otherwise a concurrent request could resolve
+# ./conf.yml or ./generic_apps against the wrong directory.
+APP_ROOT               ||= File.expand_path(__dir__)
 SCHEDULERS_DIR_PATH    ||= "./lib/schedulers"
 HISTORY_ROWS           ||= 10
 JOB_STATUS             ||= { "queued" => "QUEUED", "running" => "RUNNING", "completed" => "COMPLETED", "failed" => "FAILED", "cancelled" => "CANCELLED", "unknown" => "UNKNOWN" }
@@ -107,6 +112,31 @@ def read_yaml(yml_path)
   return nil
 end
 
+# Process-wide cache for the parsed application config. Rendering conf.yml.erb
+# through ERB and parsing the YAML is comparatively expensive, yet create_conf
+# runs on EVERY request — including one per tile on the New Custom Template page.
+# On a shared/high-latency filesystem (e.g. Mahuika) that repeated work made
+# icons load slowly and intermittently blank. Cache the parsed result and only
+# redo it when the source file's mtime changes. A deep copy is returned so
+# callers may mutate their conf freely without corrupting the cache.
+CONF_CACHE ||= { mutex: Mutex.new, path: nil, mtime: nil, raw: nil }
+
+def read_yaml_cached(yml_path)
+  erb_path = yml_path + ".erb"
+  src = File.exist?(erb_path) ? erb_path : (File.exist?(yml_path) ? yml_path : nil)
+  return read_yaml(yml_path) if src.nil?  # nothing on disk; preserve original behaviour
+
+  mtime = File.mtime(src).to_f
+  CONF_CACHE[:mutex].synchronize do
+    if CONF_CACHE[:path] != src || CONF_CACHE[:mtime] != mtime
+      CONF_CACHE[:raw]   = read_yaml(yml_path)
+      CONF_CACHE[:path]  = src
+      CONF_CACHE[:mtime] = mtime
+    end
+    Marshal.load(Marshal.dump(CONF_CACHE[:raw]))
+  end
+end
+
 # Download (and cache for 24 h) the NeSI modules-list JSON.
 # Returns a Hash keyed by module name, or {} on failure.
 def fetch_modules_list(data_dir)
@@ -137,7 +167,7 @@ end
 # Defaults are applied for any missing values.
 def create_conf
   begin
-    conf = read_yaml("./conf.yml")
+    conf = read_yaml_cached(File.join(APP_ROOT, "conf.yml"))
     halt 500, "./conf.yml.erb does not be found." if conf.nil?
   rescue Exception => e
     halt 500, "There is something wrong with ./conf.yml or ./conf.yml.erb."
@@ -967,18 +997,28 @@ rescue Exception
   [].to_json
 end
 
+# Send a static application icon. Resolved against the app root (so it is immune
+# to any Dir.chdir happening in a concurrent request), served with a browser
+# cache header (icons are static — this stops the New Custom Template page from
+# re-fetching every tile on each visit, which is what made them intermittently
+# blank on remote/shared filesystems), and returning an honest 404 — instead of
+# a silent, blank 200 — when the file is missing or the path escapes base_dir.
+def serve_icon(base_dir, folder, icon)
+  base      = File.expand_path(base_dir, APP_ROOT)
+  icon_path = File.expand_path(File.join(folder.to_s, icon.to_s), base)
+  halt 404 unless icon_path.start_with?(base + File::SEPARATOR) && File.file?(icon_path)
+  cache_control :public, max_age: 86_400
+  send_file(icon_path)
+end
+
 # Send a generic application icon.
 get "/_generic_icon/:folder/:icon" do
-  conf = create_conf
-  generic_apps_dir = conf["generic_apps_dir"] || "./generic_apps"
-  icon_path = File.join(generic_apps_dir, params[:folder], params[:icon])
-  send_file(icon_path) if File.exist?(icon_path)
+  serve_icon(create_conf["generic_apps_dir"] || "./generic_apps", params[:folder], params[:icon])
 end
 
 # Send an application icon.
 get "/:apps_dir/:folder/:icon" do
-  icon_path = File.join(create_conf["apps_dir"], params[:folder], params[:icon])
-  send_file(icon_path) if File.exist?(icon_path)
+  serve_icon(create_conf["apps_dir"], params[:folder], params[:icon])
 end
 
 # Order the featured Slurm templates so the plain "Job Script" leads and the
@@ -1615,10 +1655,10 @@ post "/*" do
         BASH
 
       output_log("Run commands in the submit section", scheduler, command: submit_with_echo)
-      stdout, stderr, status = nil
-      Dir.chdir(script_dir) do
-        stdout, stderr, status = Open3.capture3("bash", "-c", submit_with_echo)
-      end
+      # chdir: keeps the subprocess in script_dir without mutating the whole
+      # process's working directory (which would corrupt relative-path lookups,
+      # e.g. icon serving, in any concurrent request).
+      stdout, stderr, status = Open3.capture3("bash", "-c", submit_with_echo, chdir: script_dir)
       unless status.success?
         return show_website(nil, stderr, params)
       end

@@ -19,7 +19,7 @@ def get_icon_path(dirname, icon)
                 icon
               else
                 tmp_icon_path = File.join("/", @apps_dir, dirname, icon)
-                icon_local_path = File.join(Dir.pwd, tmp_icon_path)
+                icon_local_path = File.join(APP_ROOT, tmp_icon_path)
 
                 if File.exist?(icon_local_path)
                   File.join(@script_name, tmp_icon_path)
@@ -55,11 +55,11 @@ helpers do
       url_path = if app_path.to_s.start_with?("_generic/")
         gd  = @conf["generic_apps_dir"] || "./generic_apps"
         sub = app_path.sub(/\A_generic\//, "")
-        local = File.join(Dir.pwd, gd, sub, raw_icon)
+        local = File.join(APP_ROOT, gd, sub, raw_icon)
         File.exist?(local) ? File.join(@script_name, "/", gd, sub, raw_icon) : nil
       else
         tp    = File.join("/", @apps_dir, app_path, raw_icon)
-        local = File.join(Dir.pwd, tp)
+        local = File.join(APP_ROOT, tp)
         File.exist?(local) ? File.join(@script_name, tp) : nil
       end
       url_path ? "<img src=\"#{ERB::Util.h(url_path)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">" :
@@ -180,7 +180,7 @@ HTML
                   is_bi_or_fa_icon = true
                   nil
                 else
-                  local = File.join(Dir.pwd, generic_apps_dir, dirname, icon_s)
+                  local = File.join(APP_ROOT, generic_apps_dir, dirname, icon_s)
                   File.exist?(local) ? File.join(@script_name, "_generic_icon", dirname, icon_s) : "#{@script_name}/app_default.svg"
                 end
 

@@ -2,5 +2,5 @@ name: RFdiffusion
 category: Biology
 description: Structure generation, with or without conditional information (a motif, target etc) It can perform a whole range of protein design challenges as we have outlined in the RFdiffusion paper.
 homepage: https://github.com/RosettaCommons/RFdiffusion
-icon: icon.png
+icon: icon.jpg
 hidden: true

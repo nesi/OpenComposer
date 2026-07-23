@@ -50,7 +50,7 @@ helpers do
     icon_html = if raw_icon.start_with?("bi-", "fa-")
       "<i class=\"#{ERB::Util.h(raw_icon)}\" style=\"font-size: #{width}px; width: #{width}px; height: 100px; line-height: 1;\"></i>"
     elsif raw_icon.start_with?("http://", "https://")
-      "<img src=\"#{ERB::Util.h(raw_icon)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
+      "<img src=\"#{ERB::Util.h(raw_icon)}\" class=\"img-thumbnail\" loading=\"lazy\" decoding=\"async\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     elsif !raw_icon.empty?
       url_path = if app_path.to_s.start_with?("_generic/")
         gd  = @conf["generic_apps_dir"] || "./generic_apps"
@@ -62,10 +62,10 @@ helpers do
         local = File.join(APP_ROOT, tp)
         File.exist?(local) ? File.join(@script_name, tp) : nil
       end
-      url_path ? "<img src=\"#{ERB::Util.h(url_path)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">" :
-                 "<img src=\"#{ERB::Util.h("#{@script_name}/app_default.svg".to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
+      url_path ? "<img src=\"#{ERB::Util.h(url_path)}\" class=\"img-thumbnail\" loading=\"lazy\" decoding=\"async\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">" :
+                 "<img src=\"#{ERB::Util.h("#{@script_name}/app_default.svg".to_s)}\" class=\"img-thumbnail\" loading=\"lazy\" decoding=\"async\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     else
-      "<img src=\"#{ERB::Util.h("#{@script_name}/app_default.svg".to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
+      "<img src=\"#{ERB::Util.h("#{@script_name}/app_default.svg".to_s)}\" class=\"img-thumbnail\" loading=\"lazy\" decoding=\"async\" width=\"#{width}\" height=\"100\" alt=\"#{safe_nm}\">"
     end
 
     <<~HTML
@@ -150,7 +150,7 @@ HTML
     if is_bi_or_fa_icon
       html << "<i class=\"#{ERB::Util.h(icon)}\" style=\"font-size: #{width}px; width: #{width}px; height: 100px; line-height: 1;\"></i>"
     else
-      html << "<img src=\"#{icon_path}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{name}\">"
+      html << "<img src=\"#{icon_path}\" class=\"img-thumbnail\" loading=\"lazy\" decoding=\"async\" width=\"#{width}\" height=\"100\" alt=\"#{name}\">"
     end
     html << <<~HTML
              </a>
@@ -188,7 +188,7 @@ HTML
     icon_html = if is_bi_or_fa_icon
                   "<i class=\"#{ERB::Util.h(icon_s)}\" style=\"font-size: #{width}px; width: #{width}px; height: 100px; line-height: 1;\"></i>"
                 else
-                  "<img src=\"#{ERB::Util.h(icon_path.to_s)}\" class=\"img-thumbnail\" width=\"#{width}\" height=\"100\" alt=\"#{ERB::Util.h(name)}\">"
+                  "<img src=\"#{ERB::Util.h(icon_path.to_s)}\" class=\"img-thumbnail\" loading=\"lazy\" decoding=\"async\" width=\"#{width}\" height=\"100\" alt=\"#{ERB::Util.h(name)}\">"
                 end
 
     <<~HTML

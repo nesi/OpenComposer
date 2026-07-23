@@ -2,5 +2,5 @@ name: SLEPc
 category: Others
 description: SLEPc (Scalable Library for Eigenvalue Problem Computations) is a software library for the solution of large scale sparse eigenvalue problems on parallel computers.
 homepage: https://slepc.upv.es
-icon: icon.png
+icon: icon.gif
 hidden: true

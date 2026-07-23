@@ -2,5 +2,5 @@ name: eggnog-mapper
 category: Biology
 description: Tool for fast functional annotation of novel sequences (genes or proteins) using precomputed eggNOG-based orthology assignments.
 homepage: http://eggnog-mapper.embl.de
-icon: icon.png
+icon: icon.jpg
 hidden: true

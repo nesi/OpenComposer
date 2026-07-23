@@ -2,5 +2,5 @@ name: AutoDock-GPU
 category: Others
 description: OpenCL and Cuda accelerated version of AutoDock.
 homepage: https://github.com/ccsb-scripps/AutoDock-GPU
-icon: icon.png
+icon: icon.jpg
 hidden: true

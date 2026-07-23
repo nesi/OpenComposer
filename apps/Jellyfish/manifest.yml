@@ -2,5 +2,5 @@ name: Jellyfish
 category: Biology
 description: Jellyfish is a tool for fast, memory-efficient counting of k-mers in DNA.
 homepage: http://www.genome.umd.edu/jellyfish.html
-icon: icon.jpg
+icon: icon.png
 hidden: true

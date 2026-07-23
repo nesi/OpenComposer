@@ -2,5 +2,5 @@ name: flatbuffers
 category: Others
 description: 'FlatBuffers: Memory Efficient Serialization Library.'
 homepage: https://github.com/google/flatbuffers/
-icon: icon.svg
+icon: icon.png
 hidden: true

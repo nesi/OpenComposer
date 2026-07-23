@@ -2,5 +2,5 @@ name: CheckV
 category: Biology
 description: Assess the quality of metagenome-assembled viral genomes.
 homepage: https://jgi.doe.gov/data-and-tools/checkv/
-icon: icon.jpg
+icon: icon.png
 hidden: true

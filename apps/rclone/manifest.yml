@@ -2,5 +2,5 @@ name: rclone
 category: Others
 description: Rclone is a command line program to sync files and directories to and from a variety of online storage services.
 homepage: https://rclone.org/
-icon: icon.svg
+icon: icon.png
 hidden: true

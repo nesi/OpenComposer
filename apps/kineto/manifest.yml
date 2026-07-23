@@ -2,5 +2,5 @@ name: kineto
 category: Others
 description: A CPU+GPU Profiling library that provides access to timeline traces and hardware performance counters.
 homepage: https://github.com/pytorch/kineto
-icon: icon.jpg
+icon: icon.png
 hidden: true

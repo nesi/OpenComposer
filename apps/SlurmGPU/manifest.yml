@@ -1,6 +1,6 @@
 name: GPU Job Script (Slurm)
 category: Slurm Submit Templates
 description: This application generates an arbitrary job script in Slurm.
-icon: Slurm_logo.svg
+icon: Slurm_logo.png
 tags:
   - GPU

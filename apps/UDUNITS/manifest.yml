@@ -2,5 +2,5 @@ name: UDUNITS
 category: Physics
 description: UDUNITS supports conversion of unit specifications between formatted and binary forms, arithmetic manipulation of units, and conversion of values between compatible scales of measurement.
 homepage: https://www.unidata.ucar.edu/software/udunits/
-icon: icon.avif
+icon: icon.png
 hidden: true

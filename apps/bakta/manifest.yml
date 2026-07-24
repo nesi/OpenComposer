@@ -1,0 +1,5 @@
+name: bakta
+category: Others
+description: Bakta is a tool for the rapid & standardized annotation of bacterial genomes and plasmids from both isolates and MAGs.
+homepage: https://github.com/oschwengers/bakta
+hidden: true

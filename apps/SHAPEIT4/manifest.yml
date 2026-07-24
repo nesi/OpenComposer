@@ -1,0 +1,5 @@
+name: SHAPEIT4
+category: Biology
+description: Estimation of haplotypes (aka phasing) for SNP array and high coverage sequencing data.
+homepage: https://odelaneau.github.io/shapeit4/
+hidden: true

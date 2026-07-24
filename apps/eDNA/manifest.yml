@@ -1,0 +1,5 @@
+name: eDNA
+category: Biology
+description: A suite of tools to conduct metabarcoding analyses targeting any group of organisms.
+homepage: https://murraycadzow.github.io/2021-obss-day4/index.html
+hidden: true

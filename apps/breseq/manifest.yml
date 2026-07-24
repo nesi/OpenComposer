@@ -1,0 +1,5 @@
+name: breseq
+category: Biology
+description: Breseq is a computational pipeline for the analysis of short-read re-sequencing data.
+homepage: https://barricklab.org/breseq
+hidden: true

@@ -1,0 +1,5 @@
+name: VSEARCH
+category: Biology
+description: An open source alternative to the metagenomics tool USEARCH.
+homepage: https://github.com/torognes/vsearch
+hidden: true

@@ -1,0 +1,5 @@
+name: SourceTracker
+category: Biology
+description: SourceTracker is a Bayesian approach to estimating the proportion of a novel community that comes from a set of source environments.
+homepage: http://sourceforge.net/projects/sourcetracker
+hidden: true

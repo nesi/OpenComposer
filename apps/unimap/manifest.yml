@@ -1,0 +1,5 @@
+name: unimap
+category: Biology
+description: Fork of minimap2 optimized for assembly-to-reference alignment.
+homepage: https://github.com/lh3/unimap
+hidden: true

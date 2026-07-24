@@ -1,0 +1,5 @@
+name: preseq
+category: Biology
+description: Software for predicting library complexity and genome coverage in high-throughput sequencing.
+homepage: https://smithlabresearch.org/software/preseq
+hidden: true

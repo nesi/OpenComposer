@@ -1,0 +1,7 @@
+name: Clair3
+category: Biology
+description: Syumphonizing pileup and full-alignment for high-performance long-read variant calling.
+homepage: https://github.com/HKU-BAL/Clair3
+icon: icon.png
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/Clair3/

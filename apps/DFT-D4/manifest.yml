@@ -1,0 +1,6 @@
+name: DFT-D4
+category: Chemistry
+description: Generally Applicable Atomic-Charge Dependent London Dispersion Correction.
+homepage: https://github.com/dftd4/dftd4
+icon: icon.png
+hidden: true

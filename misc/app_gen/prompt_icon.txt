@@ -1,0 +1,10 @@
+Generate a clean <<<DIM>>>x<<<DIM>>> <<<FMT>>> icon for the OpenComposer app "<<<APP_NAME>>>".
+
+Constraints:
+- Output only JSON.
+- JSON key must be "icon_png_base64" containing a base64-encoded <<<FMT>>>.
+- No transparent text smaller than 18px.
+
+Context:
+- Description: <<<DESCRIPTION>>>
+- Domains: <<<DOMAINS>>>

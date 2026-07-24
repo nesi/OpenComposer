@@ -1,0 +1,5 @@
+---
+name: Job Script (PBS)
+icon: "./icon.png"
+description: |
+  This application generates an arbitrary job script in PBS.

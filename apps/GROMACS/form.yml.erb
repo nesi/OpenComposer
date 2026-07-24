@@ -1,0 +1,35 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
+base = read_yaml(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['gromacs_module'] = {
+      'widget' => 'module_load',
+      'module' => "GROMACS",
+      'label'  => "GROMACS Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{gromacs_module}
+
+  # ------------------------------------------------------------------------------------
+  # GROMACS NOTES
+
+  # Note: In version 2021.5 and older use `gmx_serial` instead of `gmx`
+
+  # Shared Memory (single node), use `srun gmx mdrun`:
+  # srun gmx     mdrun     -ntomp ${SLURM_CPUS_PER_TASK}                       -s input.tpr -o trajectory.trr -c struct.gro -e energies.edr
+
+  # Multi Node (Hybrid), use `srun gmx_mpi mdrun_mpi`:
+  # srun gmx_mpi mdrun_mpi -ntomp ${SLURM_CPUS_PER_TASK} -nomp ${SLURM_NNODES} -s input.tpr -o trajectory.trr -c struct.gro -e energies.edr
+  # ------------------------------------------------------------------------------------
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

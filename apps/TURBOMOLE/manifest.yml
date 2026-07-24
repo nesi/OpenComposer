@@ -1,0 +1,6 @@
+name: TURBOMOLE
+category: Chemistry
+description: Program Package For Electronic Structure Calculations.
+homepage: https://www.turbomole.org/
+icon: icon.png
+hidden: true

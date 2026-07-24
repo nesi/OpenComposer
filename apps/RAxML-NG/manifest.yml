@@ -1,0 +1,5 @@
+name: RAxML-NG
+category: Biology
+description: RAxML-NG is a phylogenetic tree inference tool which uses maximum-likelihood (ML) optimality criterion.
+homepage: https://github.com/amkozlov/raxml-ng
+hidden: true

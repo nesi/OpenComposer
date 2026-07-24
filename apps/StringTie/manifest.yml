@@ -1,0 +1,6 @@
+name: StringTie
+category: Biology
+description: StringTie is a fast and highly efficient assembler of RNA-Seq alignments into potential transcripts.
+homepage: https://ccb.jhu.edu/software/stringtie/
+icon: icon.png
+hidden: true

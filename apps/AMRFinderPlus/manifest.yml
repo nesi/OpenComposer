@@ -1,0 +1,5 @@
+name: AMRFinderPlus
+category: Biology
+description: NCBI Antimicrobial Resistance Gene Finder Plus.
+homepage: https://github.com/ncbi/amr/wiki
+hidden: true

@@ -1,0 +1,5 @@
+name: vcflib
+category: Biology
+description: Vcflib provides methods to manipulate and interpret sequence variation as it can be described by VCF.
+homepage: https://github.com/vcflib/vcflib
+hidden: true

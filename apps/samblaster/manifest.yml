@@ -1,0 +1,5 @@
+name: samblaster
+category: Biology
+description: Samblaster is a fast and flexible program for marking duplicates in read-id grouped paired-end SAM files.
+homepage: http://github.com/GregoryFaust/samblaster
+hidden: true

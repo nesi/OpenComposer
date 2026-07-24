@@ -1,0 +1,6 @@
+name: rasusa
+category: Biology
+description: Randomly subsample sequencing reads to a specified coverage.
+homepage: https://github.com/mbhall88/rasusa
+icon: icon.png
+hidden: true

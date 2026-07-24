@@ -1,0 +1,5 @@
+name: MetaEuk
+category: Biology
+description: MetaEuk is a modular toolkit designed for large-scale gene discovery and annotation in eukaryotic metagenomic contigs.
+homepage: https://metaeuk.soedinglab.org
+hidden: true

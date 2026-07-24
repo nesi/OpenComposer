@@ -1,0 +1,33 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['gatk_module'] = {
+      'widget' => 'module_load',
+      'module' => "GATK",
+      'label'  => "GATK Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{gatk_module}
+
+  # create temporary directory for Java so it does not fill up /tmp
+  TMPDIR=/nesi/nobackup/<project_ID>/GATK_tmp/
+  mkdir -p ${TMPDIR}
+
+  # tell Java to use ${TMPDIR} as the temporary directory
+  export _JAVA_OPTIONS=-Djava.io.tmpdir=${TMPDIR}
+
+  # run GATK command
+  gatk MarkDuplicates I=input.bam O=marked_duplicates.bam M=marked_dup_metrics.txt
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

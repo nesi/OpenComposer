@@ -1,0 +1,5 @@
+name: lp_solve
+category: Mathematics
+description: Mixed Integer Linear Programming (MILP) solver.
+homepage: http://lpsolve.sourceforge.net/5.5/
+hidden: true

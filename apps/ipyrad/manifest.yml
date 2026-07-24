@@ -1,0 +1,6 @@
+name: ipyrad
+category: Biology
+description: ipyrad is a flexible, parallel, and interactive assembly and analysis toolkit for restriction-site associated DNA (RAD-seq and related) datasets.
+homepage: https://ipyrad.readthedocs.io
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/ipyrad/

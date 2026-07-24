@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>How to install Open Composer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="container-fluid">
+    <nav class="sidebar bg-body-secondary">
+      <h5 class="ps-3 pe-1 d-inline">Contents</h5>
+      <ul class="nav flex-column px-2 py-2">
+        <li class="nav-item"><a href="#install" class="nav-link">1. Installation</a></li>
+        <li class="nav-item"><a href="#setting" class="nav-link">2. Setting</a></li>
+        <li class="nav-item ms-3"><a href="#clusters" class="nav-link">2.1. clusters</a></li>
+        <li class="nav-item ms-3"><a href="#scheduler_env" class="nav-link">2.2. scheduler_env</a></li>
+        <li class="nav-item ms-3"><a href="#copy_environment" class="nav-link">2.3. copy_environment</a></li>
+        <li class="nav-item ms-3"><a href="#bin_overrides" class="nav-link">2.4. bin_overrides</a></li>
+        <li class="nav-item ms-3"><a href="#history" class="nav-link">2.5. history</a></li>
+        <li class="nav-item"><a href="#registor" class="nav-link">3. Registration</a></li>
+        <li class="nav-item"><a href="#ood-integration" class="nav-link">4. OOD-Integrated Installation</a></li>
+        <li class="nav-item"><a href="#general" class="nav-link">5. Installation by general user</a></li>
+        <li class="nav-item"><a href="#local" class="nav-link">6. Local Development</a></li>
+        <li class="nav-item"><a href="#jobscheduler" class="nav-link">7. Adding a job scheduler</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1>How to install Open Composer</h1>
+      <h2 id="install">1. Installation</h2>
+      <p>
+        Open Composer runs on <a target="_blank" href="https://openondemand.org/">Open OnDemand</a>. Save Open Composer in your Open OnDemand application directory: <code>/var/www/ood/apps/sys/</code>.
+        Applications installed here are automatically available to <strong>all users</strong> on the Open OnDemand instance without any per-user setup.
+      </p>
+      <pre>
+$ cd /var/www/ood/apps/sys/
+$ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git</pre>
+
+      <h4 class="mt-3">Pre-initialise gems <span class="badge bg-secondary" style="font-size: 0.7em; vertical-align: middle;">Optional but recommended</span></h4>
+      <p>
+        Open Composer will install its Ruby gem dependencies automatically the first time a user opens the app.
+        To avoid users seeing a loading delay on that first visit, you can pre-install the gems as the administrator:
+      </p>
+      <pre>
+$ cd /var/www/ood/apps/sys/OpenComposer
+$ sudo cp misc/Gemfile .
+$ sudo bundle install</pre>
+      <p>
+        Re-run <code>bundle install</code> after any <code>git pull</code> that updates the <code>Gemfile</code>.
+      </p>
+
+      <h2 id="setting">2. Setting</h2>
+      <p>
+        Create <code>./conf.yml.erb</code> with reference to <code>./conf.yml.erb.app.example</code>.
+      </p>
+      <pre>$ cd OpenComposer
+$ sudo cp conf.yml.erb.app.example conf.yml.erb</pre>
+
+      <h4>Required</h4>
+      <p>The <code>apps_dir</code> and <code>scheduler</code> are required. The <code>scheduler</code> may alternatively be defined per-cluster inside <code>clusters</code>.</p>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>apps_dir</td><td>Application directory</td><td>(None)</td></tr>
+        <tr><td>scheduler</td><td>Job scheduler (<code>slurm</code>, <code>pbspro</code>, <code>sge</code>, <code>fujitsu_tcs</code>)</td><td>(None)</td></tr>
+      </table>
+
+      <h4 class="mt-4">Cluster &amp; Job Scheduler</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>clusters</td><td>Cluster properties (see section 2.1)</td><td>(None)</td></tr>
+        <tr><td>login_node</td><td>Hostname of the login node. Used for the Shell Access link in the navbar and to run <code>sacctmgr</code> via SSH when populating the Project dropdown in Slurm forms</td><td>(None)</td></tr>
+        <tr><td>ssh_wrapper</td><td>Command for using the job scheduler of another node using SSH</td><td>(None)</td></tr>
+        <tr><td>bin</td><td>PATH of commands of job scheduler</td><td>(None)</td></tr>
+        <tr><td>bin_overrides</td><td>PATH of each command of job scheduler (see section 2.2)</td><td>(None)</td></tr>
+        <tr><td>scheduler_env</td><td>Environment variables added when running job scheduler commands</td><td>(None)</td></tr>
+        <tr><td>copy_environment</td><td>Whether Slurm submits jobs with the PUN environment copied</td><td><code>false</code></td></tr>
+        <tr><td>sge_root</td><td>Directory for the Grid Engine root (<code>SGE_ROOT</code>)</td><td>(None)</td></tr>
+      </table>
+
+      <h4 class="mt-4">Data &amp; History</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>data_dir</td><td>Directory where submitted job information is stored</td><td><code>${HOME}/composer</code></td></tr>
+        <tr><td>generic_apps_dir</td><td>Directory containing hidden generic apps (e.g. a generic Slurm form) that are not shown in the main app listing but can be linked to directly</td><td><code>./generic_apps</code></td></tr>
+        <tr><td>external_reload_app</td><td>Subfolder inside <code>generic_apps_dir</code> to open when loading an external (non-OpenComposer) job from the History page</td><td><code>Slurm</code></td></tr>
+        <tr><td>history</td><td>Additional display fields on the history page (see section 2.3)</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code>, <code>OC_HISTORY_START_TIME</code>, <code>OC_HISTORY_END_TIME</code>, <code>OC_HISTORY_OUTPUT_FILE</code>, <code>OC_HISTORY_ERROR_FILE</code></td></tr>
+        <tr><td>history_store_script</td><td>Whether to store the full batch script text in the history database. Set to <code>false</code> to always fetch it live via <code>sacct -B</code></td><td><code>true</code></td></tr>
+        <tr><td>history_efficiency</td><td>Show a <strong>Job Efficiency</strong> section (Wall Time, CPU, Memory, optional GPU) in the job details modal for completed, failed, and cancelled jobs. Uses <code>sacct --json</code>, which requires Slurm 20.11+. Set to <code>true</code> to enable.</td><td><code>false</code></td></tr>
+      </table>
+
+      <h4 class="mt-4">Navigation Bar</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>navbar_color</td><td>Background color of navigation bar</td><td rowspan="2" style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
+        <tr><td>navbar_text_color</td><td>Text color of navigation bar</td></tr>
+        <tr><td>navbar_logo</td><td>Filename of a custom logo image to display in the navigation bar (must be placed in <code>public/</code>)</td><td>(None)</td></tr>
+        <tr><td>show_navbar_logo</td><td>Show the navbar logo (<code>true</code> or <code>false</code>); lets you hide the logo without unsetting <code>navbar_logo</code></td><td><code>true</code></td></tr>
+        <tr><td>show_home_directory</td><td>Show the "Home Directory" link in the navigation bar (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
+        <tr><td>show_shell_access</td><td>Show the "Shell Access" link in the navigation bar (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
+        <tr><td>show_open_ondemand</td><td>Show the "Open OnDemand" link in the navigation bar (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
+        <tr><td>open_ondemand_url</td><td>URL for the "Open OnDemand" link in the navigation bar</td><td>(None)</td></tr>
+        <tr><td>open_ondemand_label</td><td>Label text for the "Open OnDemand" navigation bar link</td><td><code>Open OnDemand</code></td></tr>
+        <tr><td>show_navbar_apps</td><td>Show or hide the Applications/Templates dropdown in the navigation bar (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
+        <tr><td>navbar_apps_label</td><td>Label for the Applications/Templates dropdown in the navigation bar</td><td><code>Applications</code></td></tr>
+        <tr><td>navbar_search_placeholder</td><td>Placeholder text for the application search field inside the navbar dropdown</td><td><code>Search apps…</code></td></tr>
+        <tr><td>dropdown_color</td><td>Background color of dropdown menus</td><td rowspan="2" style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
+        <tr><td>dropdown_text_color</td><td>Text color of dropdown menus</td></tr>
+      </table>
+
+      <h4 class="mt-4">Footer</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>show_footer</td><td>Show or hide the footer bar (<code>true</code> or <code>false</code>). Set to <code>false</code> when embedding inside OOD so OOD's own footer is used</td><td><code>true</code></td></tr>
+        <tr><td>footer</td><td>HTML content for the footer bar</td><td>(None)</td></tr>
+        <tr><td>footer_color</td><td>Background color of footer</td><td rowspan="2" style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
+        <tr><td>footer_text_color</td><td>Text color of footer</td></tr>
+        <tr><td>footer_padding</td><td>Bootstrap padding class applied to the footer bar (e.g. <code>p-1</code> through <code>p-5</code>)</td><td><code>p-3</code></td></tr>
+        <tr><td>footer_ood_logo</td><td>Show the Open OnDemand logo in the footer (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
+        <tr><td>footer_logo_height</td><td>Height of the Open OnDemand logo in the footer (CSS value, e.g. <code>50px</code>)</td><td><code>50px</code></td></tr>
+      </table>
+
+      <h4 class="mt-4">Appearance</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>home_format</td><td>Layout of the home page application grid. <code>big</code> for large tiles (icon + name) or <code>small</code> for compact list-style tiles</td><td><code>big</code></td></tr>
+        <tr><td>thumbnail_width</td><td>Width of thumbnails for each application on the home page</td><td>100</td></tr>
+        <tr><td>highlight_theme</td><td>Theme name for <a target="_blank" href="https://highlightjs.org/">highlight.js</a> used in the <code>script</code>/<code>submit</code> sections</td><td><code>vs</code></td></tr>
+        <tr><td>directive_color</td><td>Text color of scheduler directives in the <code>script</code>/<code>submit</code> sections</td><td style="background-color: #D73A49;">#D73A49</td></tr>
+        <tr><td>category_color</td><td>Background color of the home page category headers</td><td rowspan="2" style="color: white; background-color: #5522BB;">#5522BB</td></tr>
+        <tr><td>category_text_color</td><td>Text color of the home page category headers</td></tr>
+        <tr><td>description_color</td><td>Background color of the application description in the application page</td><td rowspan="2" style="color: white; background-color: #5522BB;">#5522BB</td></tr>
+        <tr><td>description_text_color</td><td>Text color of the application description in the application page</td></tr>
+        <tr><td>form_color</td><td>Background color of the text area in the application page</td><td style="background-color: #BFCFE7;">#BFCFE7</td></tr>
+        <tr><td>non_script_color</td><td>Background color of the form that does not affect the <code>script</code> section</td><td style="background-color: #FFE28A;">#FFE28A</td></tr>
+        <tr><td>non_script_button_color</td><td>Background color of buttons that do not affect the <code>script</code> section</td><td style="background-color: #FFBF00;">#FFBF00</td></tr>
+        <tr><td>submit_color</td><td>Background color of the form that affects only the <code>submit</code> section</td><td style="background-color: #FFCCCC;">#FFCCCC</td></tr>
+        <tr><td>submit_button_color</td><td>Background color of buttons that affect only the <code>submit</code> section</td><td style="background-color: #FFAAAA">#FFAAAA</td></tr>
+        <tr><td>history_action_color</td><td>Background color of the "Cancel Job" and "Delete Info" action buttons on the history page</td><td style="color: white; background-color: #DC3545;">#DC3545</td></tr>
+      </table>
+
+      <h4 class="mt-4">Form Behaviour</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>empty_script_warning</td><td>Show a confirmation dialog when the user submits a batch script that contains no real commands (only blank lines, comments, <code>#SBATCH</code> directives, and <code>module</code> lines). Set to <code>false</code> to disable.</td><td><code>true</code></td></tr>
+      </table>
+
+      <h3 id="clusters">2.1. clusters</h3>
+      <p>
+  Set this when using multiple clusters.
+  You can set <code>scheduler</code>, <code>login_node</code>, <code>ssh_wrapper</code>, <code>bin</code>, <code>bin_overrides</code>, <code>scheduler_env</code>, <code>copy_environment</code>, and <code>sge_root</code> for each cluster.
+  This setting is optional if you use only a single cluster.
+      </p>
+      <p>
+  The following defines the use of the <code>fujitsu_tcs</code> and <code>slurm</code> job schedulers on the <code>fugaku</code> and <code>prepost</code> clusters, respectively.
+      </p>
+      <pre>clusters:
+  fugaku:
+    scheduler: "fujitsu_tcs"
+  prepost:
+    scheduler: "slurm"
+    bin_overrides:
+      sbatch: "/usr/local/bin/sbatch"</pre>
+
+      <p>
+  In the following, both the <code>fugaku</code> and <code>prepost</code> clusters use the <code>slurm</code> job scheduler, but it defines that <code>slurm</code> is executed from different machines.
+      </p>
+      <pre>scheduler: "slurm"
+clusters:
+  fugaku:
+    ssh_wrapper "ssh fugaku.example.net"
+  prepost:
+    ssh_wrapper "ssh prepost.example.net"</pre>
+
+      <h3 id="scheduler_env">2.2. scheduler_env</h3>
+      <p>
+  Set environment variables added when running job scheduler commands. This setting is optional.
+  For example, this can be used when <code>SLURM_CONF_SERVER</code> is required for a Slurm configless setup.
+      </p>
+<pre>scheduler_env:
+  SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
+      <p>
+  When using <code>clusters</code>, this can be configured for each cluster.
+      </p>
+      <pre>clusters:
+  prepost:
+    scheduler: "slurm"
+    scheduler_env:
+      SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
+      <p>
+  When <code>ssh_wrapper</code> is used to run job scheduler commands on a remote host, <code>scheduler_env</code> is applied to the local <code>ssh</code> command.
+  If the environment variables are also required on the remote side, configure SSH or a wrapper script accordingly.
+      </p>
+
+      <h3 id="copy_environment">2.3. copy_environment</h3>
+      <p>
+  Set this to <code>true</code> to submit Slurm jobs with <code>--export=ALL</code>. The default is <code>false</code>, which keeps the existing behavior of submitting Slurm jobs with <code>--export=NONE</code>.
+  This setting is only used by Slurm.
+      </p>
+      <pre>copy_environment: false</pre>
+      <p>
+  When using <code>clusters</code>, this can be configured for each cluster.
+      </p>
+      <pre>clusters:
+  prepost:
+    scheduler: "slurm"
+    copy_environment: true</pre>
+      <p>
+  This copies the PUN environment when issuing Slurm commands. Be careful because the PUN environment can be different from a regular login shell environment.
+      </p>
+
+      <h3 id="bin_overrides">2.4. bin_overrides</h3>
+      <p>
+  Set the path for each command. This setting is optional.
+      </p>
+      <p>
+  If the job scheduler is <code>slurm</code>, set <code>sbatch</code>, <code>scontrol</code>, <code>scancel</code>, and <code>sacct</code> as follows.
+      </p>
+      <pre>bin_overrides:
+  sbatch:   "/usr/local/bin/sbatch"
+  scontrol: "/usr/local/bin/scontrol"
+  scancel:  "/usr/local/bin/scancel"
+  sacct:    "/usr/local/bin/sacct"</pre>
+
+      <p>
+  If the job scheduler is <code>pbspro</code>, set <code>qsub</code>, <code>qstat</code>, and <code>qdel</code> as follows.
+      </p>
+      <pre>bin_overrides:
+  qsub:   "/usr/local/bin/qsub"
+  qstat: "/usr/local/bin/qstat"
+  qdel:  "/usr/local/bin/qdel"</pre>
+
+      <p>
+  If the job scheduler is <code>sge</code>, set <code>qsub</code>, <code>qstat</code>, <code>qdel</code>, and <code>qacct</code> as follows.
+      </p>
+      <pre>bin_overrides:
+  qsub:   "/usr/local/bin/qsub"
+  qstat: "/usr/local/bin/qstat"
+  qdel:  "/usr/local/bin/qdel"
+  qacct: "/usr/local/bin/qacct"</pre>
+
+      <p>
+  If the job scheduler is <code>fujitsu_tcs</code>, set <code>pjsub</code>, <code>pjstat</code>, and <code>pjdel</code> as follows.
+      </p>
+      <pre>bin_overrides:
+  pjsub:  "/usr/local/bin/pjsub"
+  pjstat: "/usr/local/bin/pjstat"
+  pjdel:  "/usr/local/bin/pjdel"</pre>
+
+      <h3 id="history">2.5. history</h3>
+      <p>
+        The mandatory fields to be displayed on the history page are "Job ID", "Application", "Script Location", "Script Name", and "Status".
+        In addition to these, the <code>history</code> setting controls which extra fields appear.
+        If this setting is omitted, all special variables are included by default.
+        The available special variables are:
+      </p>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Special variable</th><th>Displayed as</th></tr>
+        <tr><td><code>OC_HISTORY_JOB_NAME</code></td><td>Job Name</td></tr>
+        <tr><td><code>OC_HISTORY_PARTITION</code></td><td>Partition</td></tr>
+        <tr><td><code>OC_HISTORY_SUBMISSION_TIME</code></td><td>Submission Time</td></tr>
+        <tr><td><code>OC_HISTORY_START_TIME</code></td><td>Job start time (from the scheduler)</td></tr>
+        <tr><td><code>OC_HISTORY_END_TIME</code></td><td>Job end time (from the scheduler)</td></tr>
+        <tr><td><code>OC_HISTORY_OUTPUT_FILE</code></td><td>Output — the scheduler's stdout file for the job. Clicking the filename opens the file content in an overlay panel.</td></tr>
+        <tr><td><code>OC_HISTORY_ERROR_FILE</code></td><td>Error — the scheduler's stderr file for the job. Clicking the filename opens the file content in an overlay panel.</td></tr>
+      </table>
+      <p>
+        A typical configuration showing job name, start time, and end time with custom labels:
+      </p>
+      <pre>history:
+  OC_HISTORY_JOB_NAME:
+  OC_HISTORY_START_TIME:
+    label: "Start Time"
+  OC_HISTORY_END_TIME:
+    label: "End Time"</pre>
+      <img alt="history table" width="800" src="./img/history_page.png">
+      <p>
+  If you want to disable additional display fields, define an empty array.
+      </p>
+      <pre>history: []</pre>
+      <img alt="history table" width="800" src="./img/history_page2.png">
+      <p>
+  You can set profile values obtained from the job scheduler as display fields.
+  Specify in <code>history</code> the value shown in the left column of the table that appears when you click "Job ID".
+  By using <code>label</code>, you can define a display label.
+  If <code>label</code> is not specified, the profile value is used as is.
+      </p>
+      <img alt="history table" width="400" src="./img/history_table3.png">
+      <pre>history:
+  OC_HISTORY_JOB_NAME:
+  Account:
+  AllocCPUS:
+    label: Allocated CPUs</pre>
+      <img alt="history table" width="800" src="./img/history_page3.png">
+
+      <h2 id="registor">3. Registration</h2>
+      <p>
+        When you save Open Composer to <code>/var/www/ood/apps/sys/</code>, the Open Composer icon will be displayed on the Open OnDemand home page.
+If it is not displayed, check <code>/var/www/ood/apps/sys/OpenComposer/manifest.yml</code>.
+      </p>
+      <p>
+  You can also display Open Composer applications on the Open OnDemand home page.
+  For example, if you want to display an application <code>/var/www/ood/apps/sys/OpenComposer/sample_apps/Slurm</code>,
+  create a directory with the same name in the Open OnDemand application directory (<code># mkdir /var/www/ood/apps/sys/Slurm</code>).
+  Then, create the following Open OnDemand configuration file <code>manifest.yml</code> in that directory.
+      </p>
+
+      <pre># /var/www/ood/apps/sys/Slurm/manifest.yml
+---
+name: Slurm
+url: https://&lt;your Open OnDemand URL&gt;/pun/sys/OpenComposer/Slurm</pre>
+
+      <h2 id="ood-integration">4. OOD-Integrated Installation</h2>
+      <p>
+        By default, clicking the Open Composer tile in Open OnDemand opens the application in a new tab.
+        The files in <code>ood_integration/</code> enable an <strong>embedded mode</strong> where Open Composer is rendered directly inside the OOD page — OOD's real navigation bar stays at the top, Open Composer fills the middle, and OOD's own footer is shown at the bottom. The user never leaves the OOD interface.
+      </p>
+      <p>
+        The page is a single document rendered in OOD's own dashboard layout, so the header and footer are OOD's live chrome — dynamic menus, user/help dropdowns and notifications — and no Content-Security-Policy changes are needed.
+      </p>
+      <p>
+        This requires Open OnDemand 3.x or later and administrator access to <code>/etc/ood/config/</code>.
+      </p>
+
+      <h3>How it works</h3>
+      <p>
+        The initializer <code>opencomposer_embed.rb</code> mounts a small reverse-proxy controller inside the OOD dashboard at <code>/pun/sys/dashboard/oc</code> and intercepts the Open Composer tile so it lands there. For each request the proxy:
+      </p>
+      <ol>
+        <li>Forwards the request to the real Open Composer app at <code>/pun/sys/opencomposer/…</code> over the loopback through Apache (on the same port the browser used), forwarding the user's session cookie so the call is authenticated as that user.</li>
+        <li>Rewrites Open Composer's URL prefix <code>/pun/sys/opencomposer</code> → <code>/pun/sys/dashboard/oc</code> in every text response, so all links, form actions, assets and AJAX stay on the proxy path — every page therefore stays wrapped in OOD's chrome.</li>
+        <li>Splices Open Composer's <code>&lt;head&gt;</code> assets and <code>&lt;body&gt;</code> into the dashboard's layout via <code>opencomposer_embed.html.erb</code>, giving the live OOD navbar and footer. CSS/JS are streamed through (prefix-rewritten); images and fonts pass through unchanged; redirects are relayed with their <code>Location</code> rewritten onto the proxy path.</li>
+      </ol>
+
+      <h3>Step 1 — Install Open Composer as a sys app (same as section 1)</h3>
+      <pre>$ cd /var/www/ood/apps/sys/
+$ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git opencomposer</pre>
+
+      <h4 class="mt-3">Pre-initialise gems <span class="badge bg-secondary" style="font-size: 0.7em; vertical-align: middle;">Optional but recommended</span></h4>
+      <p>
+        Open Composer will install its Ruby gem dependencies automatically the first time a user opens the app.
+        To avoid users seeing a loading delay on that first visit, you can pre-install the gems as the administrator:
+      </p>
+      <pre>$ cd /var/www/ood/apps/sys/opencomposer
+$ sudo cp misc/Gemfile .
+$ sudo bundle install</pre>
+      <p>
+        Re-run <code>bundle install</code> after any <code>git pull</code> that updates the <code>Gemfile</code>.
+      </p>
+
+      <h3>Step 2 — Configure Open Composer for embedded mode (same as section 2)</h3>
+      <pre>$ cd /var/www/ood/apps/sys/opencomposer
+$ sudo cp conf.yml.erb.app.example conf.yml.erb</pre>
+      <p>
+        For OOD-integrated mode, set the following in <code>conf.yml.erb</code> to avoid duplicating UI elements that OOD already provides:
+      </p>
+      <pre>show_home_directory: false   # OOD's Files menu links to the home directory
+show_shell_access:   false   # OOD's Clusters menu provides shell access
+show_open_ondemand:  false   # No need to link back to OOD from inside OOD
+navbar_logo: ~               # OOD's navbar already shows the site logo
+show_navbar_apps: false      # The home page tile grid already shows templates
+show_footer: false           # OOD's footer is shown below the embedded view</pre>
+
+      <h3>Step 3 — Force same-tab navigation</h3>
+      <p>
+        Add <code>new_window: false</code> to <code>manifest.yml</code> so clicking the tile stays in the same tab instead of opening a new window:
+      </p>
+      <pre># /var/www/ood/apps/sys/opencomposer/manifest.yml
+name: Open Composer
+category: Jobs
+description: |
+  Open Composer is an application that creates and submits batch job scripts.
+icon: fas://hat-wizard
+new_window: false</pre>
+
+      <h3>Step 4 — Copy the integration files</h3>
+      <pre>$ sudo mkdir -p /etc/ood/config/apps/dashboard/initializers
+$ sudo mkdir -p /etc/ood/config/apps/dashboard/views/apps
+
+$ sudo cp /var/www/ood/apps/sys/opencomposer/ood_integration/initializers/opencomposer_embed.rb \
+          /etc/ood/config/apps/dashboard/initializers/
+
+$ sudo cp /var/www/ood/apps/sys/opencomposer/ood_integration/views/apps/opencomposer_embed.html.erb \
+          /etc/ood/config/apps/dashboard/views/apps/</pre>
+
+      <h3>Step 5 — Restart the OOD web server</h3>
+      <p>In the OOD dashboard: <strong>Help → Restart Web Server</strong>, or from the command line:</p>
+      <pre>$ sudo httpd -k graceful</pre>
+      <p>
+        Clicking the Open Composer tile will now open it embedded within OOD's page.
+      </p>
+
+      <h3>Deploying to another OOD facility</h3>
+      <p>
+        The integration uses only standard OOD mechanisms (a dashboard initializer and the normal <code>/pun</code> request flow) and is multi-user-safe — each request forwards the requesting user's own session cookie, so Apache authenticates and routes to that user's instance. It should port to other Open OnDemand sites, but a few environment assumptions are worth checking. Overrides are read from the dashboard's env file <code>/etc/ood/config/apps/dashboard/env</code>; a fully commented template is provided at <code>ood_integration/dashboard.env.example</code>:
+      </p>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Assumption</th><th>If your site differs</th></tr>
+        <tr>
+          <td>Open Composer is installed as the sys app <code>opencomposer</code> (i.e. served at <code>/pun/sys/opencomposer</code>).</td>
+          <td>Set <code>OC_EMBED_APP_NAME</code> to your install directory name (for example <code>OpenComposer</code>).</td>
+        </tr>
+        <tr>
+          <td>OOD's Apache (the portal vhost) is reachable on the loopback at the same port/scheme the browser used — true for a standard host serving HTTPS on 443.</td>
+          <td>If a TLS-terminating load balancer fronts OOD and the portal vhost actually listens on a different port/scheme, set <code>OC_EMBED_UPSTREAM_HOST</code>, <code>OC_EMBED_UPSTREAM_PORT</code>, <code>OC_EMBED_UPSTREAM_SCHEME</code> (<code>http</code>/<code>https</code>) and/or <code>OC_EMBED_UPSTREAM_IP</code> accordingly.</td>
+        </tr>
+        <tr>
+          <td>Authentication is <code>mod_auth_openidc</code>; its session cookie is sent to the dashboard on <code>/pun</code> (the stock <code>ood-portal.conf</code> only strips it on <code>/node</code> and <code>/rnode</code>).</td>
+          <td>If your site uses a different auth module or strips cookies more aggressively, confirm the dashboard still receives the auth cookie so the proxy's upstream call is authenticated.</td>
+        </tr>
+        <tr>
+          <td>You may install a custom Rails initializer under <code>/etc/ood/config/apps/dashboard/initializers/</code>.</td>
+          <td>Managed/locked-down deployments may not permit this, or may require a security review (the initializer makes a server-side HTTP call). Confirm with the facility's OOD administrators.</td>
+        </tr>
+      </table>
+      <p>
+        <strong>Performance note.</strong> Every Open Composer response — including CSS, JS, images and fonts — is proxied through the dashboard Ruby process. This is fine for typical interactive use; if you expect heavy concurrent load, account for the extra dashboard traffic.
+      </p>
+
+      <h3>Uninstalling OOD-integrated mode</h3>
+      <p>
+        Remove the two integration files and reload Apache:
+      </p>
+      <pre>$ sudo rm /etc/ood/config/apps/dashboard/initializers/opencomposer_embed.rb
+$ sudo rm /etc/ood/config/apps/dashboard/views/apps/opencomposer_embed.html.erb
+$ sudo httpd -k graceful</pre>
+      <p>
+        After this, clicking the tile will open Open Composer as a full-page app in the same browser tab (because <code>new_window: false</code> is still set in <code>manifest.yml</code>).
+        If you also want to restore the original new-tab behaviour, remove or revert that line:
+      </p>
+      <pre># /var/www/ood/apps/sys/opencomposer/manifest.yml
+new_window: true   # or remove the line entirely — true is the OOD default</pre>
+
+      <h2 id="general">5. Installation by general user</h2>
+      <p>
+  You can also install Open Composer with general user privileges.
+  However, the <a target="_blank" href="https://osc.github.io/ood-documentation/latest/how-tos/app-development/enabling-development-mode.html">App Development</a> feature in Open OnDemand needs to be enabled in advance by an administrator.
+      </p>
+      <p>
+  Select "My Sandbox Apps (Development)" under "&lt;/&gt; Develop" in the navigation bar (If your web browser window size is small, it will display "&lt;/&gt;" instead of "&lt;/&gt; Develop").
+      </p>
+      <img src="img/navbar.png" width="250" alt="Navbar">
+      <p>
+  Click "New App".
+      </p>
+      <img src="img/newapp.png" width="250" alt="New App">
+      <p>
+  Click "Clone Existing App".
+      </p>
+      <img src="img/clone.png" width="400" alt="Clone an existing app">
+      <p>
+  Enter any name in "Directory name" (here we enter OpenComposer), enter "<a target="_blank" href="https://github.com/RIKEN-RCCS/OpenComposer.git">https://github.com/RIKEN-RCCS/OpenComposer.git</a>" in "Git remote", and click "Submit".
+      </p>
+      <img src="img/new_repo.png" width="800" alt="New repository">
+      <p>
+  Click "Launch Open Composer".
+      </p>
+      <img src="img/bundle.png" width="800" alt="Bundle Install">
+
+      <h2 id="local">6. Local Development</h2>
+      <p>
+        The procedure for starting Open Composer locally is as follows:
+      </p>
+      <pre>$ git clone https://github.com/RIKEN-RCCS/OpenComposer.git
+$ cd OpenComposer
+$ cp misc/Gemfile .
+$ bundle install
+$ cp conf.yml.erb.sample conf.yml.erb
+$ RACK_ENV=development bundle exec rackup</pre>
+      <p>
+        Please access <code>http://localhost:9292</code> using your web browser.
+        Note that there are restrictions, such as the inability to submit jobs.
+      </p>
+
+      <h2 id="jobscheduler">7. Adding a Job Scheduler</h2>
+      <p>
+        If you want to add a job scheduler, create a Ruby script for the job scheduler under <code>lib/schedulers/</code> using the superclass Scheduler defined in <code>lib/scheduler.rb</code> as a reference. Inherit the Scheduler class as shown in the PBS Pro example below (<code>lib/schedulers/pbspro.rb</code>).
+  You must define the <code>submit()</code> method for submitting a job, the <code>cancel()</code> method for canceling a job, and the <code>query()</code> method for querying job information.
+      </p>
+      <pre>class Pbspro &lt; Scheduler</pre>
+      <p>
+        Also, in some clusters, job scheduler commands (e.g., <code>qstat</code>) are wrapper scripts, making it impossible for users to execute the original commands. In such cases, you may be able to address this issue by making minor changes to the existing scheduler script. For example, in <code>lib/schedulers/miyabi.rb</code>, a new class, Miyabi, is defined by inheriting the PBS Pro scheduler, as shown below. The Miyabi class defines only the <code>query()</code> method, while the other methods use those defined in <code>lib/schedulers/pbspro.rb</code>.
+      </p>
+      <pre>class Miyabi &lt; Pbspro</pre>
+      <p>
+        After creating the job scheduler script, specify the scheduler in <code>./conf.yml.erb</code> as shown below.
+      </p>
+      <pre>scheduler: miyabi</pre>
+
+    </main>
+  </div>
+
+  <footer class="d-flex justify-content-center">
+    <p class="mb-0 text-white">&copy; RIKEN Center for Computational Science</p>
+  </footer>
+</body>
+</html>

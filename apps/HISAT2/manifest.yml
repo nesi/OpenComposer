@@ -1,0 +1,6 @@
+name: HISAT2
+category: Biology
+description: HISAT2 is a fast and sensitive alignment program for mapping next-generation sequencing reads (both DNA and RNA) against the general human population (as well as against a single reference genome).
+homepage: https://daehwankimlab.github.io/hisat2
+icon: icon.png
+hidden: true

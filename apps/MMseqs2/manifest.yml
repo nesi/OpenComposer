@@ -1,0 +1,6 @@
+name: MMseqs2
+category: Biology
+description: 'MMseqs2: ultra fast and sensitive search and clustering suite.'
+homepage: https://mmseqs.com
+icon: icon.png
+hidden: true

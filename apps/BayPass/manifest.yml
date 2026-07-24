@@ -1,0 +1,5 @@
+name: BayPass
+category: Biology
+description: Genome-Wide Scan for Adaptive Differentiation and Association Analysis with population-specific covariables.
+homepage: https://forge.inrae.fr/mathieu.gautier/baypass_public
+hidden: true

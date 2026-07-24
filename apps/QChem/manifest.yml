@@ -1,0 +1,5 @@
+name: QChem
+category: Chemistry
+description: QChem application.
+icon: icon.jpg
+hidden: true

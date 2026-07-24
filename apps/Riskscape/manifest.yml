@@ -1,0 +1,6 @@
+name: Riskscape
+category: Earth Science
+description: RiskScape is an open-source spatial data processing application used for multi-hazard risk analysis.
+homepage: https://riskscape.org.nz/
+icon: icon.webp
+hidden: true

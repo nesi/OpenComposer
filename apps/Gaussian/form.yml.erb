@@ -1,0 +1,28 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['gaussian_module'] = {
+      'widget' => 'module_load',
+      'module' => "Gaussian",
+      'label'  => "Gaussian Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{gaussian_module}
+
+  export GAUSS_SCRDIR="/nesi/nobackup/${SLURM_JOB_ACCOUNT}/gaussian_job_${SLURM_JOB_ID}"
+  mkdir -p "${GAUSS_SCRDIR}"
+
+  srun g09 < example.gjf
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

@@ -1,0 +1,6 @@
+name: HMMER2
+category: Biology
+description: HMMER is used for searching sequence databases for homologs of protein sequences, and for making protein sequence alignments.
+homepage: http://hmmer.org
+icon: icon.png
+hidden: true

@@ -1,0 +1,5 @@
+name: PhyloPhlAn
+category: Biology
+description: Integrated pipeline for large-scale phylogenetic profiling of genomes and metagenomes.
+homepage: https://huttenhower.sph.harvard.edu/phylophlan/
+hidden: true

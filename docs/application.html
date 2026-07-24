@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Open Composer Application Creation Manual</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="container-fluid">
+    <nav class="sidebar bg-body-secondary">
+      <h5 class="ps-3 pe-1 d-inline">Contents</h5>
+      <ul class="nav flex-column px-2 py-2">
+        <li class="nav-item"><a href="#intro" class="nav-link">1. Introduction</a></li>
+        <li class="nav-item ms-3"><a href="#manifest" class="nav-link">1.1. manifest.yml</a></li>
+        <li class="nav-item ms-3"><a href="#form" class="nav-link">1.2. form.yml</a></li>
+        <li class="nav-item"><a href="#widget" class="nav-link">2. Description of widget</a></li>
+        <li class="nav-item ms-3"><a href="#number" class="nav-link">2.1. number widget</a></li>
+        <li class="nav-item ms-3"><a href="#text" class="nav-link">2.2. text widget</a></li>
+        <li class="nav-item ms-3"><a href="#email" class="nav-link">2.3. email widget</a></li>
+        <li class="nav-item ms-3"><a href="#select" class="nav-link">2.4. select widget</a></li>
+        <li class="nav-item ms-3"><a href="#multi_select" class="nav-link">2.5. multi_select widget</a></li>
+        <li class="nav-item ms-3"><a href="#radio" class="nav-link">2.6. radio widget</a></li>
+        <li class="nav-item ms-3"><a href="#checkbox" class="nav-link">2.7. checkbox widget</a></li>
+        <li class="nav-item ms-3"><a href="#path" class="nav-link">2.8. path widget</a></li>
+        <li class="nav-item ms-3"><a href="#dependent_module_select" class="nav-link">2.9. dependent_module_select widget</a></li>
+        <li class="nav-item ms-3"><a href="#functions" class="nav-link">2.10. Functions</a></li>
+        <li class="nav-item"><a href="#dynamic" class="nav-link">3. Dynamic Form Widget</a></li>
+        <li class="nav-item ms-3"><a href="#set" class="nav-link">3.1. Widget setting</a></li>
+        <li class="nav-item ms-3"><a href="#disable" class="nav-link">3.2. Widget disabling</a></li>
+        <li class="nav-item ms-3"><a href="#hide" class="nav-link">3.3. Widget hiding</a></li>
+        <li class="nav-item"><a href="#combination" class="nav-link">4. Available combinations</a></li>
+        <li class="nav-item"><a href="#script" class="nav-link">5. Script section</a></li>
+        <li class="nav-item ms-3"><a href="#label" class="nav-link">5.1. Change label</a></li>
+        <li class="nav-item ms-3"><a href="#save" class="nav-link">5.2. Save file</a></li>
+        <li class="nav-item ms-3"><a href="#hide-script" class="nav-link">5.3. Hide script</a></li>
+        <li class="nav-item ms-3"><a href="#variables" class="nav-link">5.4. Special variables</a></li>
+        <li class="nav-item"><a href="#check" class="nav-link">6. Check section</a></li>
+        <li class="nav-item"><a href="#submit" class="nav-link">7. Submit section</a></li>
+        <li class="nav-item ms-3"><a href="#empty-script-warning" class="nav-link">7.1. Empty script warning</a></li>
+        <li class="nav-item"><a href="#header" class="nav-link">8. Header section</a></li>
+        <li class="nav-item"><a href="#erb" class="nav-link">9. ERB and Dynamic Configuration</a></li>
+        <li class="nav-item ms-3"><a href="#erb-conf" class="nav-link">9.1. Accessing @conf</a></li>
+        <li class="nav-item ms-3"><a href="#erb-command" class="nav-link">9.2. Populating a dropdown from a shell command</a></li>
+        <li class="nav-item ms-3"><a href="#erb-read-yaml" class="nav-link">9.3. Inheriting a base form with read_yaml</a></li>
+        <li class="nav-item"><a href="#supplement" class="nav-link">10. Supplement</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1>Open Composer Application Creation Manual</h1>
+      <h2 id="intro">1. Introduction</h2>
+      <ol>
+        <li>Enter the directory name to store all applications in <code>apps_dir</code> in <code>./conf.yml.erb</code>. Here, set it to <code>apps_dir: ./apps</code>.</li>
+        <li>Create an application directory in <code>./apps</code>. If the application name is <code>test</code>, create <code>./apps/test</code>.</li>
+        <li>Create the application description file <code>manifest.yml</code> and the web form configuration file <code>form.yml</code> inside <code>./apps/test</code>.
+          If you want to create them in Embedded Ruby format, name the files <code>manifest.yml.erb</code> and <code>form.yml.erb</code> instead.
+      </ol>
+
+      <h3 id="manifest">1.1. manifest.yml</h3>
+      <p>
+        Describes your application. Here is a sample:
+      </p>
+      <pre>name: Gaussian
+category: Chemistry
+icon: icon.png
+description: Gaussian is a general purpose computational chemistry software package.
+hidden: true
+homepage: https://gaussian.com/
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/Gaussian/
+related_apps:
+  OVITO:
+    icon: ovito.png
+  GrADS:
+    icon: bi-airplane-fill
+  ImageJ:</pre>
+      <ul>
+  <li>name: Application name (If this key is omitted, the directory name is used instead)</li>
+  <li>category: Category name</li>
+  <li>icon: Path to image file for icon. URL, <a target="_blank" href="https://icons.getbootstrap.com/">Bootstrap icon</a>, or <a target="_blank" href="https://fontawesome.com">Font Awesome icon</a> is also possible. For Bootstrap icons, write <code>icon: bi-airplane-fill</code>. For Font Awesome icons, write <code>icon: fa-solid fa-gear</code>.</li>
+  <li>description: Description of the application</li>
+  <li>hidden: If set to <code>true</code>, the application is not shown in the main application listing on the home page. Useful for base forms or generic apps that are only accessed via a direct link or inheritance.</li>
+  <li>homepage: URL for the software's homepage. Displayed as a link on the application page.</li>
+  <li>documentation: URL for the software's documentation. Displayed as a link on the application page.</li>
+  <li>related_apps: Specify an application registered in Open OnDemand. The specified application is displayed on the history page. As with <code>icon:</code>, you can specify icon images, etc. If no image is specified, the image registered in Open OnDemand is used.</li>
+      </ul>
+
+      <h3 id="form">1.2. form.yml</h3>
+      <p>
+        The <code>form.yml</code> is composed of five main sections: <code>form</code>, <code>script</code>, <code>header</code>, <code>check</code> and <code>submit</code>.
+        The <code>form</code> and <code>script</code> sections are required fields, but <code>header</code>, <code>check</code> and <code>submit</code> sections can be omitted.
+      </p>
+      <p>
+  The following figure shows the scope of <code>form</code>, <code>script</code>, and <code>header</code> sections.
+  A job script is generated from <code>form</code>, <code>script</code>, and <code>header</code> sections.
+  However, the <code>header</code> section is optional, and if omitted, <code>./lib/header.yml.erb</code> is used instead.
+  Thus, in most cases, there is no need to define <code>header</code>.
+  Note that the application name in the upper left is the scope of <code>manifest.yml</code>.
+  The <code>check</code> section performs validation of the inputs before job submission.
+  The <code>submit</code> section defines the pre-processing when submitting a job.
+      </p>
+      <img src="img/sections.png" width="800" alt="Sections">
+
+      <h2 id="widget">2. Description of widget</h2>
+      <p>
+        Tthe <code>form</code>, <code>header</code> and <code>submit</code> sections use the following widgets to generate the job script.
+      </p>
+      <ul>
+  <li>number widget: Displays a numeric input field.</li>
+  <li>text widget: Displays a text input field.</li>
+  <li>email widget: Displays an email input field.</li>
+  <li>select widget: Displays a dropdown menu.</li>
+  <li>multi_select: Displays an input field where multiple items can be selected.</li>
+  <li>radio widget: Displays radio buttons.</li>
+  <li>checkbox widget: Displays checkboxes.</li>
+  <li>path widget: Displays an input field for path of a file or directory on the Open OnDemand server.</li>
+  <li>dependent_module_select widget: Displays a dropdown whose options are loaded dynamically based on the value of a driver widget.</li>
+      </ul>
+
+      <h3 id="number">2.1. number widget</h3>
+      <p>
+  Displays a numeric input field.
+  In the example below, <code>nodes</code> is the variable name for the widget.
+  The <code>label</code> is the displayed name,
+  <code>value</code> is the default value,
+  <code>min</code> and <code>max</code> set the range, and <code>step</code> determines the increment.
+  The <code>required</code> key specifies whether the input is mandatory, and <code>help</code> provides a tooltip below the input field.
+  The <code>script</code> section specifies how the input value will appear in the job script.
+  The <code>#{nodes}</code> in the <code>script</code> section will be replaced with the input value.
+      </p>
+      <pre>form:
+  nodes:
+    widget:   number
+    label:    Number of nodes (1 - 128)
+    value:    4
+    min:      1
+    max:      128
+    step:     1
+    required: false
+    help:     The larger the number, the longer the wait time.
+
+script: |
+  #SBATCH --nodes=#{nodes}</pre>
+      <img width="800" src="img/number.png" alt="number widget">
+      <p>
+  You can also display multiple numeric input fields in a single line.
+  For example, specifying <code>size</code> indicates the number of input fields, with each item defined as an array.
+  In the <code>script</code> section, <code>#{time_1}</code> and <code>#{time_2}</code> will be replaced with the respective values entered in the fields.
+      </p>
+      <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time (0 - 24 h), Maximum run time (0 - 59 m) ]
+    size:   2
+    value:  [  1,  0 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{time_2}:00</pre>
+      <img width="800" src="img/label1.png" alt="label">
+      <p>
+  If <code>label</code> is not an array, a single-line label can be provided. The same applies to <code>help</code>.
+      </p>
+      <pre>form:
+  time:
+    widget: number
+    label:  Maximum run time (0 - 24 h, 0 - 59 m)
+    size:   2
+    value:  [  1,  0 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{time_2}:00</pre>
+      <img src="img/label2.png" alt="label">
+      <p>
+  You can also write a label for each item and a long label on one line.
+  Write the long label as the first element of the array format, and write the second element in array format.
+      </p>
+      <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time, [0 - 24 h, 0 - 59 m] ]
+    size:   2
+    value:  [  1,  0 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{time_2}:00</pre>
+      <img src="img/label3.png" alt="label">
+
+      <h3 id="text">2.2. text widget</h3>
+      <p>
+  Displays a text input field.
+      </p>
+      <pre>form:
+  comment:
+    widget: text
+    label: Comment
+    value: test
+
+script: |
+  #SBATCH --comment=#{comment}</pre>
+      <img width="800" src="img/text1.png" alt="text">
+      <p>
+  You can also display multiple text input fields in a single line.
+      </p>
+      <pre>form:
+  option:
+    widget: text
+    label: [ option, argument ]
+    value: [ --comment=, test ]
+    size: 2
+
+script: |
+  #SBATCH #{option_1}#{option_2}</pre>
+      <img width="800" src="img/text2.png" alt="text">
+
+      <h3 id="email">2.3. email widget</h3>
+      <p>
+  Displays an email input field.
+  Similar to the <code>text</code> widget, but validates the input to ensure it follows the email format when the "Submit" button is clicked.
+      </p>
+      <pre>form:
+  email:
+    widget: email
+    label:  Email
+
+script: |
+  #SBATCH --mail-user=#{email}</pre>
+
+      <h3 id="select">2.4. select widget</h3>
+      <p>
+  Displays a dropdown menu.
+  The <code>options</code> key specifies the choices as an array.
+  Each option's first element is the display name in the dropdown.
+  In the <code>script</code> section, <code>#{partition}</code> is replaced with the second element of the selected option.
+      </p>
+      <pre>form:
+  partition:
+    widget: select
+    label: Partition
+    value: Large Queue
+    options:
+      - [ Small Queue, small ]
+      - [ Large Queue, large ]
+
+script: |
+  #SBATCH --partition=#{partition}</pre>
+      <img width="800" src="img/select1.png" alt="select">
+      <p>
+  For multi-dimensional values,
+  <code>options</code> can use an array for the second-element.
+  In this example, <code>#{package_1}</code> and <code>#{package_2}</code> are replaced with the respective first and second values of the selected array.
+  This format is also available for the <code>multi_select</code>, <code>radio</code> and <code>checkbox</code> widgets.
+  Note that the size of the second-element arrays must be the same for all entries.
+      </p>
+      <pre>form:
+  package:
+    widget: select
+    label: Select package
+    options:
+      - [ A, [packageA, a.out] ]
+      - [ B, [packageB, b.out] ]
+
+script: |
+  module load #{package_1}
+  mpiexec #{package_2}</pre>
+      <img width="800" src="img/select2.png" alt="select">
+      <p>
+        Setting <code>remember_last: true</code> on a <code>select</code> widget causes the browser to remember the last value the user selected and restore it automatically the next time they visit the form.
+        This is useful for fields like a project or partition selector that users rarely change between job submissions.
+      </p>
+      <pre>form:
+  partition:
+    widget: select
+    label: Partition
+    remember_last: true
+    options:
+      - [ Small Queue, small ]
+      - [ Large Queue, large ]
+
+script: |
+  #SBATCH --partition=#{partition}</pre>
+
+      <h3 id="multi_select">2.5. multi_select widget</h3>
+      <p>
+  Displays an input field where multiple items can be selected.
+  The <code>options</code> key specifies the available choices.
+  Values that are not listed in <code>options</code> can also be entered directly.
+  Items selected from <code>options</code> are replaced with the second element of each option array, while directly entered items are replaced with the entered text itself.
+      </p>
+      <pre>form:
+  load_modules:
+    widget: multi_select
+    label: Add modules
+    value: mpi/mpich-x86_64
+    options:
+      - [ mpi/mpich-x86_64, mpi/mpich-x86_64 ]
+      - [ mpi/openmpi-x86_64, mpi/openmpi-x86_64 ]
+      - [ nvhpc/24.3, nvhpc/24.3 ]
+      - [ nvhpc/24.5, nvhpc/24.5 ]
+      - [ nvhpc/24.7, nvhpc/24.7 ]
+
+script: |
+  module load #{load_modules}</pre>
+      <p>
+  If <code>mpi/mpich-x86_64</code> and <code>nvhpc/24.7</code> are selected, the job script will display them on separate lines:
+      </p>
+      <img width="800" src="img/multi_select1.png" alt="multi select">
+      <p>
+  To display selected items in a single line, set the <code>separator</code> key with a delimiter.
+      </p>
+      <pre>form:
+  load_modules:
+    widget: multi_select
+    label: Add modules
+    value: mpi/mpich-x86_64
+    separator: " "
+    options:
+      - [ mpi/mpich-x86_64, mpi/mpich-x86_64 ]
+      - [ mpi/openmpi-x86_64, mpi/openmpi-x86_64 ]
+      - [ nvhpc/24.3, nvhpc/24.3 ]
+      - [ nvhpc/24.5, nvhpc/24.5 ]
+      - [ nvhpc/24.7, nvhpc/24.7 ]
+
+script: |
+  module load #{load_modules}</pre>
+      <img width="800" src="img/multi_select2.png" alt="multi select">
+      <p>
+  Multiple default values can also be set using an array format.
+      </p>
+      <pre>form:
+  load_modules:
+    widget: multi_select
+    label: Add modules
+    value: [ mpi/mpich-x86_64, nvhpc/24.7 ]
+    options:
+      - [ mpi/mpich-x86_64, mpi/mpich-x86_64 ]
+      - [ mpi/openmpi-x86_64, mpi/openmpi-x86_64 ]
+      - [ nvhpc/24.3, nvhpc/24.3 ]
+      - [ nvhpc/24.5, nvhpc/24.5 ]
+      - [ nvhpc/24.7, nvhpc/24.7 ]
+
+script: |
+  module load #{load_modules}</pre>
+
+      <h3 id="radio">2.6. radio widget</h3>
+      <p>
+  Displays radio buttons.
+  It is similar to the <code>select</code> widget,
+  but the <code>direction</code> key can specify the button layout.
+  Setting <code>direction: horizontal</code> arranges the buttons horizontally,
+  while omitting it defaults to a vertical layout.
+      </p>
+      <pre>form:
+  jupyter:
+    widget: radio
+    label: Jupyter
+    direction: horizontal
+    value: Jupyter Lab
+    options:
+      - [ Jupyter Lab,      jupyterlab ]
+      - [ Jupyter Notebook, jupyter    ]
+
+script: |
+  module load #{jupyter}</pre>
+      <img width="800" src="img/radio1.png" alt="radio">
+      <pre>form:
+  jupyter:
+    widget: radio
+    label: Jupyter
+    value: Jupyter Lab
+    options:
+      - [ Jupyter Lab,      jupyterlab ]
+      - [ Jupyter Notebook, jupyter    ]
+
+script: |
+  module load #{jupyter}</pre>
+      <img width="800" src="img/radio2.png" alt="radio">
+
+      <h3 id="checkbox">2.7. checkbox widget</h3>
+      <p>
+  Displays checkboxes. If you set <code>required</code> in array format as follows, it will set whether each item is required.
+      </p>
+      <pre>form:
+  mail_option:
+    label: Mail option
+    widget: checkbox
+    direction: horizontal
+    value: [ Fail of job,  When the job is requeued ]
+    required: [ true, false, true, false, false ]
+    options:
+      - [ Beginning of job execution, BEGIN   ]
+      - [ End of job execution,       END     ]
+      - [ Fail of job,                FAIL    ]
+      - [ When the job is requeued,   REQUEUE ]
+      - [ All,                        ALL     ]
+
+script: |
+  #SBATCH --mail-type=#{mail_option}</pre>
+      <img width="800" src="img/checkbox1.png" alt="checkbox">
+      <p>
+  When <code>required</code> is a single boolean value (e.g., true), at least one checkbox must be selected before submission.
+      </p>
+      <pre>form:
+  mail_option:
+    label: Mail option
+    widget: checkbox
+    direction: horizontal
+    value: [ Fail of job,  When the job is requeued ]
+    required: true
+    options:
+      - [ Beginning of job execution, BEGIN   ]
+      - [ End of job execution,       END     ]
+      - [ Fail of job,                FAIL    ]
+      - [ When the job is requeued,   REQUEUE ]
+      - [ All,                        ALL     ]
+
+script: |
+  #SBATCH --mail-type=#{mail_option}</pre>
+      <img width="800" src="img/checkbox2.png" alt="checkbox">
+      <p>
+  You can set the <code>separator</code> similar to the <code>multi_select</code> widget, and you can set the <code>direction</code> similar to the <code>radio</code> widget.
+      </p>
+
+      <h3 id="path">2.8. path widget</h3>
+      <p>
+  Displays an input field for path of a file or directory on the Open OnDemand server.
+  The <code>show_files</code> key toggles whether files are displayed (default: true).
+  The <code>favorites</code> key sets shortcut paths.
+      </p>
+      <pre>form:
+  working_dir:
+    widget: path
+    label: Working Directory
+    show_files: false
+    favorites:
+      - /lvs0/rccs-aot
+
+script: |
+  cd #{working_dir}</pre>
+    <img width="800" src="img/path1.png" alt="path">
+    <p>
+      You can enter any string like in a <code>text</code> widget. Also, by clicking the "Select Path" button, you can select a file or directory using the modal shown below.
+    </p>
+    <img style="border-style: solid; border-width: 1px;" width="600" src="img/path2.png" alt="path">
+
+      <h3 id="dependent_module_select">2.9. dependent_module_select widget</h3>
+      <p>
+        Displays a dropdown whose options are loaded dynamically based on which <code>prefix</code> the currently-selected value of a <strong>driver</strong> widget matches.
+        Use it when one select widget (e.g. an application version) determines which set of modules should be offered in a second select.
+      </p>
+      <p>
+        The <code>driver</code> key names the field whose value is watched.
+        The <code>options</code> key is a list of <code>prefix</code>/<code>module</code> pairs:
+        when the driver's current value starts with <code>prefix</code>, the widget queries for all available versions of <code>module</code> and populates the dropdown with the results.
+      </p>
+      <pre>form:
+  alphafold_module:
+    widget: select
+    label: AlphaFold Module
+    options:
+      - [AlphaFold 2.3.2, AlphaFold/2.3.2]
+      - [AlphaFold 3.0.0, AlphaFold/3.0.0]
+      - [AlphaFold 3.0.1, AlphaFold/3.0.1]
+      - [AlphaFold 3.0.2, AlphaFold/3.0.2]
+
+  alphafold_db_module:
+    widget: dependent_module_select
+    label: AlphaFold Database Module
+    driver: alphafold_module
+    options:
+      - prefix: AlphaFold/2.
+        module: AlphaFold2DB
+      - prefix: AlphaFold/3.
+        module: AlphaFold3DB
+
+script: |
+  module load #{alphafold_module}
+  module load #{alphafold_db_module}</pre>
+      <p>
+        In this example, selecting <code>AlphaFold/2.3.2</code> in the driver loads the available versions of <code>AlphaFold2DB</code>, while selecting <code>AlphaFold/3.0.0</code>, <code>AlphaFold/3.0.1</code>, or <code>AlphaFold/3.0.2</code> loads the versions of <code>AlphaFold3DB</code>.
+        The first matching prefix wins, so list more specific prefixes before more general ones.
+      </p>
+      <img src="img/dependent_module_select.png" alt="dependent_module_select example" class="img-fluid">
+
+    <h3 id="functions">2.10. Functions</h3>
+    <p>
+      The <code>zeropadding(key, digit)</code> function pads a number with leading zeros.
+      If the number of digits is less than the value specified in the second argument, <code>digit</code>, the missing digits are filled with '0'.
+    </p>
+    <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time (0 - 24 h), Maximum run time (0 - 59 m) ]
+    size:   2
+    value:  [  1,  5 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{zeropadding(time_2, 2)}:00</pre>
+  <img width="800" src="img/zeropadding.png" alt="Zero Padding">
+
+  <p>
+    The function <code>calc(expr[, decimalPlaces, roundingMode])</code> evaluates the expression <code>expr</code> and returns the result.
+    The second argument, <code>decimalPlaces</code>, specifies the number of digits after the decimal point. If omitted, it defaults to 0.
+    The third argument, <code>roundingMode</code>, specifies the rounding method.
+    One of <code>OC_ROUNDING_ROUND</code> (round half up), <code>OC_ROUNDING_FLOOR</code> (round down),
+    or <code>OC_ROUNDING_CEIL</code> (round up) can be specified. If omitted, it defaults to <code>OC_ROUNDING_ROUND</code>.
+  </p>
+  <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time (0 - 24 h), Maximum run time (0 - 59 m) ]
+    size:   2
+    value:  [  1, 10 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #{calc(time_1 + time_2 / 60)}
+  #{calc(time_1 + time_2 / 60, 2)}
+  #{calc(time_1 + time_2 / 60, 2, OC_ROUNDING_FLOOR)}</pre>
+    <img src="img/calc.png" width="800" alt="Calculation">
+
+    <p>
+    The <code>dirname(FILE_PATH)</code> and <code>basename(FILE_PATH)</code> functions extract the directory name and file name from a given path.
+      </p>
+      <pre>form:
+  input_file:
+    widget: path
+    label: Input file
+    value: /home/test/foo.txt
+
+script: |
+  cd #{dirname(input_file)}
+  mpiexec ./#{basename(input_file)}</pre>
+      <img width="800" src="img/path3.png" alt="path">
+
+      <h2 id="dynamic">3. Dynamic Form Widget</h2>
+      <p>
+        You can dynamically change the settings of other widgets based on the selected option in <code>select</code>, <code>radio</code>, and <code>checkbox</code> widgets.
+      </p>
+      <h3 id="set">3.1. Widget setting</h3>
+      <p>
+        Sets the <code>min</code>, <code>max</code>, <code>step</code>, <code>label</code>, <code>value</code>, <code>required</code>, and <code>help</code>.
+        Specifies <code>set-(min|max|step|label|value|required|help)-(KEY)[_(num|1st element in options)]:(VALUE)</code> from the third element and onward of each <code>options</code> array.
+      </p>
+      <p>
+        In the following example, if you select <code>Medium</code> for <code>node_type</code>, the label and maximum value for <code>cores</code> will be <code>Number of Cores (1-8)</code> and <code>8</code>.
+      </p>
+      <pre>form:
+  node_type:
+    widget: select
+    label: Node Type
+    options:
+      - [ Small,  small ]
+      - [ Medium, medium, set-label-cores: Number of Cores (1-8),  set-max-cores: 8  ]
+      - [ Large,  large,  set-label-cores: Number of Cores (1-16), set-max-cores: 16 ]
+
+  cores:
+    widget: number
+    label: Number of Cores (1-4)
+    value: 1
+    min: 1
+    max: 4
+    step: 1
+
+script: |
+  #SBATCH --partition=#{node_type}
+  #SBATCH --cpus-per-task=#{cores}</pre>
+      <img width="400" src="img/setting1.png" alt="setting">
+      <p>
+        For <code>number</code>, <code>text</code>, or <code>email</code> widgets with multiple input fields,
+        you can specify the target input field using <code>_(num)</code>.
+        In the following example,
+        if you select <code>GPU</code> for <code>node_type</code>,
+        the label and maximum value of the first <code>time</code> input field will be <code>Maximum run time hours (0 - 24)</code> and <code>24</code>.
+      </p>
+
+      <pre>form:
+  node_type:
+    widget: select
+    label: Node Type
+    options:
+      - [ 'Standard', 'standard' ]
+      - [ 'GPU',      'gpu', set-label-time_1: Maximum run time (0 - 24h), set-max-time_1: 24 ]
+
+  time:
+    widget:  number
+    label:   [ Maximum run time (0 - 72 h), Maximum run time (0 - 59 m) ]
+    size:    2
+    value:   [  1,  0 ]
+    max:     [ 72, 59 ]
+    min:     [  0,  0 ]
+    step:    [  1,  1 ]
+
+script: |
+  #SBATCH --partition=#{node_type}
+  #SBATCH --time=#{time_1}:#{time_2}:00</pre>
+      <img width="400" src="img/setting2.png" alt="setting">
+      <p>
+  For <code>select</code>, <code>radio</code>, and <code>checkbox</code> widgets,
+  use <code>1st element in options</code> to specify the target option.
+  In the following example, when you select <code>GPU</code> for <code>node_type</code>, <code>Enable GPU</code> for <code>enable_gpu</code> is checked.
+      </p>
+      <pre>form:
+  node_type:
+    widget: select
+    label: Node Type
+    options:
+      - [ 'Standard', '' ]
+      - [ 'GPU',      '', set-value-enable_gpu: Enable GPU ]
+
+  enable_gpu:
+    widget: checkbox
+    options:
+      - [ Enable GPU, gpu ]
+
+script:	|
+  #SBATCH --partition=#{node_type}</pre>
+      <img width="400" src="img/setting3.png" alt="setting">
+
+      <h3 id="disable">3.2. Widget disabling</h3>
+      <p>
+  Disables or enables the widget.
+  Specifies <code>[disable|enable]-(KEY)[-(1st element in options)][_num]</code> for the third element and onward of each <code>options</code> array.
+      </p>
+      <p>
+  In the following example, when <code>Fugaku</code> is selected for <code>cluster</code>,
+  the <code>GPU</code> option for <code>node_type</code> and the <code>cuda_ver</code> widget will be disabled.
+  If a key is disabled, its line in the <code>script</code> section will also be deleted.
+      </p>
+      <pre>form:
+  cluster:
+    widget: select
+    label:  Cluster system
+    options:
+      - [ Fugaku,  fugaku, disable-node_type-GPU, disable-cuda_ver ]
+      - [ Tsubame, tsubame ]
+
+  node_type:
+    widget: select
+    label:  Node type
+    options:
+      - [ Standard, standard ]
+      - [ GPU,      gpu      ]
+
+  cuda_ver:
+    widget: number
+    label: CUDA version
+    value: 12
+    min: 12
+    max: 14
+
+script: |
+  module load system/#{node_type}
+  module load cuda/#{cuda_ver}</pre>
+      <img width="400" src="img/disable1.png" alt="disable"><br><br>
+      <img width="800" src="img/disable2.png" alt="disable">
+      <p>
+  The <code>options</code> in the above example can also be written as shown below. In this case, <code>node_type</code> and <code>cuda_ver</code> are enabled only when <code>Tsubame</code> is selected.
+      </p>
+      <pre>options:
+  - [ Fugaku,  fugaku ]
+  - [ Tsubame, tsubame, enable-node_type-GPU, enable-cuda_ver ]</pre>
+
+      <h3 id="hide">3.3. Widget hiding</h3>
+      <p>
+  Hides or showes the widget.
+  Specifies <code>[hide|show]-(KEY)</code> for the third element and onward of each <code>options</code> array.
+      </p>
+      <p>
+  In the following example,
+  checking <code>hide_advanced_options</code> will hide <code>comment</code>.
+  Unlike disabling, it only hides the widget of that key, and does not affect lines in the <code>script</code> section.
+  The <code>indent</code> creates an indent on the left side of a web form.
+  You can enter a number from 1 to 5, and the higher the number, the larger the indent width.
+      </p>
+      <pre>form:
+  hide_advanced_option:
+    widget: checkbox
+    options:
+      - [ 'Hide advanced option', '', hide-comment ]
+
+  comment:
+    widget: text
+    label: Comment
+    value: test
+    indent: 1
+
+script: |
+  #SBATCH --comment=#{comment}</pre>
+      <img width="800" src="img/hide1.png" alt="hide">
+      <p>
+  In the following example, <code>comment</code> will be displayed if <code>show_advanced_options</code> is checked.
+      </p>
+      <pre>form:
+  show_advanced_options:
+    widget: checkbox
+    options:
+      - [ 'Show advanced option', '', show-comment ]
+
+  comment:
+    widget: text
+    label: Comment
+    value: test
+    indent: 1
+
+script: |
+  #SBATCH --comment=#{comment}</pre>
+      <img width="800" src="img/hide2.png" alt="hide">
+
+      <h2 id="combination">4. Available combinations</h2>
+      <p>
+  The available combinations of widgets and options in the <code>form</code> and <code>header</code> sections are shown in the table below. Only <code>options</code> is required, but the other items are optional.
+      </p>
+      <table class="table">
+  <thead>
+    <tr style="vertical-align:middle">
+      <th>Widget</th><th>label, value, help,<br>required, indent</th><th>options<br>(Dynamic Form Widget)</th><th>size</th><th>separator</th><th>direction</th><th>min, max,<br>step</th>
+      <th>show_files,<br>favorites</th><th>remember_last</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>number</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td>OK</td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>text, email</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>select</td><td>OK</td><td>OK (OK)</td><td></td><td></td><td></td><td></td><td></td><td>OK</td>
+    </tr>
+    <tr>
+      <td>multi_select</td><td>OK</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>radio</td><td>OK</td><td>OK (OK)</td><td></td><td></td>
+      <td>OK</td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>checkbox</td><td>OK</td><td>OK (OK)</td> <td></td><td>OK</td><td>OK</td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>path</td><td>OK</td><td></td><td></td><td></td><td></td><td></td><td>OK</td><td></td>
+    </tr>
+    <tr>
+      <td>dependent_module_select</td><td>label, help</td><td>prefix/module pairs<br>(see 2.9)</td><td></td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+  </tbody>
+      </table>
+
+      <h2 id="script">5. Script section</h2>
+      <h3 id="label">5.1. Change label</h3>
+      <p>
+        If you want to change the label of the job script (default is "Script Content"), set <code>label</code> in the <code>script</code> section.
+        In that case, write the job script in <code>content</code>.
+      </p>
+      <pre>form:
+  nodes:
+    widget: number
+    label: Number of nodes
+
+script:
+  label: Script Details
+  content: |
+    #SBATCH --nodes=#{nodes}</pre>
+      <img src="img/label.png" width="200" alt="label">
+
+      <h3 id="save">5.2. Save file</h3>
+      <p>
+  Open Composer is capable of generating not only job scripts but also parameter and configuration files used by applications.
+  In such cases, it is often preferable to save the job script without submitting it.
+  To do so, specify <code>action: save</code> in the script section.
+      </p>
+      <pre>form:
+  nodes:
+    widget: number
+    label: Number of nodes
+    value: 1
+
+script:
+  label: Parameter file
+  action: save
+  content: |
+    num_of_nodes: #{nodes}</pre>
+
+      <p>
+  When you make this setting, the button label will change from "Submit" to "Save."
+      </p>
+      <img src="img/save.png" width="400" alt="Save">
+      <p>
+  Clicking the button will save the file, and the save destination will be displayed at the top of the screen. Clicking the link will launch the Open OnDemand Home Directory.
+  If there is a terminal icon, clicking that icon will launch the Open OnDemand Terminal application.
+      </p>
+      <img src="img/save2.png" width="400" alt="Save">
+      <h3 id="hide-script">5.3. Hide script</h3>
+      <p>
+  You can hide your job script in the text area on the right side.
+Use the special variable <code>OC_SCRIPT_CONTENT</code> and the <code>hide-</code> of the Dynamic Form Widget in the following way.
+Note that the filename is <code>form.yml.erb</code> since it uses ERB.
+      </p>
+      <pre>form:
+  script_content:
+    widget: checkbox
+    value: "Hide script content"
+    options:
+      - [ "Hide script content", "", hide-&lt;%= OC_SCRIPT_CONTENT %&gt; ]</pre>
+
+      <img src="img/hide-script.png" width="600" alt="Hide script">
+
+      <p>
+  If you want to hide the job script without displaying the checkbox, set <code>hide-</code> to the checkbox itself.
+      </p>
+      <pre>form:
+  script_content:
+    widget: checkbox
+    value: "Hide script content"
+    options:
+      - [ "Hide script content", "", hide-&lt;%= OC_SCRIPT_CONTENT %&gt;, hide-script_content ]</pre>
+
+      <h3 id="variables">5.4. Special variables</h3>
+      <p>
+  The following special variables are also available in the <code>script</code> section:
+      </p>
+      <ul>
+        <li>#{OC_APP_NAME}: Application name defined in <code>name</code> of <code>manifest.yml</code></li>
+        <li>#{OC_DIR_NAME}: The name of the directory where <code>manifest.yml</code> and related files are stored (the last path element of each application’s URL).</li>
+        <li>#{OC_SCRIPT_LOCATION}: <code>Script Location</code> defined in the <code>header</code> section</li>
+        <li>#{OC_CLUSTER_NAME}: <code>Cluster name</code> defined in the <code>header</code> section (This is only available when <code>cluster</code> is defined in <code>./conf.yml.erb</code>)</li>
+        <li>#{OC_SCRIPT_NAME}: <code>Script Name</code> defined in the <code>header</code> section</li>
+        <li>#{OC_JOB_NAME}: <code>Job Name</code> defined in the <code>header</code> section</li>
+      </ul>
+
+      <h2 id="check">6. Check section</h2>
+      <p>
+  Variables defined in the <code>form</code> section can be validated in the <code>check</code> section using the Ruby language and the function <code>oc_assert(condition, message)</code>.
+  This function displays the specified <code>message</code> and terminates execution if the <code>condition</code> evaluates to <code>false</code>.
+      </p>
+      <p>
+  In the example below, if a total time exceeding 24 hours is entered, an error message will be shown when the "Submit" button is clicked, preventing the script from being submitted.
+  To reference variables defined in the form section, prefix the variable name with the @ symbol.
+      </p>
+      <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time (0 - 24 h), Maximum run time (0 - 59 m) ]
+    size:   2
+    value:  [  1,  0 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{time_2}:00
+
+check: |
+  message = "Exceeded Time"
+  oc_assert(@time_1 != 24 || @time_2 == 0, message)</pre>
+      <p>
+  In the <code>check</code> section, just like in the <code>script</code> section, the following special variables can be used:
+      </p>
+      <ul>
+  <li>@OC_APP_NAME: Application name defined in <code>name</code> of <code>manifest.yml</code></li>
+        <li>@OC_DIR_NAME: The name of the directory where <code>manifest.yml</code> and related files are stored (the last path element of each application’s URL).</li>
+        <li>@OC_SCRIPT_LOCATION: <code>Script Location</code> defined in the <code>header</code> section</li>
+        <li>@OC_CLUSTER_NAME: <code>Cluster name</code> defined in the <code>header</code> section (This is only available when <code>cluster</code> is defined in <code>./conf.yml.erb</code>)</li>
+        <li>@OC_SCRIPT_NAME: <code>Script Name</code> defined in the <code>header</code> section</li>
+  <li>@OC_JOB_NAME: <code>Job Name</code> defined in the <code>header</code> section</li>
+      </ul>
+
+      <h2 id="submit">7. Submit section</h2>
+      <p>
+  In the <code>submit</code> section, you define the processing to be executed before job submission (after the validation performed in the <code>check</code> section) using the Bash language.
+      </p>
+      <p>An example of the <code>submit</code> section is shown below.
+  You can use the same notation as in the <code>script</code> section.
+  Additionally, a special variable available only in the <code>submit</code> section, <code>OC_SUBMIT_OPTIONS</code>, allows you to specify additional options for the job submission command.
+  After this process is executed, the command to submit the job script (for example, <code>sbatch #{OC_SUBMIT_OPTIONS} -J #{OC_JOB_NAME} #{OC_SCRIPT_NAME}</code>) will be run.
+      </p>
+
+      <pre>form:
+  nodes:
+    widget: number
+    label: Number of nodes
+
+submit: |
+  #!/bin/bash
+  set -e
+  cd #{OC_SCRIPT_LOCATION}
+  mv #{OC_SCRIPT_NAME} param_#{nodes}.conf
+  genjs_ct param_#{nodes}.conf > #{OC_SCRIPT_NAME}
+  OC_SUBMIT_OPTIONS="-n 1 --export=NONE"</pre>
+      <p>
+  If you want to view the commands in the <code>submit</code> section before submitting the job, write <code>action: confirm</code>.
+  In that case, write the details of the commands in <code>content</code>.
+      </p>
+      <pre>form:
+  nodes:
+    widget: number
+    label: Number of nodes
+
+submit:
+  action: confirm
+  content: |
+    #!/bin/bash
+    set -e
+    cd #{OC_SCRIPT_LOCATION}
+    mv #{OC_SCRIPT_NAME} param_#{nodes}.conf
+    genjs_ct param_#{nodes}.conf > #{OC_SCRIPT_NAME}
+    OC_SUBMIT_OPTIONS="-n 1 --export=NONE"</pre>
+      <p>
+  Once you make this setting, the button label will change from "Submit" to "Confirm."
+  Clicking the "Confirm" button will display the commands in the <code>submit</code> section with values assigned to the variables.
+  You can also edit the contents.
+  Clicking the "Submit" button will execute the commands in the <code>submit</code> section and submit the job.
+  Note that if an error occurs in the script, you will need to use the <code>set -e</code> command to interrupt the commands.
+      </p>
+      <img src="img/submit.png" width="600" alt="Submit">
+      <p>
+  If you also set <code>action: save</code> in the <code>script</code> section, its contents will be saved before executing the commands in the <code>submit</code> section.
+  The button at the bottom of the "Confirm" screen will change from "Submit" to "Save," as shown below.
+      </p>
+      <img src="img/submit2.png" width="600" alt="Submit">
+
+      <h3 id="empty-script-warning">7.1. Empty script warning</h3>
+      <p>
+        When the user clicks <strong>Submit</strong> (or <strong>Confirm</strong>), Open Composer automatically checks whether the batch script contains any real commands.
+        A line is considered boilerplate and ignored if it is blank, starts with <code>#</code> (comments, <code>#SBATCH</code> directives, or the shebang line), or starts with <code>module</code>.
+        If no real commands are found, a browser confirmation dialog is shown before the job is submitted:
+      </p>
+      <pre>No commands have been added to the batch script.
+
+Are you sure you want to submit?</pre>
+      <p>
+        Clicking <strong>Cancel</strong> returns the user to the form without submitting.
+        Clicking <strong>OK</strong> proceeds with submission as normal.
+        This check is automatic and enabled by default.
+      </p>
+      <p>
+        To disable the warning, set <code>empty_script_warning: false</code> in <code>conf.yml.erb</code>:
+      </p>
+      <pre>empty_script_warning: false</pre>
+      <img src="img/no_entry_warning_message.png" alt="Empty script warning" class="img-fluid">
+
+      <h2 id="header">8. Header section</h2>
+      <p>
+  You can define the <code>header</code> section.
+  However, widgets with the same names as those defined in <code>lib/header.yml.erb</code> must be defined.
+      </p>
+      <p>
+  The example below defines a new widget, <code>script_content</code>, that hides the job script.
+  The <code>_script_location</code> and <code>_script</code> are widgets defined in <code>lib/header.yml.erb</code> (if a <code>cluster</code> is defined in <code>./conf.yml.erb</code>, you must also define <code>_cluster_name</code>).
+      </p>
+
+      <pre>header:
+  _script_location:
+    widget:     path
+    value:      &lt;%= Dir.home %&gt;
+    label:      Script Location
+    show_files: false
+    required:   true
+
+  _script:
+    widget:   text
+    size :    2
+    label:    [ Script Name, Job Name ]
+    value:    [ job.sh, "" ]
+    required: [ true, false ]
+
+  script_content:
+    widget: checkbox
+    value: "Hide script content"
+    options:
+      - [ "Hide script content", "", hide-&lt;%= OC_SCRIPT_CONTENT %&gt; ]</pre>
+
+      <img src="img/hide-script-header.png" width="600" alt="Hide script in header">
+      <p>
+  Note that the example above shows how to set headers for each individual application.
+  If you want to configure the headers for all applications, edit <code>lib/header.yml.erb</code> directly.
+  In that case, you can use the special variables shown below, just like in the <code>script</code> section (These variables can also be used in the <code>header</code> and <code>form</code> sections, but in that case, the file name must be <code>form.yml.erb</code>.)</p>
+      <ul>
+  <li>@OC_APP_NAME: Application name defined in <code>name</code> of <code>manifest.yml</code></li>
+  <li>@OC_DIR_NAME: The name of the directory where <code>manifest.yml</code> and related files are stored (the last path element of each application’s URL).</li>
+      </ul>
+      <p>
+  Below is an example showing how to change the processing for only a specific application.
+      </p>
+      <pre>&lt;% if @OC_DIR_NAME == "Slurm" %&gt;
+queue:
+  widget: select
+  label: Queue
+  options:
+    - [small]
+    - [large]
+&lt;% end %&gt;</pre>
+
+      <h2 id="erb">9. ERB and Dynamic Configuration</h2>
+      <p>
+        When a form file is named <code>form.yml.erb</code>, Open Composer processes it as Embedded Ruby (ERB) before parsing the YAML.
+        This lets you generate form content dynamically at page load time — for example, running a shell command to build the list of options for a dropdown, or reading values from the OpenComposer configuration.
+      </p>
+
+      <h3 id="erb-conf">9.1. Accessing @conf</h3>
+      <p>
+        The variable <code>@conf</code> is available inside <code>form.yml.erb</code> and contains the full OpenComposer configuration hash loaded from <code>conf.yml.erb</code>.
+        Use it to read site-specific settings such as the login node hostname.
+      </p>
+      <pre>&lt;%
+  login_node = @conf&.fetch('login_node', nil)
+%&gt;
+---
+form:
+  my_field:
+    widget: text
+    label: Login node is &lt;%= login_node %&gt;</pre>
+
+      <h3 id="erb-command">9.2. Populating a dropdown from a shell command</h3>
+      <p>
+        You can run a shell command inside ERB to populate a <code>select</code> widget's <code>options</code> list at page load time.
+        If the OOD web server does not have direct access to the job scheduler daemon, prefix the command with
+        <code>ssh</code> to the login node (read from <code>@conf['login_node']</code>).
+      </p>
+      <p>
+        The example below populates a "Project" dropdown from the user's Slurm associations by running <code>sacctmgr</code> via SSH.
+        It always renders a <code>select</code> widget — if no accounts are found the options list is empty rather than crashing.
+      </p>
+      <pre>&lt;%
+  begin
+    _login_node = (@conf&amp;.fetch('login_node', nil) rescue nil)
+    _login_node = _login_node.is_a?(Hash) ? _login_node.values.compact.first : _login_node
+    _ssh_prefix = _login_node ? "ssh -o BatchMode=yes -o ConnectTimeout=10 #{_login_node}" : ""
+    _accounts = `#{_ssh_prefix} sacctmgr -n -P show user #{ENV['USER']} withassoc format=Account 2&gt;/dev/null`
+                .split("\n").map(&amp;:strip).reject(&amp;:empty?).uniq.sort
+  rescue
+    _accounts = []
+  end
+%&gt;
+---
+form:
+  account:
+    widget: select
+    label: Project
+&lt;% if _accounts.empty? %&gt;
+    options: []
+&lt;% else %&gt;
+    options:
+&lt;% _accounts.each do |a| %&gt;
+      - ["&lt;%= a %&gt;", "&lt;%= a %&gt;"]
+&lt;% end %&gt;
+&lt;% end %&gt;
+
+script: |
+  #SBATCH --account=#{account}</pre>
+      <p>
+        Key points:
+      </p>
+      <ul>
+        <li>Wrap the shell command in a <code>begin/rescue</code> block so a failed command produces an empty list rather than a form error.</li>
+        <li>Use <code>options: []</code> (not omitting the key) when the list is empty — a missing <code>options</code> key parses as <code>nil</code> in YAML and causes a runtime error.</li>
+        <li><code>BatchMode=yes</code> prevents SSH from hanging waiting for a password; <code>ConnectTimeout=10</code> prevents the page from stalling if the login node is unreachable.</li>
+        <li>The Passenger web process runs as the logged-in OOD user, so their SSH key to the login node must already be set up.</li>
+      </ul>
+
+      <h3 id="erb-read-yaml">9.3. Inheriting a base form with read_yaml</h3>
+      <p>
+        Use the <code>read_yaml(path)</code> helper to load another form file (including <code>.erb</code> files) and then modify its content before emitting YAML.
+        This is how all the apps in the <code>apps/</code> directory inherit the common Slurm fields from <code>SlurmBasic</code> — they load the base form, inject application-specific fields, and append the module-load commands to the script.
+      </p>
+      <pre>&lt;%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+# Insert an application-specific field before the time widget
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['myapp_module'] = {
+      'widget' => 'module_load',
+      'module' => 'myapp',
+      'label'  => 'MyApp Module'
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\nmodule load #{myapp_module}\n"
+%&gt;
+&lt;%= base.to_yaml -%&gt;</pre>
+      <p>
+        <code>read_yaml</code> automatically finds and processes the <code>.erb</code> version of the file if it exists, so <code>SlurmBasic</code>'s ERB header (which populates the Project dropdown) is executed correctly when inherited.
+      </p>
+
+      <h2 id="supplement">10. Supplement</h2>
+      <ul>
+  <li>All the samples on this page are written in the Bash language, but you can use other shells as well. However, the <code>submit</code> section can only be written in the Bash language.</li>
+  <li>Widget names can only contain alphanumeric characters and underscores. Numbers and underscores cannot start the name. Please also avoid using widget names that end with an underscore followed by a number (e.g., <code>nodes_1</code>). The same rule applies to the directory name in which the application is saved. However, when defining the <code>header</code> section in <code>form.yml</code>, the widget names beginning with underscores (e.g. <code>_script_location</code>) used in <code>lib/header.yml.erb</code> can be used.</li>
+  <li>If there is no second element in <code>options</code>, the first element is used instead.</li>
+  <li>In the <code>script</code> section, if a variable used in a line does not have a value, the line is not displayed. However, if you add a colon to the beginning of the variable (e.g. <code>#{:nodes}</code> or <code>#{basename(:input_file)}</code>), the line will be output even if the variable does not have a value.</li>
+  <li>The order of processing that Open Composer performs before submitting a job script is as follows.
+    <ol>
+      <li>The "Submit" button is clicked in the application page</li>
+      <li>If <code>empty_script_warning</code> is enabled, check whether the batch script contains any real commands and show a confirmation dialog if not (see <a href="#empty-script-warning">section 7.1</a>)</li>
+      <li>Execute the script written in the <code>check</code> section in <code>form.yml</code> (if the <code>check</code> section exists)</li>
+      <li>Execute the script written in the <code>submit</code> section in <code>form.yml</code> (if the <code>submit</code> section exists)</li>
+      <li>Submit the job script</li>
+    </ol>
+  </li>
+      </ul>
+    </main>
+  </div>
+
+  <footer class="d-flex justify-content-center">
+    <p class="mb-0 text-white">&copy; RIKEN Center for Computational Science</p>
+  </footer>
+</body>
+</html>

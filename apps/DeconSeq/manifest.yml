@@ -1,0 +1,6 @@
+name: DeconSeq
+category: Biology
+description: A tool that can be used to automatically detect and efficiently remove sequence contaminations from genomic and metagenomic datasets.
+homepage: http://deconseq.sourceforge.net/
+icon: icon.png
+hidden: true

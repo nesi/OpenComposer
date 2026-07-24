@@ -1,0 +1,5 @@
+name: SortMeRNA
+category: Biology
+description: SortMeRNA is a biological sequence analysis tool for filtering, mapping and OTU-picking NGS reads.
+homepage: http://bioinfo.lifl.fr/RNA/sortmerna/
+hidden: true

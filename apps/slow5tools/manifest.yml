@@ -1,0 +1,5 @@
+name: slow5tools
+category: Others
+description: Toolkit for converting (FAST5 <-> SLOW5), compressing, viewing, indexing and manipulating data in SLOW5 format.
+homepage: https://hasindu2008.github.io/slow5tools
+hidden: true

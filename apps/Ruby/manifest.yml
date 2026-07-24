@@ -1,0 +1,6 @@
+name: Ruby
+category: Language
+description: Ruby is a dynamic, open source programming language with a focus on simplicity and productivity.
+homepage: https://www.ruby-lang.org
+icon: icon.png
+hidden: true

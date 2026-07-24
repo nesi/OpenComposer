@@ -1,0 +1,5 @@
+name: tabix
+category: Biology
+description: Generic indexer for TAB-delimited genome position files.
+homepage: http://samtools.sourceforge.net
+hidden: true

@@ -1,0 +1,203 @@
+<%
+  begin
+    _ssh_prefix = @login_node ? "ssh -o BatchMode=yes -o ConnectTimeout=10 #{@login_node}" : ""
+    _accounts = `#{_ssh_prefix} sacctmgr -n -P show user #{ENV['USER']} withassoc format=Account 2>/dev/null`
+                .split("\n").map(&:strip).reject(&:empty?).uniq.sort
+  rescue
+    _accounts = []
+  end
+%>
+---
+form:
+  account:
+    widget: select
+    label: Project
+    help: If you do not see your project here, see <a href="https://docs.nesi.org.nz/Getting_Started/Projects/Applying_to_Join_a_Project" target="_blank">how to apply to join a project</a>.
+    remember_last: true
+<% if _accounts.empty? %>
+    options: []
+<% else %>
+    options:
+<% _accounts.each do |a| %>
+      - ["<%= a %>", "<%= a %>"]
+<% end %>
+<% end %>
+
+  partition:
+    widget: select
+    label: Partition
+    help: The architecture of the node you want to use. Select any if you do not have a preference. <a href="https://docs.nesi.org.nz/Batch_Computing/Hardware/#compute-nodes" target="_blank"> See here to learn more about the computer nodes that make up the different partitions</a>.
+    remember_last: true
+    options:
+      - [ any,   "",    set-max-cores_simple: 166, set-max-memory_total_gb: 1450]
+      - [ genoa, genoa, set-max-cores_simple: 166, set-max-memory_total_gb: 1450]
+      - [ milan, milan, set-max-cores_simple: 126, set-max-memory_total_gb: 1000]
+
+  cores_simple:
+    widget: number
+    label: Number of CPUs
+    help: If you need to set MPI or OpenMP flags, tick the "Show advanced CPU options". <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer/#advanced-cpu-options" target="_blank"> See here to learn more about CPU options</a>.
+    value: 1
+    min:   1
+    step:  1
+
+  cores_advanced:
+    widget: number
+    label: ["Number of MPI processes (<code>ntasks</code>)", "Number of OpenMP threads (<code>cpus-per-task</code>)"]
+    size:  2
+    help: See <a href="https://docs.nesi.org.nz/Software/Parallel_Computing/Parallel_Computing" target="_blank">Parallel Computing</a> for more information.
+    value: [ 1, 1]
+    min:   [ 1, 1]
+    step:  [ 1, 1]
+
+  show_advanced_cpu_option:
+    widget: checkbox
+    label:
+    options:
+      - ["Show advanced CPU options", "", show-cores_advanced, hide-cores_simple, enable-cores_advanced, disable-cores_simple]
+
+  number_of_nodes:
+    widget: number
+    label: Number of Nodes
+    min:   1
+    step:  1
+    help: This is the number of computer nodes you want to run your calculation over. Leave empty if you don't want to specify the number of nodes you want to use. <a href="https://docs.nesi.org.nz/Tutorials/Introduction_To_HPC/What_is_an_HPC/#nodes" target="_blank"> See here to learn more about nodes</a>.
+
+  memory_total_gb:
+    widget: number
+    label: Total Memory (GB)
+    help: This is the total amount of memory you want to use. If you want to specify the memory per CPU you want to use, tick the "Show Memory per CPU" tickbox. 
+    value: 2
+    min:   1
+    step:  1
+
+  memory_per_cpu_gb:
+    widget: number
+    label: Memory per CPU (GB)
+    help: The total memory for your job is this value multiplied by the number of cores requested.
+    value: 2
+    min:   1
+    max:   8
+    step:  1
+
+  show_memory_per_cpu_option:
+    widget: checkbox
+    label:
+    options:
+      - ["Show Memory per CPU", "", show-memory_per_cpu_gb, hide-memory_total_gb, enable-memory_per_cpu_gb, disable-memory_total_gb]
+
+  time_days_hours_minutes:
+    widget: number
+    label: [Time (Days), (Hours), (Minutes), (Seconds)]
+    size: 4
+    value: [0, 0, 15, 0]
+    min:   [0, 0, 0, 0]
+    max:   [21, 23, 59, 59]
+    step:  [1, 1, 1, 1]
+
+  show_advanced_option:
+    widget: checkbox
+    label:
+    options:
+      - ["Show advanced options", "", show-testing, show-profiling, show-ssd, show-multithreading, show-array, show-mail_option, enable-testing, enable-profiling, enable-ssd, enable-multithreading, enable-array, enable-mail_option]
+
+  testing:
+    widget: checkbox
+    label: Testing
+    help: <a href="https://docs.nesi.org.nz/Tutorials/Introduction_To_HPC/Resources/#run-tests-jobs-using-debug-qos-quality-of-service" target="_blank">See here for more information about how to test your jobs</a>.
+    direction: horizontal
+    separator: ","
+    indent: 1
+    options:
+      - [ "Perform a high priority test (max 15 mins)", 'debug', set-max-time_days_hours_minutes_1: 0, set-max-time_days_hours_minutes_2: 0, set-max-time_days_hours_minutes_3: 15, set-max-time_days_hours_minutes_4: 0]
+
+  profiling:
+    widget: checkbox
+    label: Profiling
+    direction: horizontal
+    separator: ","
+    indent: 1
+    help: See <a href="https://docs.nesi.org.nz/Software/Profiling_and_Debugging/Slurm_Native_Profiling" target="_blank">Slurm Native Profiling</a> for more information.
+    options:
+      - [ "Profile my Job", "task", show-profiling_time, enable-profiling_time]
+
+  profiling_time:
+    widget: number
+    label: Record information about the job every X seconds
+    indent: 1
+    value: 30
+    min:   1
+    max:  60
+    step:  1
+
+  ssd:
+    widget: checkbox
+    label: SSD
+    help: <a href="https://docs.nesi.org.nz/Batch_Computing/Temporary_directories/#on-ssd" target="_blank">See here for more information on using the SSD for temporary storage</a>.
+    direction: horizontal
+    separator: ","
+    indent: 1
+    options:
+      - [ "Use 1.5 TB NVMe SSD for Temporary Storage", "ssd", ]
+
+  multithreading:
+    widget: checkbox
+    label: Multithreading
+    direction: horizontal
+    separator: ","
+    indent: 1
+    help: See <a href="https://docs.nesi.org.nz/Software/Parallel_Computing/Simultaneous_Multithreading" target="_blank">Simultaneous Multithreading</a> for more information.
+    options:
+      - [ "Use Multithreading", "2", ]
+
+  array:
+    widget: number
+    label: [ Array Job (start index), Array Job (last index), Array Job (jump) ]
+    size: 3
+    indent: 1
+    value: [null, null, 1]
+    min:  [0, 0, 1]
+    help: Each job executed from an array job is assigned a task ID, which can be referenced in the shell script via the environment variable SLURM_ARRAY_TASK_ID. See <a href="https://docs.nesi.org.nz/Batch_Computing/Job_Arrays" target="_blank">Job Arrays</a> for more information.
+
+  mail_option:
+    label: Mail option
+    widget: checkbox
+    help: If you would like Slurm to send you an email about your job(s), click the options below for sending job information to your email.
+    direction: horizontal
+    separator: ","
+    indent: 1
+    options:
+      - [ "Beginning of job execution", 'BEGIN',   enable-email ]
+      - [ "End of job execution",       'END',     enable-email ]
+      - [ "Fail of job",                'FAIL',    enable-email ]
+      - [ "When the job is requeued",   'REQUEUE', enable-email ]
+      - [ "All",                        'ALL',     enable-email ]
+
+  email:
+    widget: email
+    label: Email
+    help: The email address that Slurm will send the selected job notification email(s) to.
+    indent: 2
+
+script: |
+  #!/bin/bash -e
+  #SBATCH --job-name=#{OC_JOB_NAME}
+  #SBATCH --account=#{account}
+  #SBATCH --partition=#{partition}
+  #SBATCH --cpus-per-task=#{cores_simple}
+  #SBATCH --ntasks=#{cores_advanced_1}
+  #SBATCH --cpus-per-task=#{cores_advanced_2}
+  #SBATCH --nodes=#{number_of_nodes}
+  #SBATCH --mem=#{memory_total_gb}G
+  #SBATCH --mem-per-cpu=#{memory_per_cpu_gb}G
+  #SBATCH --time=#{time_days_hours_minutes_1}-#{zeropadding(time_days_hours_minutes_2,2)}:#{zeropadding(time_days_hours_minutes_3,2)}:#{zeropadding(time_days_hours_minutes_4,2)}
+  #SBATCH --array=#{array_1}-#{array_2}:#{array_3}
+  #SBATCH --qos=#{testing}
+  #SBATCH --profile=#{profiling}
+  #SBATCH --acctg-freq=#{profiling_time}
+  #SBATCH --gres=#{ssd} # Set paths to ${TMPDIR} to use SSD. SSD is wiped at end of job
+  #SBATCH --threads-per-core=#{multithreading}
+  #SBATCH --mail-type=#{mail_option}
+  #SBATCH --mail-user=#{email}
+
+

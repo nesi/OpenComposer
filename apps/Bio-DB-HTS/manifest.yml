@@ -1,0 +1,5 @@
+name: Bio-DB-HTS
+category: Biology
+description: Read files using HTSlib including BAM/CRAM, Tabix and BCF database files.
+homepage: https://metacpan.org/release/Bio-DB-HTS
+hidden: true

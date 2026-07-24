@@ -1,0 +1,5 @@
+name: BayesAss
+category: Biology
+description: Program for inference of recent immigration rates between populations using unlinked multilocus genotypes.
+homepage: http://www.rannala.org/?page_id=245
+hidden: true

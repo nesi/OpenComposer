@@ -1,0 +1,5 @@
+name: spoa
+category: Biology
+description: C++ implementation of the partial order alignment (POA) algorithm which is used to generate consensus sequences.
+homepage: https://github.com/rvaser/spoa
+hidden: true

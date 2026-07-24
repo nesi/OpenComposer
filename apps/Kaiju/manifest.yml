@@ -1,0 +1,6 @@
+name: Kaiju
+category: Biology
+description: Kaiju is a program for sensitive taxonomic classification of high-throughput sequencing reads from metagenomic whole genome sequencing experiments.
+homepage: http://kaiju.binf.ku.dk/
+icon: icon.gif
+hidden: true

@@ -1,0 +1,6 @@
+name: TOGA
+category: Biology
+description: Implements a novel machine learning based paradigm to infer orthologous genes between related species and to accurately distinguish orthologs from paralogs or processed pseudogenes.
+homepage: https://github.com/hillerlab/TOGA
+icon: icon.png
+hidden: true

@@ -1,0 +1,5 @@
+name: GRIDSS
+category: Biology
+description: GRIDSS is a module software suite containing tools useful for the detection of genomic rearrangements.
+homepage: https://github.com/PapenfussLab/gridss/wiki/GRIDSS-Documentation
+hidden: true

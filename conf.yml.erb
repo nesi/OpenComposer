@@ -1,0 +1,191 @@
+---
+# ============================================================================
+# Open Composer configuration
+#
+# Every available setting is listed below with its DEFAULT value, so you can
+# change values directly here without consulting the documentation.
+#
+# The site-specific connection settings (login_node, ssh_wrapper, bin,
+# bin_overrides, sge_root, scheduler_env, copy_environment) are left commented
+# out — they have no universal default. Uncomment and set them for your site.
+# ============================================================================
+
+# ---- Required settings -----------------------------------------------------
+# Directory containing the application templates.
+apps_dir: "./sample_apps"
+
+# Scheduler type — controls job submission, history, cancellation, and which
+# generic script template appears under "New Template".
+# Valid values: slurm, pbspro, miyabi, sge, fujitsu_tcs
+scheduler: "slurm"
+
+# Multi-cluster: instead of the single "scheduler:" above, define one block per
+# cluster. Each cluster may set its own scheduler / connection settings.
+#clusters:
+#  fugaku:
+#    scheduler: "fujitsu_tcs"
+#  prepost:
+#    scheduler: "slurm"
+#    scheduler_env:
+#      SLURM_CONF_SERVER: "slurmctld.example.com"
+#    copy_environment: false
+#    bin_overrides:
+#      sbatch: "/usr/local/bin/sbatch"
+
+# ---- General ---------------------------------------------------------------
+# Where Open Composer stores its data (history DB, saved templates).
+data_dir: <%= ENV['HOME'] %>/composer
+
+# Site-specific connection settings. Leave commented to run against a local
+# scheduler; uncomment and set to submit over SSH to a login node.
+#login_node: "example.com"
+#ssh_wrapper: "ssh hoge@example.com"
+#bin: "/usr/local/bin"
+# Environment variables added when running job scheduler commands.
+#scheduler_env:
+#  SLURM_CONF_SERVER: "slurmctld.example.com"
+# Slurm only: submit jobs with the PUN environment copied (--export=ALL) or not (--export=NONE).
+#copy_environment: false
+# Per-command PATH overrides for the scheduler binaries.
+#bin_overrides:
+#  sbatch:   "/usr/local/bin/sbatch"
+#  scontrol: "/usr/local/bin/scontrol"
+#  scancel:  "/usr/local/bin/scancel"
+#  sacct:    "/usr/local/bin/sacct"
+#  pjsub:    "/usr/local/bin/pjsub"
+#  pjstat:   "/usr/local/bin/pjstat"
+#  pjdel:    "/usr/local/bin/pjdel"
+#  qsub:     "/opt/pbs/bin/qsub"
+#  qstat:    "/usr/local/bin/qstat"
+#  qdel:     "/usr/local/bin/qdel"
+#  qacct:    "/usr/local/bin/qacct"
+#sge_root: "/apps/t4/rhel9/uge/latest"
+
+# SSH key check on Submit. When true, clicking Submit first checks for an SSH
+# key in ~/.ssh; if none exists Open Composer generates a passphrase-less key
+# (named "<ssh_key_name>_<ssh_key_type>"), authorizes it, and adds an
+# IdentityFile line to ~/.ssh/config so the job can be submitted over SSH
+# without a password prompt.
+ensure_ssh_key: false
+ssh_key_type:   "ed25519"        # Key type generated when missing: ed25519 (recommended) or rsa
+ssh_key_name:   "opencomposer"   # Base name for the generated key files
+
+# Directory containing hidden generic apps (not shown in the main app listing).
+generic_apps_dir: "./generic_apps"
+
+# When loading an external/generic job (one not submitted through Open Composer)
+# from the History page, open this subfolder inside generic_apps_dir.
+external_reload_app: "Slurm"
+
+# "Load or Create a Script from Disk" button (opens the full-page file browser).
+show_load_script:   true
+load_script_label:  "Load or Create a Script from Disk"
+
+# ---- History ---------------------------------------------------------------
+# Set to false to never store the batch script in the DB. When false, "Load
+# parameters" always fetches the script live via sacct -B.
+history_store_script: true
+# Set to true to show the Job Efficiency section in the history job details
+# modal. Requires sacct --json support (Slurm 20.11+).
+history_efficiency:   false
+# Columns shown on the History page. Give a key a "label:" to rename its column.
+history:
+  OC_HISTORY_JOB_NAME:
+  OC_HISTORY_PARTITION:
+  OC_HISTORY_SUBMISSION_TIME:
+  OC_HISTORY_START_TIME:
+  OC_HISTORY_END_TIME:
+  OC_HISTORY_OUTPUT_FILE:
+  OC_HISTORY_ERROR_FILE:
+
+# ---- Layout ----------------------------------------------------------------
+# Browser tab icon (file in the public/ dir). "" disables it.
+favicon:                 ""
+
+# Horizontal separator line drawn directly under the top navbar:
+#   false             hide it (default)
+#   true / gradient   a soft 6px gradient rule that fades to transparent
+#   solid / line      a normal 1px solid rule
+#   accent            a thicker 3px coloured accent bar
+show_navbar_separator:   false
+navbar_separator_color:  "#C3C8C8"   # Colour of the solid / accent separator (ignored for gradient)
+
+# Optional descriptive blurb shown above the template categories. HTML is
+# allowed. "" hides it.
+app_description:         ""
+
+footer:                  "&nbsp;"    # Footer text / HTML (shown when show_footer is true)
+home_format:             "big"       # Template thumbnail layout: "big" or "small"
+thumbnail_width:         "100"
+highlight_theme:         "vs"        # Code-editor syntax highlight theme
+directive_color:         "#D73A49"
+navbar_color:            "#3D3B40"
+navbar_text_color:       "#FFFFFF"
+dropdown_color:          "#3D3B40"
+dropdown_text_color:     "#FFFFFF"
+category_color:          "#5522BB"
+category_text_color:     "#FFFFFF"
+description_color:       "#5522BB"
+description_text_color:  "#FFFFFF"
+form_color:              "#BFCFE7"
+non_script_color:        "#FFE28A"
+non_script_button_color: "#FFBF00"
+submit_color:            "#FFCCCC"
+submit_button_color:     "#FFAAAA"
+history_action_color:    "#DC3545"
+
+# Footer
+show_footer:             true
+footer_color:            "#3D3B40"
+footer_text_color:       "#FFFFFF"
+footer_padding:          "p-3"       # Bootstrap padding class: p-1, p-2, p-3, p-4, p-5
+footer_ood_logo:         true        # Set to false to hide the Open OnDemand logo
+footer_logo_height:      "24px"      # Height of the footer brand logo
+# Footer brand logo (the "Powered by …" image, bottom-left of the footer). Image
+# file lives in the public/ dir. Clicking it opens footer_brand_url. Leave
+# footer_brand_logo empty ("") to fall back to the Open OnDemand logo above.
+footer_brand_logo:       ""
+footer_brand_url:        "https://openondemand.org/"
+footer_brand_alt:        "Powered by Open OnDemand"
+
+# ---- Submission warnings ---------------------------------------------------
+empty_script_warning:    true        # Set to false to disable the warning when submitting a script with no real commands
+
+# ---- Navbar links (set the matching show_* to false to hide) ---------------
+# Each item's label and icon can be customised. Icons accept either a Font
+# Awesome class (e.g. "fas fa-folder") or a Bootstrap Icons class
+# (e.g. "bi bi-terminal-fill") — both icon sets are loaded.
+show_home_directory:     true
+home_directory_label:    "Home Directory"
+home_directory_icon:     "fas fa-home"
+
+show_shell_access:       true
+shell_access_label:      "Shell Access"
+shell_access_icon:       "fas fa-terminal"
+
+# Search box, rendered on the right-hand side of the navbar. Set to false to hide.
+show_search:             true
+navbar_search_placeholder: "Search apps…"
+
+# Background colours for category badges (optional). Add "Category: <#hex>"
+# pairs, e.g.:
+#  Chemistry: "#0097a7"
+#  Physics:   "#283593"
+category_badge_colors: {}
+
+# Optional message shown under the template list. "" hides it.
+all_templates_footer:    ""
+
+# "Return to OnDemand" link. open_ondemand_url is left unset so the link and the
+# navbar logo auto-derive to <this host>/pun/sys/dashboard. Set open_ondemand_url
+# to override that with a fixed URL.
+show_open_ondemand:      true
+#open_ondemand_url:      "https://ondemand.example.com"
+open_ondemand_label:     "Open OnDemand"
+open_ondemand_icon:      "bi bi-grid-fill"    # grid icon
+open_ondemand_new_tab:   true                 # Set to false to open in the same tab
+
+# Navbar logo (top-left). Set navbar_logo to an image file in the public/ dir to
+# show it; show_navbar_logo toggles it without unsetting navbar_logo.
+show_navbar_logo:        true
+navbar_logo:             ""

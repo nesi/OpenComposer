@@ -1,0 +1,5 @@
+name: Kraken2
+category: Biology
+description: Taxonomic sequence classifier.
+homepage: http://ccb.jhu.edu/software/kraken/MANUAL.html
+hidden: true

@@ -1,0 +1,255 @@
+---
+form:
+  group:
+    widget: select
+    label: Group List
+    required: true
+    options:
+    <% (`groups`.strip.split - [ENV['USER'], ENV['LOGNAME']]).each do |g| %>
+      - [<%= g %>]
+    <% end %>
+    
+  queue:
+    widget: select
+    label: Queue
+    required: true
+    options:
+      - [ debug-g, debug-g,
+          set-label-npt_1: Nodes (1 - 16),     set-max-npt_1: 16,
+          set-label-npt_2: Processes (1 - 72), set-max-npt_2: 72,
+	  set-label-npt_3: Threads (1 - 72),   set-max-npt_3: 72,
+          set-label-time_1: Maximum run time hours (0),   set-max-time_1: 0, set-value-time_1: 0,
+	  set-label-time_2: Maximum run minutes (0 - 30), set-max-time_2: 30,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 72. ]
+      - [ short-g, short-g,
+          set-label-npt_1: Nodes (1 - 8),      set-max-npt_1:  8,
+          set-label-npt_2: Processes (1 - 72), set-max-npt_2: 72,
+          set-label-npt_3: Threads (1 - 72),   set-max-npt_3: 72,
+	  set-label-time_1: Maximum run time hours (0 - 8), set-max-time_1: 8,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 72. ]
+      - [ regular-g, regular-g,
+          set-label-npt_1: Nodes (1 - 256),    set-max-npt_1: 256,
+          set-label-npt_2: Processes (1 - 72), set-max-npt_2:  72,
+          set-label-npt_3: Threads (1 - 72),   set-max-npt_3:  72,
+	  set-label-time_1: Maximum run time hours (0 - 48), set-max-time_1: 48,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 72.,
+	  set-help-time: "If you use more than 129 nodes, the maximum time is 24 hours." ]
+      - [ debug-mig, debug-mig,
+          set-label-npt_1: Nodes (1), set-max-npt_1: 1,
+	  set-label-time_1: Maximum run time hours (0),   set-max-time_1:  0, set-value-time_1: 0,
+	  set-label-time_2: Maximum run minutes (0 - 30), set-max-time_2: 30,
+	  enable-mig,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 72. ]
+      - [ short-mig, short-mig,
+          set-label-npt_1: Nodes (1), set-max-npt_1: 1, set-value-npt_1: 1,
+	  set-label-time_1: Maximum run time hours (0 - 8), set-max-time_1: 8,
+	  enable-mig,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 72. ]
+      - [ regular-mig, regular-mig,
+          set-label-npt_1: Nodes (1), set-max-npt_1: 1, set-value-npt_1: 1,
+	  set-label-time_1: Maximum run time hours (0 - 48), set-max-time_1: 48,
+	  enable-mig,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 72. ]
+      - [ debug-c, debug-c,
+          set-label-npt_1: Nodes (1 - 4),       set-max-npt_1:   4,
+          set-label-npt_2: Processes (1 - 112), set-max-npt_2: 112,
+          set-label-npt_3: Threads (1 - 112),   set-max-npt_3: 112,
+	  set-label-time_1: Maximum run time hours (0),   set-max-time_1:  0, set-value-time_1: 0,
+	  set-label-time_2: Maximum run minutes (0 - 30), set-max-time_2: 30,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 112. ]
+      - [ short-c, short-c,
+          set-label-npt_1: Nodes (1 - 2),       set-max-npt_1:   2,
+     	  set-label-npt_2: Processes (1 - 112), set-max-npt_2: 112,
+    	  set-label-npt_3: Threads (1 - 112),   set-max-npt_3: 112,
+	  set-label-time_1: Maximum run time hours (0 - 8), set-max-time_1: 8,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 112. ]
+      - [ regular-c, regular-c,
+          set-label-npt_1: Nodes (1 - 64),      set-max-npt_1:  64,
+     	  set-label-npt_2: Processes (1 - 112), set-max-npt_2: 112,
+          set-label-npt_3: Threads (1 - 112),   set-max-npt_3: 112,
+	  set-label-time_1: Maximum run time hours (0 - 48), set-max-time_1: 48,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 112. ]
+    
+  mig:
+    widget: radio
+    label: Number of MIGs
+    value: 1
+    direction: horizontal
+    required: true
+    options:
+      - [ 1, 1,
+          set-value-npt_1: 1, set-label-npt_1: MIG Instances (1),
+	  set-label-npt_2: Processes (1 - 18), set-min-npt_2: 1, set-max-npt_2: 18,
+	  set-label-npt_3: Threads (1 - 18), set-max-npt_3: 18,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 18. ]
+      - [ 2, 2,
+          set-value-npt_1: 2, set-label-npt_1: MIG Instances (2),
+	  set-label-npt_2: Processes (2 - 36), set-min-npt_2: 2, set-max-npt_2: 36,
+          set-label-npt_3: Threads (1 - 36), set-max-npt_3: 36,
+	  set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 36. ]
+      - [ 4, 4,
+          set-value-npt_1: 4, set-label-npt_1: MIG Instances (4),
+	  set-label-npt_2: Processes (4 - 72), set-min-npt_2: 4, set-max-npt_2: 72,
+	  set-label-npt_3: Threads (1 - 72), set-max-npt_3: 72,
+          set-help-npt: Processes is the number of processes per node. Processes x Threads must be less than or equal to 72. ]
+
+  npt:
+    widget: number
+    size:     3
+    required: [ true, true, true ]
+    label:    [ Nodes, Processes, Threads ]
+    value:    [ 1, 1, 1 ]
+    min:      [ 1, 1, 1 ]
+    help: Processes is the number of processes per node.
+    
+  time:
+    widget:   number
+    required: [ true, true ]
+    label:    [ Maximum run time hours (0 - 24), Maximum run minutes (0 - 59) ]
+    size:     2
+    value:    [  1, 30 ]
+    min:      [  0,  0 ]
+    max:      [ 24, 59 ]
+    step:     [  1,  1 ]
+
+  show_advanced_option:
+    widget: checkbox
+    options:
+      - [ "Show advanced option", "", show-mail_events, show-array, show-module, show-log, show-logname ]
+
+  mail_events:
+    label: Mail events
+    widget: checkbox
+    direction: horizontal
+    separator: ","
+    indent: 1
+    options:
+      - [ "Do not send email",                     'n',
+          disable-mail_events-Send email when a job ends abnormally,
+	  disable-mail_events-Send email when a job starts,
+	  disable-mail_events-Send email when a job ends ]
+      - [ "Send email when a job ends abnormally", 'a' ]
+      - [ "Send email when a job starts",          'b' ]
+      - [ "Send email when a job ends",            'e' ]
+
+  array:
+    widget: number
+    label: [ Array Job (start index), Array Job (last index) ]
+    size: 2
+    indent: 1
+    min:  [0, 0]
+    
+  log:
+    widget: checkbox
+    indent: 1
+    options:
+      - [ "Output the job's stderr output to stdout", "oe", disable-logname ]
+      
+  logname:
+    widget: text
+    indent: 1
+    label:  [ File name of stdout, File name of stderr ]
+    size:   2
+      
+  module:
+    widget: multi_select
+    label: Load modules
+    indent: 1
+    separator: " "
+    options:
+      - [frontflow_blue/8.1]
+      - [mpi-fftw/3.3.10]
+      - [netcdf-parallel/4.9.2]
+      - [phase/2024.01]
+      - [pt-scotch/7.0.5]
+      - [superlu_dist/9.0.0]
+      - [waitio/1.0]
+      - [frontistr/5.6]
+      - [netcdf-cxx-parallel/4.3.1]
+      - [parmetis/4.0.3]
+      - [phdf5/1.14.5]
+      - [qe/7.3.1]
+      - [trilinos/13.4.1]
+      - [modylas/1.0.4]
+      - [netcdf-fortran-parallel/4.6.1]
+      - [petsc-gpu/3.22.2]
+      - [pnetcdf/1.14.0]
+      - [revocap_coupler/2.1]
+      - [vfd-gds/1.0.2]
+      - [fftw/3.3.10]
+      - [hdf5/1.14.5]
+      - [metis/4.0.3]
+      - [mt-metis/0.7.2]
+      - [netcdf-fortran/4.6.1]
+      - [nv-hpcx/24.9]
+      - [povray/3.7.0.10]
+      - [scotch/7.0.5]
+      - [superlu_mt/4.0.0]
+      - [gsl/2.8]
+      - [magma-gpu/2.7.2]
+      - [metis/5.1.0]
+      - [netcdf-cxx/4.3.1]
+      - [netcdf/4.9.2]
+      - [ompi-cuda/4.1.6-12.6]
+      - [revocap_refiner/1.1.01]
+      - [superlu/7.0.0]
+      - [xabclib/1.03]
+      - [apptainer/1.3.5]
+      - [bioruby/2.0.5]
+      - [enroot/3.5.0]
+      - [gocryptfs/2.4.0]
+      - [paraview/5.13.1]
+      - [qt/5.15.16]
+      - [singularity/4.2.1]
+      - [xcrypt/cecb323]
+      - [bioperl/1.7.8]
+      - [cmake/3.31.1]
+      - [gatk/4.3.0.0]
+      - [miniforge3/24.11.0-0]
+      - [python/3.10.16]
+      - [R/4.4.2]
+      - [squashfuse/0.5.2]
+      - [cuda/12.4]
+      - [cuda/12.6]
+      - [gcc-toolset/12]
+      - [gcc-toolset/13]
+      - [gcc-toolset/14]
+      - [gcc/11.4.1]
+      - [gcc/12.4.0]
+      - [nvidia/24.5]
+      - [nvidia/24.9]
+      - [nvidia/24.11]
+
+script: |
+  #!/usr/bin/env bash
+  #PBS -W group_list=#{group}
+  #PBS -q #{queue}
+  #PBS -l select=#{npt_1}:mpiprocs=#{npt_2}:ompthreads=#{npt_3}
+  #PBS -l walltime=#{time_1}:#{time_2}:00
+  #PBS -m #{mail_events}
+  #PBS -r y -J #{array_1}-#{array_2}
+  #PBS -j #{log}
+  #PBS -o #{logname_1}
+  #PBS -e #{logname_2}
+  
+  module load #{module}
+  cd ${PBS_O_WORKDIR}
+  
+check: |
+  if @time_1 == 0 && @time_2 == 0
+    halt 500, "Time is too short."
+  elsif ((@queue == "short-g" || @queue == "short-mig" || @queue == "short-c") && @time_1 == 8) && @time_2 > 0
+    halt 500, "Exceeded Time (#{@time_1}:#{@time_2}:00)."
+  elsif ((@queue == "reqular-g" || @queue == "reqular-mig" || @queue == "reqular-c") && @time_1 == 48) && @time_2 > 0
+    halt 500, "Exceeded Time (#{@time_1}:#{@time_2}:00)."
+  elsif @queue == "reqular-g" && (@time_1 > 24 || @time_1 == 24 && @time_2 > 0)
+    halt 500, "Exceeded Time (#{@time_1}:#{@time_2}:00)."
+  end
+
+  procs   = @npt_2
+  threads = @npt_3
+  if (@queue == "debug-c" || @queue == "short-c" || @queue == "regular-c")
+    halt 500, 'The condition "Processes x Threads >= 112" is not met.' if procs * threads >= 112
+  else
+    halt 500, 'The condition "Processes x Threads >= 72" is not met.'  if procs * threads >= 72
+  end

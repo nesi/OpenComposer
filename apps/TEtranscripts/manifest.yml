@@ -1,0 +1,5 @@
+name: TEtranscripts
+category: Biology
+description: Takes RNA-seq (and similar data) and annotates reads to both genes & transposable elements.
+homepage: https://github.com/mhammell-laboratory/TEtranscripts
+hidden: true

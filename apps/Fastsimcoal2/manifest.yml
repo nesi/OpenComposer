@@ -1,0 +1,5 @@
+name: Fastsimcoal2
+category: Biology
+description: While preserving all the simulation flexibility of simcoal2, fastsimcoal is now implemented under a faster continous-time sequential Markovian coalescent approximation, allowing it to efficiently generate genetic diversity for different types of markers along large genomic regions, for both present or ancient samples.
+homepage: http://cmpg.unibe.ch/software/fastsimcoal2/
+hidden: true

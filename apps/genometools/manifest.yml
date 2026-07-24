@@ -1,0 +1,5 @@
+name: genometools
+category: Biology
+description: 'GenomeTools: A Comprehensive Software Library for Efficient Processing of Structured Genome Annotations.'
+homepage: http://genometools.org
+hidden: true

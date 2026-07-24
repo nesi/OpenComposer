@@ -1,0 +1,6 @@
+name: VirSorter
+category: Biology
+description: 'VirSorter: mining viral signal from microbial genomic data.'
+homepage: https://github.com/jiarong/VirSorter2
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/VirSorter/

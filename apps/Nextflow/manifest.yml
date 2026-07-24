@@ -1,0 +1,7 @@
+name: Nextflow
+category: Workflow Management
+description: Nextflow is a reactive workflow framework and a programming DSL that eases writing computational pipelines with complex data.
+homepage: https://www.nextflow.io/
+icon: icon.png
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/Nextflow/

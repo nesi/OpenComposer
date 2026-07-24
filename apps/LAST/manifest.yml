@@ -1,0 +1,5 @@
+name: LAST
+category: Biology
+description: LAST finds similar regions between sequences.
+homepage: http://last.cbrc.jp/
+hidden: true

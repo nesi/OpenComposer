@@ -1,0 +1,5 @@
+name: wtdbg
+category: Biology
+description: De novo sequence assembler for long noisy reads produced by PacBio or Oxford Nanopore Technologies.
+homepage: https://github.com/ruanjue/wtdbg2
+hidden: true

@@ -1,0 +1,48 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['blast_module'] = {
+      'widget' => 'module_load',
+      'module' => "BLAST",
+      'label'  => "BLAST Module"
+    }
+    new_form['blastdb_module'] = {
+      'widget' => 'module_load',
+      'module' => "BLASTDB",
+      'label'  => "BLASTDB Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{blast_module}
+  module load #{blastdb_module}
+
+  # This script takes one argument, the FASTA file of query sequences.
+  QUERIES=$1
+  FORMAT="6 qseqid qstart qend qseq sseqid sgi sacc sstart send staxids sscinames stitle length evalue bitscore"
+  BLASTOPTS="-evalue 0.05 -max_target_seqs 10"
+  BLASTAPP=blastn
+  DB=nt
+  #BLASTAPP=blastx
+  #DB=nr
+
+  # Uncomment this section out if you 
+  # want to keep the database in RAM
+  # See https://docs.nesi.org.nz/Software/Available_Applications/BLAST for 
+  # information about this.
+  #cp $BLASTDB/{$DB,taxdb}.* $TMPDIR/ 
+  #export BLASTDB=$TMPDIR
+
+  $BLASTAPP $BLASTOPTS -db $DB -query $QUERIES -outfmt "$FORMAT" \
+      -out $QUERIES.$DB.$BLASTAPP -num_threads $SLURM_CPUS_PER_TASK
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

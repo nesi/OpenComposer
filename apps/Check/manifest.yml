@@ -1,0 +1,5 @@
+name: Check
+category: Others
+description: Check is a unit testing framework for C.
+homepage: https://libcheck.github.io/check/
+hidden: true

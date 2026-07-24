@@ -12,41 +12,61 @@
 
 # ---- Required settings -----------------------------------------------------
 # Directory containing the application templates.
-apps_dir: "./apps"
+apps_dir: "./sample_apps"
 
 # Scheduler type — controls job submission, history, cancellation, and which
 # generic script template appears under "New Template".
 # Valid values: slurm, pbspro, miyabi, sge, fujitsu_tcs
-# Mahuika is a single Slurm cluster; naming it here shows "mahuika" in the UI.
-clusters:
-  mahuika:
-    scheduler: "slurm"
+scheduler: "slurm"
+
+# Multi-cluster: instead of the single "scheduler:" above, define one block per
+# cluster. Each cluster may set its own scheduler / connection settings.
+#clusters:
+#  fugaku:
+#    scheduler: "fujitsu_tcs"
+#  prepost:
+#    scheduler: "slurm"
+#    scheduler_env:
+#      SLURM_CONF_SERVER: "slurmctld.example.com"
+#    copy_environment: false
+#    bin_overrides:
+#      sbatch: "/usr/local/bin/sbatch"
 
 # ---- General ---------------------------------------------------------------
 # Where Open Composer stores its data (history DB, saved templates).
 data_dir: <%= ENV['HOME'] %>/composer
 
-# Mahuika: submit over SSH to the login node, using the scheduler binaries in /usr/bin.
-login_node: "login.hpc.nesi.org.nz"
-ssh_wrapper: "ssh login.hpc.nesi.org.nz"
-bin: "/usr/bin"
-bin_overrides:
-  sbatch:   "/usr/bin/sbatch"
-  scontrol: "/usr/bin/scontrol"
-  scancel:  "/usr/bin/scancel"
-  sacct:    "/usr/bin/sacct"
-# Optional: environment variables added when running scheduler commands.
+# Site-specific connection settings. Leave commented to run against a local
+# scheduler; uncomment and set to submit over SSH to a login node.
+#login_node: "example.com"
+#ssh_wrapper: "ssh hoge@example.com"
+#bin: "/usr/local/bin"
+# Environment variables added when running job scheduler commands.
 #scheduler_env:
 #  SLURM_CONF_SERVER: "slurmctld.example.com"
-# Slurm only: copy the PUN environment into submitted jobs (--export=ALL vs --export=NONE).
+# Slurm only: submit jobs with the PUN environment copied (--export=ALL) or not (--export=NONE).
 #copy_environment: false
+# Per-command PATH overrides for the scheduler binaries.
+#bin_overrides:
+#  sbatch:   "/usr/local/bin/sbatch"
+#  scontrol: "/usr/local/bin/scontrol"
+#  scancel:  "/usr/local/bin/scancel"
+#  sacct:    "/usr/local/bin/sacct"
+#  pjsub:    "/usr/local/bin/pjsub"
+#  pjstat:   "/usr/local/bin/pjstat"
+#  pjdel:    "/usr/local/bin/pjdel"
+#  qsub:     "/opt/pbs/bin/qsub"
+#  qstat:    "/usr/local/bin/qstat"
+#  qdel:     "/usr/local/bin/qdel"
+#  qacct:    "/usr/local/bin/qacct"
+#sge_root: "/apps/t4/rhel9/uge/latest"
 
 # SSH key check on Submit. When true, clicking Submit first checks for an SSH
 # key in ~/.ssh; if none exists Open Composer generates a passphrase-less key
 # (named "<ssh_key_name>_<ssh_key_type>"), authorizes it, and adds an
 # IdentityFile line to ~/.ssh/config so the job can be submitted over SSH
 # without a password prompt.
-ensure_ssh_key: true
+ensure_ssh_key: false
 ssh_key_type:   "ed25519"        # Key type generated when missing: ed25519 (recommended) or rsa
 ssh_key_name:   "opencomposer"   # Base name for the generated key files
 
@@ -92,7 +112,7 @@ navbar_separator_color:  "#C3C8C8"   # Colour of the solid / accent separator (i
 
 # Optional descriptive blurb shown above the template categories. HTML is
 # allowed. "" hides it.
-app_description:         '<p class="mb-2">Open Composer lets you build and submit Slurm job scripts directly from Open OnDemand — no terminal required.</p><p class="mb-2">See <strong>History</strong> to view the jobs you have submitted and their status.</p><p class="mb-0">See the <a href="https://docs.r-ccs.riken.jp/rikyu/en/composer/" target="_blank" rel="noopener">Open Composer documentation</a> for details on how to use it.</p>'
+app_description:         ""
 
 footer:                  "&nbsp;"    # Footer text / HTML (shown when show_footer is true)
 home_format:             "big"       # Template thumbnail layout: "big" or "small"
@@ -147,12 +167,11 @@ shell_access_icon:       "fas fa-terminal"
 show_search:             true
 navbar_search_placeholder: "Search apps…"
 
-# Background colours for category badges (optional). Add "Category: <#hex>" pairs.
-category_badge_colors:
-  Slurm Submit Templates: "#25545E"
-  Chemistry:              "#0097a7"
-  Engineering:            "#1565c0"
-  Physics:                "#283593"
+# Background colours for category badges (optional). Add "Category: <#hex>"
+# pairs, e.g.:
+#  Chemistry: "#0097a7"
+#  Physics:   "#283593"
+category_badge_colors: {}
 
 # Optional message shown under the template list. "" hides it.
 all_templates_footer:    ""

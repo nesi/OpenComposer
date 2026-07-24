@@ -3,5 +3,4 @@ category: Chemistry
 description: The Vienna Ab initio Simulation Package (VASP) is a computer program for atomic scale materials modelling, e.g. electronic structure calculations and quantum-mechanical molecular dynamics, from first principles.
 homepage: http://www.vasp.at
 icon: icon.png
-hidden: true
 documentation: https://docs.nesi.org.nz/Software/Available_Applications/VASP/

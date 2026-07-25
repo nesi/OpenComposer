@@ -45,26 +45,26 @@ class Scheduler
   # Fetch live details for a single job from the scheduler control command.
   # Override in subclasses that support this (e.g. Slurm via scontrol).
   # @return [Array<Hash, String>] [parsed_hash_or_nil, error_message_or_nil]
-  def scontrol_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def scontrol_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     [nil, nil]
   end
 
   # Fetch key fields for a single job from sacct for the Job Details modal.
   # @return [Array<Hash, String>] [parsed_hash_or_nil, error_message_or_nil]
-  def sacct_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     [nil, nil]
   end
 
   # Fetch all jobs for the current user within a date range from sacct.
   # @return [Array<Array, String, String>] [jobs_array_or_nil, error_or_nil, command_or_nil]
-  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     [nil, nil, nil]
   end
 
   # Fetch estimated start times for pending jobs from squeue --start.
   # @param job_ids [Array<String>] base job IDs to query (e.g. ["6801262"]).
   # @return [Array<Hash, String>] [job_id => start_time_string, error_or_nil]
-  def squeue_start_times(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def squeue_start_times(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     [{}, nil]
   end
 
@@ -72,14 +72,14 @@ class Scheduler
   # Returns entries with the same key names as sacct_all_jobs so they can be merged
   # into sacct_map for any job IDs sacct did not report (e.g. freshly queued jobs).
   # @return [Array<Array, String>] [jobs_array, error_or_nil]
-  def squeue_active_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def squeue_active_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     [[], nil]
   end
 
   # Fetch the batch script submitted for a job.
   # Override in subclasses that support this (e.g. Slurm via sacct -B).
   # @return [Array<String, String>] [script_content_or_nil, error_message_or_nil]
-  def batch_script(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def batch_script(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     [nil, nil]
   end
 
@@ -87,7 +87,7 @@ class Scheduler
   # Each element of the returned array is a 7-element array:
   #   [nodelist, state, cpus_a_i_o_t, memory_mb, free_mem_mb, gres, gres_used]
   # @return [Array<Array, String, String>] [nodes_array_or_nil, error_or_nil, command_or_nil]
-  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     [nil, nil, nil]
   end
 

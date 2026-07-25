@@ -67,8 +67,17 @@ data_dir: <%= ENV['HOME'] %>/composer
 # IdentityFile line to ~/.ssh/config so the job can be submitted over SSH
 # without a password prompt.
 ensure_ssh_key: false
-ssh_key_type:   "ed25519"        # Key type generated when missing: ed25519 (recommended) or rsa
+ssh_key_type:   "ed25519"        # ed25519 (recommended), rsa (4096-bit), or ecdsa; any other value falls back to ed25519
 ssh_key_name:   "opencomposer"   # Base name for the generated key files
+
+# Catalogue of the environment modules available on the cluster, used to fill the
+# module_load and dependent_module_select widgets and to auto-apply the GPU badge.
+# It must be a JSON document of the form
+#   {"GROMACS": {"versions": ["2023.2-gimkl-2022a"], "default": "...", "domains": ["chem"]}}
+# reachable over HTTP(S) from the web node. The result is cached for 24 hours in
+# <data_dir>/.module-list-cache.json. Empty (the default) disables the feature:
+# the module widgets then offer no versions and no GPU badge is auto-applied.
+modules_list_url:   ""
 
 # Directory containing hidden generic apps (not shown in the main app listing).
 generic_apps_dir: "./generic_apps"
@@ -83,12 +92,16 @@ load_script_label:  "Load or Create a Script from Disk"
 
 # ---- History ---------------------------------------------------------------
 # Set to false to never store the batch script in the DB. When false, "Load
-# parameters" always fetches the script live via sacct -B.
+# script" always fetches the script live via sacct -B.
 history_store_script: true
 # Set to true to show the Job Efficiency section in the history job details
 # modal. Requires sacct --json support (Slurm 20.11+).
 history_efficiency:   false
-# Columns shown on the History page. Give a key a "label:" to rename its column.
+# Columns shown on the History page. Supported keys: OC_HISTORY_JOB_NAME,
+# OC_HISTORY_PARTITION, OC_HISTORY_SUBMISSION_TIME, OC_HISTORY_START_TIME,
+# OC_HISTORY_END_TIME, OC_HISTORY_OUTPUT_FILE, OC_HISTORY_ERROR_FILE.
+# Give a key a "label:" to rename its column, or use "history: []" for no
+# extra columns. Omitting the block entirely shows all seven.
 history:
   OC_HISTORY_JOB_NAME:
   OC_HISTORY_PARTITION:
@@ -121,8 +134,6 @@ highlight_theme:         "vs"        # Code-editor syntax highlight theme
 directive_color:         "#D73A49"
 navbar_color:            "#3D3B40"
 navbar_text_color:       "#FFFFFF"
-dropdown_color:          "#3D3B40"
-dropdown_text_color:     "#FFFFFF"
 category_color:          "#5522BB"
 category_text_color:     "#FFFFFF"
 description_color:       "#5522BB"
@@ -175,6 +186,11 @@ category_badge_colors: {}
 
 # Optional message shown under the template list. "" hides it.
 all_templates_footer:    ""
+
+# Manifest category pinned to the top of the "All Templates" and "New Script"
+# pages. Matched case-insensitively; the remaining templates follow in
+# alphabetical order.
+new_script_featured_category: "Slurm Submit Templates"
 
 # "Return to OnDemand" link. open_ondemand_url is left unset so the link and the
 # navbar logo auto-derive to <this host>/pun/sys/dashboard. Set open_ondemand_url

@@ -17,9 +17,9 @@ apps_dir: "./apps"
 # Scheduler type — controls job submission, history, cancellation, and which
 # generic script template appears under "New Template".
 # Valid values: slurm, pbspro, miyabi, sge, fujitsu_tcs
-# Mahuika is a single Slurm cluster; naming it here shows "mahuika" in the UI.
+# Single Slurm cluster; the name here is shown in the UI (History / Nodes selector).
 clusters:
-  mahuika:
+  demo:
     scheduler: "slurm"
 
 # ---- General ---------------------------------------------------------------
@@ -50,6 +50,11 @@ ensure_ssh_key: true
 ssh_key_type:   "ed25519"        # Key type generated when missing: ed25519 (recommended) or rsa
 ssh_key_name:   "opencomposer"   # Base name for the generated key files
 
+# Catalogue used by the module_load / dependent_module_select widgets and to
+# auto-apply the GPU badge. Fetched over HTTPS and cached for 24 hours in
+# <data_dir>/.module-list-cache.json. Leave empty to disable the feature.
+modules_list_url: "https://raw.githubusercontent.com/nesi/modules-list/main/module-list.json"
+
 # Directory containing hidden generic apps (not shown in the main app listing).
 generic_apps_dir: "./generic_apps"
 
@@ -63,12 +68,15 @@ load_script_label:  "Load or Create a Script from Disk"
 
 # ---- History ---------------------------------------------------------------
 # Set to false to never store the batch script in the DB. When false, "Load
-# parameters" always fetches the script live via sacct -B.
+# script" always fetches the script live via sacct -B.
 history_store_script: true
 # Set to true to show the Job Efficiency section in the history job details
 # modal. Requires sacct --json support (Slurm 20.11+).
 history_efficiency:   false
-# Columns shown on the History page. Give a key a "label:" to rename its column.
+# Columns shown on the History page. Supported keys: OC_HISTORY_JOB_NAME,
+# OC_HISTORY_PARTITION, OC_HISTORY_SUBMISSION_TIME, OC_HISTORY_START_TIME,
+# OC_HISTORY_END_TIME, OC_HISTORY_OUTPUT_FILE, OC_HISTORY_ERROR_FILE.
+# Give a key a "label:" to rename its column.
 history:
   OC_HISTORY_JOB_NAME:
   OC_HISTORY_PARTITION:
@@ -101,8 +109,6 @@ highlight_theme:         "vs"        # Code-editor syntax highlight theme
 directive_color:         "#D73A49"
 navbar_color:            "#3D3B40"
 navbar_text_color:       "#FFFFFF"
-dropdown_color:          "#3D3B40"
-dropdown_text_color:     "#FFFFFF"
 category_color:          "#5522BB"
 category_text_color:     "#FFFFFF"
 description_color:       "#5522BB"
@@ -140,7 +146,7 @@ home_directory_label:    "Home Directory"
 home_directory_icon:     "fas fa-home"
 
 show_shell_access:       true
-shell_access_label:      "Shell Access"
+shell_access_label:      "Cluster Shell"
 shell_access_icon:       "fas fa-terminal"
 
 # Search box, rendered on the right-hand side of the navbar. Set to false to hide.

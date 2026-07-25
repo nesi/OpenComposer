@@ -86,7 +86,6 @@ HISTORY_KEY_MAP ||= {
   "OC_HISTORY_ERROR_FILE"      => "StdErr"
 }.freeze
 CLUSTERS_KEYS ||= ["scheduler", "login_node", "ssh_wrapper", "bin", "bin_overrides", "scheduler_env", "copy_environment", "sge_root"].freeze
-MODULES_LIST_URL ||= "https://raw.githubusercontent.com/nesi/modules-list/main/module-list.json"
 MODULES_CACHE_TTL ||= 86_400  # 24 hours
 SCHEDULER_TO_GENERIC_APP ||= {
   "slurm"       => "Slurm",
@@ -115,7 +114,7 @@ end
 # Process-wide cache for the parsed application config. Rendering conf.yml.erb
 # through ERB and parsing the YAML is comparatively expensive, yet create_conf
 # runs on EVERY request — including one per tile on the New Custom Template page.
-# On a shared/high-latency filesystem (e.g. Mahuika) that repeated work made
+# On a shared/high-latency filesystem that repeated work made
 # icons load slowly and intermittently blank. Cache the parsed result and only
 # redo it when the source file's mtime changes. A deep copy is returned so
 # callers may mutate their conf freely without corrupting the cache.
@@ -137,17 +136,21 @@ def read_yaml_cached(yml_path)
   end
 end
 
-# Download (and cache for 24 h) the NeSI modules-list JSON.
+# Download (and cache for 24 h) the modules-list JSON.
 # Returns a Hash keyed by module name, or {} on failure.
-def fetch_modules_list(data_dir)
+def fetch_modules_list(data_dir, url = nil)
+  # No catalogue configured: the module widgets and the automatic GPU badge are
+  # simply inactive. Sites that want them set "modules_list_url" in conf.yml.erb.
+  return {} if url.to_s.strip.empty?
+
   cache_path = File.join(data_dir, ".module-list-cache.json")
 
   if File.exist?(cache_path) && (Time.now.to_i - File.mtime(cache_path).to_i) < MODULES_CACHE_TTL
     return JSON.parse(File.read(cache_path))
   end
 
-  uri      = URI(MODULES_LIST_URL)
-  response = Net::HTTP.start(uri.host, uri.port, use_ssl: true, read_timeout: 15, open_timeout: 10) do |http|
+  uri      = URI(url)
+  response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", read_timeout: 15, open_timeout: 10) do |http|
     http.get(uri.request_uri)
   end
 
@@ -199,11 +202,14 @@ def create_conf
   conf["history"] = conf["history"].each_with_object({}) { |k, h| h[k] = nil } if conf["history"].is_a?(Array)
   conf["history_store_script"]    = conf.fetch("history_store_script", true)
   conf["history_efficiency"]      = conf.fetch("history_efficiency",   false)
+  # Optional external module catalogue. Empty means the module_load and
+  # dependent_module_select widgets offer no versions and no GPU badge is
+  # auto-applied; both degrade quietly rather than erroring.
+  conf["modules_list_url"]        = conf.fetch("modules_list_url", "").to_s
   conf["footer"]                  ||= "&nbsp;"
   conf["thumbnail_width"]         ||= "100"
   conf["navbar_color"]            ||= "#3D3B40"
   conf["navbar_text_color"]       ||= "#FFFFFF"
-  conf["dropdown_color"]          ||= conf["navbar_color"]
   conf["footer_color"]            ||= conf["navbar_color"]
   conf["footer_text_color"]       ||= "#FFFFFF"
   conf["category_color"]          ||= "#5522BB"
@@ -246,6 +252,15 @@ def create_conf
   FileUtils.mkdir_p(conf["data_dir"])
 
   return conf
+end
+
+# Export SGE_ROOT for the active cluster so Grid Engine commands can find their
+# installation. Called on every request, not just submissions: the History and
+# Nodes pages shell out to qstat/qacct/qhost too. An SGE_ROOT already present in
+# the environment always wins.
+def export_sge_root(conf, cluster_name)
+  root = conf.key?("clusters") ? conf["sge_root"]&.[](cluster_name) : conf["sge_root"]
+  ENV['SGE_ROOT'] ||= root unless root.to_s.empty?
 end
 
 # Create a manifest object in a specified application.
@@ -549,10 +564,11 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
                    else
                      @conf["login_node"]
                    end
+  export_sge_root(@conf, @cluster_name)
 
   @ood_logo_path = URI.join(@my_ood_url, @script_name + "/", "ood.png")
   @current_path  = File.join(@script_name, @dir_name)
-  _modules_list  = fetch_modules_list(@conf["data_dir"])
+  _modules_list  = fetch_modules_list(@conf["data_dir"], @conf["modules_list_url"])
   @gpu_names     = _modules_list.filter_map { |k, v| k.downcase if Array(v["domains"]).include?("gpu") }
   # category may be a single string or a list; sort by the primary (first) one.
   @all_manifests = create_all_manifests(@apps_dir).sort_by { |m| _c = Array(m.category).first; [_c&.downcase == "others" ? 1 : 0, (_c || "").downcase, m.name.downcase] }
@@ -590,6 +606,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     bin_s           = @conf.key?("clusters") ? @bin[@cluster_name]               : @bin
     bin_overrides_s = @conf.key?("clusters") ? @bin_overrides[@cluster_name]     : @bin_overrides
     ssh_wrapper_s   = @conf.key?("clusters") ? @ssh_wrapper[@cluster_name]       : @ssh_wrapper
+    sched_env_s     = @conf.key?("clusters") ? @conf["scheduler_env"][@cluster_name] : @conf["scheduler_env"]
     scancel_path = if bin_overrides_s&.key?("scancel")
       bin_overrides_s["scancel"]
     elsif bin_s && File.exist?(File.join(bin_s, "scancel"))
@@ -605,7 +622,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
     sacct_from = raw_date_from.to_s.empty? ? (Date.today - 6).strftime("%Y-%m-%d") : raw_date_from.to_s
     sacct_to   = raw_date_to.to_s.empty?   ? Date.today.strftime("%Y-%m-%d")        : raw_date_to.to_s
-    all_sacct_jobs, @sacct_error, _cmd = scheduler_s.sacct_all_jobs(sacct_from, sacct_to, bin_s, bin_overrides_s, ssh_wrapper_s)
+    all_sacct_jobs, @sacct_error, _cmd = scheduler_s.sacct_all_jobs(sacct_from, sacct_to, bin_s, bin_overrides_s, ssh_wrapper_s, sched_env_s)
 
     sacct_map = {}
     (all_sacct_jobs || []).each do |j|
@@ -617,7 +634,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     # Supplement sacct with squeue to catch PENDING jobs sacct may not report
     # (e.g. jobs submitted so recently they haven't appeared in sacct yet, or
     # Slurm configurations that omit PENDING jobs from sacct output).
-    squeue_jobs, @squeue_error = scheduler_s.squeue_active_jobs(bin_s, bin_overrides_s, ssh_wrapper_s)
+    squeue_jobs, @squeue_error = scheduler_s.squeue_active_jobs(bin_s, bin_overrides_s, ssh_wrapper_s, sched_env_s)
     (squeue_jobs || []).each do |j|
       jid = j["JobID"].to_s.strip
       next unless valid_oc_job_id?(jid, scheduler_s)
@@ -639,11 +656,13 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
 
     history_conf = @conf["history"].is_a?(Hash) ? @conf["history"] : {}
     oc_col_defs = {
-      "OC_HISTORY_JOB_NAME"    => { "default_label" => "Job Name",    "job_key" => JOB_NAME, "type" => "job_name",  "sortable" => true,  "responsive" => false },
-      "OC_HISTORY_START_TIME"  => { "default_label" => "Start Time",  "job_key" => "Start",   "type" => "text",      "sortable" => true,  "responsive" => true  },
-      "OC_HISTORY_END_TIME"    => { "default_label" => "End Time",    "job_key" => "End",     "type" => "text",      "sortable" => true,  "responsive" => true  },
-      "OC_HISTORY_OUTPUT_FILE" => { "default_label" => "Output",      "job_key" => "StdOut",  "type" => "file_link", "sortable" => false, "responsive" => true  },
-      "OC_HISTORY_ERROR_FILE"  => { "default_label" => "Error",       "job_key" => "StdErr",  "type" => "file_link", "sortable" => false, "responsive" => true  },
+      "OC_HISTORY_JOB_NAME"        => { "default_label" => "Job Name",        "job_key" => JOB_NAME,            "type" => "job_name",  "sortable" => true,  "responsive" => false },
+      "OC_HISTORY_PARTITION"       => { "default_label" => "Partition",       "job_key" => JOB_PARTITION,       "type" => "text",      "sortable" => true,  "responsive" => true  },
+      "OC_HISTORY_SUBMISSION_TIME" => { "default_label" => "Submission Time", "job_key" => JOB_SUBMISSION_TIME, "type" => "text",      "sortable" => true,  "responsive" => true  },
+      "OC_HISTORY_START_TIME"      => { "default_label" => "Start Time",      "job_key" => "Start",             "type" => "text",      "sortable" => true,  "responsive" => true  },
+      "OC_HISTORY_END_TIME"        => { "default_label" => "End Time",        "job_key" => "End",               "type" => "text",      "sortable" => true,  "responsive" => true  },
+      "OC_HISTORY_OUTPUT_FILE"     => { "default_label" => "Output",          "job_key" => "StdOut",            "type" => "file_link", "sortable" => false, "responsive" => true  },
+      "OC_HISTORY_ERROR_FILE"      => { "default_label" => "Error",           "job_key" => "StdErr",            "type" => "file_link", "sortable" => false, "responsive" => true  },
     }
     @conf_history_cols = history_conf.map do |k, v|
       conf_label = v.is_a?(Hash) ? v["label"] : nil
@@ -857,7 +876,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
             bin_s2     = @conf.key?("clusters") ? bin_val[cluster_name]    : bin_val
             bin_ov_s2  = @conf.key?("clusters") ? bin_ov_val[cluster_name] : bin_ov_val
             ssh_s2     = @conf.key?("clusters") ? ssh_val[cluster_name]    : ssh_val
-            script_content, _err = sched_s.batch_script(id, bin_s2, bin_ov_s2, ssh_s2)
+            env_s2     = @conf.key?("clusters") ? @conf["scheduler_env"][cluster_name] : @conf["scheduler_env"]
+            script_content, _err = sched_s.batch_script(id, bin_s2, bin_ov_s2, ssh_s2, env_s2)
             if script_content
               @script_content = escape_html(script_content)
               sbatch_cache = parse_sbatch_into_cache(script_content, @body, @OC_APP_NAME, @OC_DIR_NAME)
@@ -883,7 +903,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
             bin_s2     = @conf.key?("clusters") ? bin_val[cluster_name]    : bin_val
             bin_ov_s2  = @conf.key?("clusters") ? bin_ov_val[cluster_name] : bin_ov_val
             ssh_s2     = @conf.key?("clusters") ? ssh_val[cluster_name]    : ssh_val
-            script_content, _err = sched_s.batch_script(id, bin_s2, bin_ov_s2, ssh_s2)
+            env_s2     = @conf.key?("clusters") ? @conf["scheduler_env"][cluster_name] : @conf["scheduler_env"]
+            script_content, _err = sched_s.batch_script(id, bin_s2, bin_ov_s2, ssh_s2, env_s2)
             if script_content
               @script_content = escape_html(script_content)
               sbatch_cache = parse_sbatch_into_cache(script_content, @body, @OC_APP_NAME, @OC_DIR_NAME)
@@ -971,7 +992,7 @@ def output_log(action, scheduler, **details)
 end
 
 # Return available module versions for the module_load widget.
-# Looks up the given module name in the cached NeSI modules-list JSON and returns
+# Looks up the given module name in the cached modules-list JSON and returns
 # full "Name/version" strings, default version first.
 get "/_module_avail" do
   content_type :json
@@ -979,7 +1000,7 @@ get "/_module_avail" do
   return [].to_json if mod.empty?
 
   conf       = create_conf
-  all_mods   = fetch_modules_list(conf["data_dir"])
+  all_mods   = fetch_modules_list(conf["data_dir"], conf["modules_list_url"])
   entry      = all_mods.find { |k, _| k.casecmp(mod).zero? }
   return [].to_json unless entry
 
@@ -1176,6 +1197,7 @@ get "/job_details" do
   bin          = conf.key?("clusters") ? conf["bin"][cluster_name]          : conf["bin"]
   bin_overrides= conf.key?("clusters") ? conf["bin_overrides"][cluster_name]: conf["bin_overrides"]
   ssh_wrapper  = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]  : conf["ssh_wrapper"]
+  scheduler_env= conf.key?("clusters") ? conf["scheduler_env"][cluster_name]: conf["scheduler_env"]
 
   result = {
     "job_id"          => job_id,
@@ -1188,7 +1210,7 @@ get "/job_details" do
 
   # Route to sacct first to determine if job is terminal; if not, use scontrol.
   terminal = [JOB_STATUS["completed"], JOB_STATUS["cancelled"], JOB_STATUS["failed"]]
-  sacct_data, sacct_err, sacct_cmd = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper)
+  sacct_data, sacct_err, sacct_cmd = scheduler.sacct_job(job_id, bin, bin_overrides, ssh_wrapper, scheduler_env)
   oc_status = sacct_data && !sacct_data.empty? ? sacct_state_to_oc_status(sacct_data["State"].to_s, scheduler) : nil
 
   if sacct_data && !sacct_data.empty? && terminal.include?(oc_status)
@@ -1200,7 +1222,7 @@ get "/job_details" do
     result["script_location"] = workdir unless workdir.to_s.strip.empty? || workdir == "None"
   else
     # Active or unknown — try scontrol first, then sacct
-    scontrol_data, scontrol_err, scontrol_cmd = scheduler.scontrol_job(job_id, bin, bin_overrides, ssh_wrapper)
+    scontrol_data, scontrol_err, scontrol_cmd = scheduler.scontrol_job(job_id, bin, bin_overrides, ssh_wrapper, scheduler_env)
     if scontrol_data && !scontrol_data.empty?
       result["source"]  = "scontrol"
       result["command"] = scontrol_cmd
@@ -1223,7 +1245,7 @@ get "/job_details" do
     end
   end
 
-  script_content, _err = scheduler.batch_script(job_id, bin, bin_overrides, ssh_wrapper)
+  script_content, _err = scheduler.batch_script(job_id, bin, bin_overrides, ssh_wrapper, scheduler_env)
   result["script_content"] = script_content
 
   result.to_json
@@ -1243,12 +1265,13 @@ get "/history/job_efficiency" do
   bin          = conf.key?("clusters") ? conf["bin"][cluster_name]           : conf["bin"]
   bin_overrides= conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
   ssh_wrapper  = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]   : conf["ssh_wrapper"]
+  scheduler_env= conf.key?("clusters") ? conf["scheduler_env"][cluster_name] : conf["scheduler_env"]
 
   unless scheduler.respond_to?(:efficiency)
     next({ "error" => "Efficiency not supported by this scheduler." }.to_json)
   end
 
-  result, error = scheduler.efficiency(job_id, bin, bin_overrides, ssh_wrapper)
+  result, error = scheduler.efficiency(job_id, bin, bin_overrides, ssh_wrapper, scheduler_env)
   if error
     { "error" => error }.to_json
   else
@@ -1290,13 +1313,14 @@ get "/history/active_job_ids" do
   bin           = conf.key?("clusters") ? conf["bin"][cluster_name]           : conf["bin"]
   bin_overrides = conf.key?("clusters") ? conf["bin_overrides"][cluster_name] : conf["bin_overrides"]
   ssh_wrapper   = conf.key?("clusters") ? conf["ssh_wrapper"][cluster_name]   : conf["ssh_wrapper"]
+  scheduler_env = conf.key?("clusters") ? conf["scheduler_env"][cluster_name] : conf["scheduler_env"]
 
   deleted_db  = open_deleted_db(conf, cluster_name)
   deleted_ids = Set.new(deleted_db.execute("SELECT _job_id FROM deleted_jobs").map { |r| r["_job_id"] })
 
   from = (Date.today - 29).strftime("%Y-%m-%d")
   to   = Date.today.strftime("%Y-%m-%d")
-  all_jobs, _err, _cmd = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
+  all_jobs, _err, _cmd = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper, scheduler_env)
 
   active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
   seen_ids = Set.new
@@ -1310,7 +1334,7 @@ get "/history/active_job_ids" do
   end
 
   # Supplement sacct with squeue to catch PENDING jobs not yet in sacct
-  squeue_jobs, _sq_err = scheduler.squeue_active_jobs(bin, bin_overrides, ssh_wrapper)
+  squeue_jobs, _sq_err = scheduler.squeue_active_jobs(bin, bin_overrides, ssh_wrapper, scheduler_env)
   (squeue_jobs || []).each do |j|
     jid = j["JobID"].to_s.strip
     next unless valid_oc_job_id?(jid, scheduler)
@@ -1334,13 +1358,15 @@ get "/nodes/data" do
     bin_s           = conf["bin"][cluster_name]
     bin_overrides_s = conf["bin_overrides"][cluster_name]
     ssh_wrapper_s   = conf["ssh_wrapper"][cluster_name]
+    scheduler_env_s = conf["scheduler_env"][cluster_name]
   else
     scheduler_s     = create_scheduler(conf)
     bin_s           = conf["bin"]
     bin_overrides_s = conf["bin_overrides"]
     ssh_wrapper_s   = conf["ssh_wrapper"]
+    scheduler_env_s = conf["scheduler_env"]
   end
-  nodes, error, command = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s)
+  nodes, error, command = scheduler_s.sinfo_nodes(bin_s, bin_overrides_s, ssh_wrapper_s, scheduler_env_s)
   rows = (nodes || []).map do |cols|
     { node: cols[0], state: cols[1], cpus: cols[2], memory: cols[3], freemem: cols[4], gres: cols[5], gresused: cols[6] }
   end
@@ -1484,7 +1510,7 @@ post "/*" do
   copy_environment = conf.key?("clusters") ? conf["copy_environment"][cluster_name] : conf["copy_environment"]
   history_db    = conf.key?("clusters") ? conf["history_db"][cluster_name] : conf["history_db"]
   data_dir      = conf["data_dir"]
-  ENV['SGE_ROOT'] ||= conf.key?("clusters") ? conf["sge_root"][cluster_name] : conf["sge_root"]
+  export_sge_root(conf, cluster_name)
 
   if request.path_info == "/history"
     job_ids   = params["JobIds"].to_s.split(",").reject(&:empty?)
@@ -1505,7 +1531,7 @@ post "/*" do
     when "CancelAll"
       from = (Date.today - 29).strftime("%Y-%m-%d")
       to   = Date.today.strftime("%Y-%m-%d")
-      all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
+      all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper, scheduler_env)
       active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
       cancel_ids = (all_sacct || []).filter_map do |j|
         jid = j["JobID"].to_s.strip
@@ -1522,7 +1548,7 @@ post "/*" do
         deleted_db = open_deleted_db(conf, conf.key?("clusters") ? cluster_name : nil, main_db: db)
         from = (Date.today - 29).strftime("%Y-%m-%d")
         to   = Date.today.strftime("%Y-%m-%d")
-        all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper)
+        all_sacct, _err2, _cmd2 = scheduler.sacct_all_jobs(from, to, bin, bin_overrides, ssh_wrapper, scheduler_env)
         active_statuses = [JOB_STATUS["queued"], JOB_STATUS["running"]]
         active_count = (all_sacct || []).count do |j|
           jid = j["JobID"].to_s.strip
@@ -1604,7 +1630,8 @@ post "/*" do
 
         if ["number"].include?(widget)
           set_check_value(key, value.to_f == value.to_i ? value.to_i : value.to_f)
-        elsif ["text", "email", "path", "module_load"].include?(widget)
+        elsif ["text", "email", "path", "module_load", "dependent_module_select"].include?(widget)
+          # These submit their value directly rather than through an options list.
           set_check_value(key, value)
         elsif ["select", "radio"].include?(widget)
           option = form["form"][key]["options"].find { |x| x[0].to_s == value }

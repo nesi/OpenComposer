@@ -10,21 +10,155 @@
   chrome (live OOD navbar and footer) via a reverse-proxy dashboard initializer under
   `ood_integration/`, with no iframe. Toggleable per deployment; runs full-width.
 
+#### Home page, templates & the script browser
+
+- **All Templates page** — a new navbar-level page (`/all_templates`) listing every template as
+  one flat list: the featured submit-template category first, then your own saved custom
+  templates (purple *My Template* badge), then every remaining application alphabetically.
+  Unlike the home page it also lists applications hidden from the home gallery.
+- **Navbar links renamed and split** — the left-hand navbar is now
+  **Selected Templates** / **All Templates** / **History** / **Nodes**. The upstream
+  "Applications" dropdown was removed, along with the `show_navbar_apps` and
+  `navbar_apps_label` settings that controlled it.
+- **Load or Create a Script from Disk** (`show_load_script`, `load_script_label`) — a full-page
+  file browser (breadcrumbs, sortable Name/Size/Modified/Owner/Mode columns, hidden-file and
+  owner/mode toggles, quick filter, directory history). Clicking a `.sl`, `.sh`, `.bash`,
+  `.sbatch`, `.batch` or `.slurm` file opens it in the generic Slurm editor with the script
+  location and name pre-filled.
+- **New Script picker** — choose any template to start from, with the directory you were
+  browsing carried through as the script location.
+- **New Custom Template picker** (`/templates/new`) — pick any application, or a generic
+  scheduler template filtered to the configured scheduler, as the starting point. Forms opened
+  this way are in *template mode*: **Submit** is hidden and **Save as Custom Template** becomes
+  the primary action.
+- **Drag-and-drop ordering** of My Custom Templates, persisted as `position:` in each template's
+  YAML (`POST /templates/reorder`), plus a per-section search box.
+- **`home_format: small`** — a compact, letter-grouped alternative to the default tile grid.
+- **`category_badge_colors`** — per-category badge colours, and **`all_templates_footer`** — an
+  admin message pinned under the All Templates list.
+- **`new_script_featured_category`** — which manifest category is pinned to the top of the
+  All Templates and New Script pages (default `Slurm Submit Templates`).
+- **`tags` manifest key** — the tag `GPU` (any case) adds a black *GPU* badge wherever the app
+  is listed. Applications whose name matches a GPU-domain module in the site module list are
+  badged automatically.
+
+#### Application forms
+
+- **`module_load` widget** — a dropdown of every available version of an environment module,
+  populated asynchronously from the site module list (`GET /_module_avail`). Changing it
+  rewrites the existing `module load …` line in place instead of regenerating the template
+  line, so surrounding hand-written script lines are preserved.
+- **`dependent_module_select` widget** — a dropdown whose module list follows the value of
+  another (driver) widget, matched with `prefix:` or `contains:`.
+- **`remember_last: true`** on `select` widgets — restores the user's previous choice from
+  browser storage, skipped when a form is opened from a saved template or from History.
+- **Script → form parsing** — editing the Script Content box updates the matching form widgets,
+  and opening a job from History reconstructs the whole form, including expanding hidden
+  sections, from the script's scheduler directives.
+- **Empty-script submission warning** (`empty_script_warning`) — asks for confirmation before
+  submitting a script that contains only blank lines, comments, scheduler directives and
+  `module` lines.
+- **New manifest keys** `hidden`, `documentation` and `tags`.
+
+#### History page
+
+- **`sacct` is now the source of truth** for which jobs exist; the SQLite database only enriches
+  those rows with Open Composer metadata. Jobs submitted outside Open Composer therefore appear
+  in History too — their script is fetched live with `sacct -B`, and **Load script** imports it
+  into the generic form named by `external_reload_app`.
+- **Job Efficiency panel** (`history_efficiency`, default `false`) — Wall Time, CPU, Memory and,
+  for GPU jobs, GPU utilisation and GPU memory, in the job details modal for finished jobs.
+  New route `GET /history/job_efficiency`, using `sacct --json` (requires Slurm 20.11+).
+- **Live job details** — the details modal is fetched on open, from `scontrol show job --json`
+  for queued/running jobs and `sacct` for finished ones, with a collapsible **Source:** section
+  disclosing the exact command that was run.
+- **`history_store_script`** — set to `false` to keep script text out of the database and always
+  fetch it live with `sacct -B`.
+- **Output / Error columns** (`OC_HISTORY_OUTPUT_FILE`, `OC_HISTORY_ERROR_FILE`) with an in-page
+  file viewer (`GET /_read_file`); files over 1 MB are truncated with a warning.
+- **Cancel All Jobs** and **Delete All History** actions, plus **Refresh**, with progress
+  reporting and an abort control. New route `GET /history/active_job_ids`.
+- **`squeue` supplement** so freshly queued jobs appear before `sacct` reports them.
+- **Per-column ascending/descending sort links** driven by `sort` and `order` query parameters.
+- **Cancelled and Unknown status filters**, alongside Queued/Running/Completed/Failed.
+
+#### Nodes page
+
+- **Per-cluster selector** when more than one cluster is configured.
+- **Command disclosure** — an ⓘ button reveals the exact `sinfo` command the page is built
+  from, so users can reproduce it in a terminal.
+- **State summary badges** above the table, and a **"Fetched at …"** timestamp with a Refresh
+  link (the page does not poll).
+- The node search box matches node name, state, CPU and memory figures, and GRES type names.
+
+#### Job submission
+
+- **Automatic SSH key provisioning** (`ensure_ssh_key`, `ssh_key_type`, `ssh_key_name`;
+  disabled by default) — on Submit, if the user has no usable SSH key, Open Composer generates
+  a passphrase-less key, appends its public half to `~/.ssh/authorized_keys`, and appends a
+  `Host *` / `IdentityFile` stanza to `~/.ssh/config` so `ssh_wrapper` submission does not
+  prompt for a password. Existing keys are never overwritten; failures are logged but do not
+  block submission.
+- **`scheduler_env` and `copy_environment`** adopted from upstream v2.0.1 and wired through
+  this fork's submit, cancel and per-job cancel paths.
+- **`modules_list_url`** — the JSON module catalogue behind the `module_load` and
+  `dependent_module_select` widgets and the automatic GPU badge is now configurable, and
+  empty by default. Previously the URL was a hard-coded constant, so the feature could not
+  be pointed at a site's own catalogue or turned off.
+
 #### Navbar, branding & layout
 
 - **Configurable navbar items** — the label and icon of the File/Home Directory, Shell Access,
   and Return to OnDemand links are now set in `conf.yml.erb`
-  (`home_directory_label`/`_icon`, `shell_access_label`/`_icon`, `open_ondemand_label`/`_icon`).
+  (`home_directory_label`/`_icon`, `shell_access_label`/`_icon`, `open_ondemand_label`/`_icon`),
+  plus `open_ondemand_new_tab` to open the link in the same tab.
 - **Search box** can be shown/hidden (`show_search`) and now sits on the right of the navbar.
+  It searches every template by name, category and description — hidden applications and your
+  own saved templates included.
 - **`favicon`**, **footer brand logo** (`footer_brand_logo`/`footer_brand_url`/`footer_brand_alt`,
   replacing the fixed OnDemand logo), an **app description** blurb (`app_description`), and a
-  **gradient separator** under the top bar (`show_navbar_separator`) are all configurable.
+  **separator** under the top bar (`show_navbar_separator`/`navbar_separator_color`) are all
+  configurable, along with `show_navbar_logo`, `footer_padding`, `footer_ood_logo` and
+  `footer_logo_height`.
 - **Return to OnDemand / navbar logo** auto-derive to `<this host>/pun/sys/dashboard` when
   `open_ondemand_url` is unset, so no per-site URL is required.
-- **Multiple categories per app** — a manifest `category` may be a list; the app then appears
-  under each category and shows a badge per category.
+- **Multiple categories per app** — a manifest `category` may be a list; the app then shows one
+  badge per category on the All Templates page, in the New Script picker and in search results.
+  (The home-page grid still groups on the whole value, so prefer a single string there.)
+
+### Changed
+
+- **History database migrated to a 7-column V3 schema**, with deletions recorded as tombstones
+  in a separate `<cluster>_deleted.sqlite3`. V1 and V2 databases migrate automatically on first
+  open.
+- The generic per-scheduler script templates moved to `generic_apps_dir`, reachable at
+  `/_generic/<directory>` and used as the fallback when an application's `form.yml` is missing.
 
 ### Fixed
+
+- **Shell Access navbar link** was gated on the wrong setting (`show_home_directory`) and had a
+  hard-coded label, so `show_shell_access` had no effect. It now honours `show_shell_access`,
+  `shell_access_label` and `shell_access_icon`.
+- **`OC_HISTORY_PARTITION` and `OC_HISTORY_SUBMISSION_TIME` rendered as permanently empty
+  columns.** Both are in the default `history` set, so any site that omitted `history:` from
+  `conf.yml.erb` got two blank columns headed by the raw variable name. They now have real
+  column definitions: Partition is carried through from the scheduler's job record, Submission
+  Time uses the stored submission timestamp, and both are sortable.
+- **`scheduler_env` only reached job submission, cancellation and status queries.** The
+  History page, Nodes page, job details modal, Job Efficiency report and batch-script
+  retrieval all ran without it, so a configless Slurm site could submit jobs while those
+  pages returned nothing. Every scheduler command now receives it.
+- **`sge_root` was exported only while handling a POST request**, so the GET-driven History
+  and Nodes pages ran `qstat`/`qacct`/`qhost` without `SGE_ROOT`. It is now exported on every
+  request (still never overriding a value already in the environment).
+- **A manifest `category` given as a list produced one home-page section whose heading was
+  the list rendered as a Ruby array literal.** The application is now listed under each of
+  its categories, on both the home page and the New Custom Template picker.
+- **`dependent_module_select` values were not available to the `check` section**, leaving the
+  corresponding `@` variable `nil`. They are now passed through like `module_load` values.
+- **The Shell Access navbar link was rendered even with no `login_node` configured**,
+  producing a link to an empty host. It is now hidden unless a login node is known, matching
+  the equivalent links on the application and history pages.
 
 - **Script Content box not updating** when changing widgets on a template form.
 - **Syntax-highlight overlay misaligned** with the typed text in the embedded editor.
@@ -81,6 +215,9 @@
   preserved correctly.
 
 ## [2.0.1] - 2026-07-10
+
+> Upstream release, merged into this line after 3.0.0 was cut — hence the out-of-order date.
+> Everything below is included in 3.0.0.
 
 ### Added
 

@@ -60,10 +60,10 @@ class Sge < Scheduler
 
   # Fetch all jobs from qstat (active) and qacct (historical) in the sacct_all_jobs format.
   # SGE has no date-range filtering — all available history is returned.
-  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     qstat    = get_command_path("qstat", bin, bin_overrides)
     command1 = [ssh_wrapper, qstat].compact.join(" ")
-    stdout1, stderr1, status1 = Open3.capture3(command1)
+    stdout1, stderr1, status1 = capture_scheduler_command(scheduler_env, command1)
     return nil, [stdout1, stderr1].join(" ").strip, command1 unless status1.success?
 
     jobs = {}
@@ -101,7 +101,7 @@ class Sge < Scheduler
     # Append completed jobs from qacct (no day limit — fetch all history)
     qacct    = get_command_path("qacct", bin, bin_overrides)
     command2 = [ssh_wrapper, qacct, "-j"].compact.join(" ")
-    stdout2, _stderr2, status2 = Open3.capture3(command2)
+    stdout2, _stderr2, status2 = capture_scheduler_command(scheduler_env, command2)
 
     if status2.success?
       stdout2.split(/={10,}/).each do |block|
@@ -136,10 +136,10 @@ class Sge < Scheduler
   end
 
   # Fetch node information from qhost and return it in the sinfo_nodes format.
-  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     qhost   = get_command_path("qhost", bin, bin_overrides)
     command = [ssh_wrapper, qhost].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
     nodes = []

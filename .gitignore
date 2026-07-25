@@ -2,8 +2,10 @@
 .DS_Store
 
 # bundle
-Gemfile
-Gemfile.lock
+# Anchored to the repo root so the misc/Gemfile template stays tracked — the
+# install docs tell administrators to copy it here.
+/Gemfile
+/Gemfile.lock
 vendor/
 .bundle
 *.pyc

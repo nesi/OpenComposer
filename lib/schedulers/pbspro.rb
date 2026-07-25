@@ -107,10 +107,10 @@ class Pbspro < Scheduler
 
   # Fetch all jobs from qstat and return them in the sacct_all_jobs format.
   # PBS has no date-range filtering, so all available jobs are returned.
-  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     qstat   = get_command_path("qstat", bin, bin_overrides)
     command = [ssh_wrapper, qstat, "-f -t -x"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
     jobs    = []
@@ -154,10 +154,10 @@ class Pbspro < Scheduler
   end
 
   # Fetch node information from pbsnodes -av and return it in the sinfo_nodes format.
-  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     pbsnodes = get_command_path("pbsnodes", bin, bin_overrides)
     command  = [ssh_wrapper, pbsnodes, "-av"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
     nodes     = []

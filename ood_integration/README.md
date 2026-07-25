@@ -61,9 +61,6 @@ show_shell_access:   false   # OOD's Clusters menu provides shell access
 show_open_ondemand:  false   # No need to link back to OOD from inside OOD
 navbar_logo: ~               # OOD's navbar already shows the site logo
 
-# Hide the Templates dropdown — the home page tile grid already shows them
-show_navbar_apps: false
-
 # Hide Open Composer's own footer — OOD's footer is shown instead
 show_footer: false
 ```

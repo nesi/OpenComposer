@@ -10,7 +10,7 @@ Open Composer is an Open OnDemand app in the "Jobs" category. Unlike Batch Conne
 - **Latest release:** [`v3.0.0`](https://github.com/RIKEN-RCCS/OpenComposer/releases/tag/v3.0.0) (see [Changelog](CHANGELOG.md))
 - **License:** MIT (see [LICENSE file](https://github.com/RIKEN-RCCS/OpenComposer/blob/main/LICENSE))
 - **Requirements:** Open OnDemand 3.0 or later
-- **Supported job schedulers:** Slurm, PBS Pro, Grid Engine, Fujitsu TCS
+- **Supported job schedulers:** Slurm, PBS Pro, PBS Pro/Miyabi, Grid Engine, Fujitsu TCS
 
 ## Features
 
@@ -18,47 +18,58 @@ Open Composer is an Open OnDemand app in the "Jobs" category. Unlike Batch Conne
 - Multi-scheduler and multi-cluster support
 - Job history page with filtering, status tracking, and job cancellation
 - One-by-one job cancellation with an animated in-modal progress bar
-- Editable job script preview before submission
+- Job history driven by the scheduler itself, so jobs submitted outside Open Composer are listed too
+- Optional Job Efficiency report (wall time, CPU, memory, GPU) for finished jobs
+- Editable job script preview before submission, with two-way sync between the script and the form
 - Configurable application forms via `form.yml`
 - Dynamic form widgets with conditional visibility and validation
+- Environment-module widgets, including a dropdown that follows another widget's value
 - Support for preprocessing steps via submit sections
 - Customizable per-application headers and labels
 - Path selector widget for file and directory selection
-- My Templates — save, manage, and reuse form configurations
+- My Templates — save, manage, reorder, and reuse form configurations
+- All Templates page listing every template, including apps hidden from the home page
+- "Load or Create a Script from Disk" file browser for editing and resubmitting existing scripts
 - Nodes page with dynamic GRES columns auto-discovered from the scheduler
 - Navbar search bar for quickly finding templates by name, category, or description
+- Optional automatic SSH key provisioning so SSH-based submission needs no password prompt
+- Optional OOD-embedded mode — renders inside Open OnDemand's own navbar and footer
 - Fully customisable navbar and footer (colours, logo, links)
 - Bilingual documentation (English and Japanese)
 
 ## Deployment
 
-Open Composer opens in its own tab/window when a user clicks the app tile. This is the standard OOD app behaviour and requires no extra configuration beyond installing the app itself.
+By default, Open Composer opens in its own tab/window when a user clicks the app tile. This is the standard OOD app behaviour and requires no extra configuration beyond installing the app itself. Alternatively it can run in **OOD-embedded mode**, rendered inside OOD's own navigation bar and footer — see [`ood_integration/`](ood_integration/) and [section 4 of the installation document](https://riken-rccs.github.io/OpenComposer/docs/install.html#ood-integration).
 
-Use `conf.yml.erb.app.example` as your starting point:
+Use `conf.yml.erb.sample` as your starting point — it lists every available setting with its default value:
 
 ```sh
 cd /var/www/ood/apps/sys/
 sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git opencomposer
 cd opencomposer
-sudo cp conf.yml.erb.app.example conf.yml.erb
+sudo cp conf.yml.erb.sample conf.yml.erb
 # Edit conf.yml.erb for your site
 ```
 
-The full navbar is shown by default — Home Directory link, Shell Access, Return-to-OOD button, logo, and the Templates dropdown.
+The full navbar is shown by default: the **Selected Templates**, **All Templates**, **History** and **Nodes** links on the left, and the search box, Home Directory link, Shell Access link and Return-to-OnDemand button on the right. Each right-hand item can be hidden (`show_search`, `show_home_directory`, `show_shell_access`, `show_open_ondemand`) and relabelled. A navbar logo appears only once you set `navbar_logo` to an image in `public/`.
 
 ## Screenshots
 
 ### Home page
 
-<img width="600" style="border: 1px solid #333;" alt="Home" src="https://riken-rccs.github.io/OpenComposer/docs/img/home_page.png">
+<img width="600" style="border: 1px solid #333;" alt="Home" src="docs/img/home.png">
 
 ### Application page
 
-<img width="600" style="border: 1px solid #333;" alt="Application" src="https://riken-rccs.github.io/OpenComposer/docs/img/application_page.png">
+<img width="600" style="border: 1px solid #333;" alt="Application" src="docs/img/application_slurm.png">
 
 ### History page
 
-<img width="600" style="border: 1px solid #333;" alt="History" src="https://riken-rccs.github.io/OpenComposer/docs/img/history_page.png">
+<img width="600" style="border: 1px solid #333;" alt="History" src="docs/img/history.png">
+
+### Nodes page
+
+<img width="600" style="border: 1px solid #333;" alt="Nodes" src="docs/img/nodes.png">
 
 ## Documents
 
@@ -92,17 +103,19 @@ The following steps assume administrator privileges. If you do not have administ
 cd /var/www/ood/apps/sys/
 sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git opencomposer
 cd opencomposer
-sudo cp conf.yml.erb.app.example conf.yml.erb
-# Edit conf.yml.erb for your site — see Configuration below
+sudo cp conf.yml.erb.sample conf.yml.erb
+# Edit conf.yml.erb for your site
 ```
+
+At minimum, set `apps_dir` and either `scheduler` or a `clusters` block. Every other setting in `conf.yml.erb.sample` is listed with its default value and can be left as-is.
 
 Then reload the OOD dashboard (**Help → Restart Web Server**). Open Composer will appear in the **Jobs** category.
 
 ## Testing
 
-| System      | Site       | Scheduler          | Repository |
-|-------------|------------|--------------------|-----------|
-| Fugaku      | RIKEN RCCS | Fujitsu TCS, Slurm | [composer_fugaku](https://github.com/RIKEN-RCCS/composer_fugaku) |
+| System      | Site       | Scheduler          | Repository                                                               |
+|-------------|------------|--------------------|--------------------------------------------------------------------------|
+| Fugaku      | RIKEN RCCS | Fujitsu TCS, Slurm | [composer_fugaku](https://github.com/RIKEN-RCCS/composer_fugaku)         |
 | R-CCS Cloud | RIKEN RCCS | Slurm              | [composer_rccs_cloud](https://github.com/RIKEN-RCCS/composer_rccs_cloud) |
 
 ## Contributing
@@ -111,7 +124,9 @@ For discussions, see the [GitHub Discussions](https://github.com/RIKEN-RCCS/Open
 
 ## Troubleshooting
 
-For bugs or feature requests, [open an issue](https://github.com/RIKEN-RCCS/OpenComposer/issues) with detailed logs and reproduction steps.
+Open Composer writes one line per significant action — `Submit job`, `Cancel job`, `Delete job information`, `Ensure SSH key`, and `Run commands in the check/submit section` — to the per-user PUN log, normally `/var/log/ondemand-nginx/$USER/error.log`. Each line is prefixed `[Open Composer]` and records the scheduler, cluster, and job IDs involved, which makes it the best starting point for a failed submission.
+
+For bugs or feature requests, [open an issue](https://github.com/RIKEN-RCCS/OpenComposer/issues) with the relevant `[Open Composer]` log lines and reproduction steps.
 
 ## Reference
 
@@ -127,7 +142,9 @@ If you use this software in your research or development work, please cite the f
 
 ## Known Limitations
 
-No major limitations are currently known.
+- The environment-module widgets (`module_load`, `dependent_module_select`) and the automatic GPU badge require an external JSON module catalogue, configured with `modules_list_url`. With no catalogue configured they are simply inactive.
+- Job Efficiency derives its GPU-memory percentage from a hard-coded table of GPU models; other accelerators show raw usage only.
+- The `check` section is evaluated with Ruby, and the `submit` section with Bash; neither is sandboxed, so treat `form.yml` files as trusted code.
 
 ## Acknowledgments
 

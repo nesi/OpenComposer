@@ -466,6 +466,10 @@ helpers do
                jobs.sort_by { |j| [j[HEADER_SCRIPT_NAME].to_s.downcase, history_job_id_sort_key(j[JOB_ID])] }
              when JOB_NAME
                jobs.sort_by { |j| [j[JOB_NAME].to_s.downcase, history_job_id_sort_key(j[JOB_ID])] }
+             when JOB_PARTITION
+               jobs.sort_by { |j| [j[JOB_PARTITION].to_s.downcase, history_job_id_sort_key(j[JOB_ID])] }
+             when JOB_SUBMISSION_TIME
+               jobs.sort_by { |j| [j[JOB_SUBMISSION_TIME].to_s, history_job_id_sort_key(j[JOB_ID])] }
              when "Start"
                jobs.sort_by { |j| [j["Start"].to_s, history_job_id_sort_key(j[JOB_ID])] }
              when "End"
@@ -507,6 +511,7 @@ helpers do
         JOB_SUBMISSION_TIME    => submit_time,
         JOB_STATUS_ID          => oc_status,
         JOB_NAME               => sacct_row&.[]("JobName"),
+        JOB_PARTITION          => sacct_row&.[]("Partition"),
         OC_SCRIPT_CONTENT      => db1_row&.[]("_script_content"),
         "Start"                => normalize_time_for_db(sacct_row&.[]("Start")),
         "End"                  => normalize_time_for_db(sacct_row&.[]("End")),
@@ -552,6 +557,8 @@ helpers do
       [HEADER_SCRIPT_LOCATION, "Script Location"],
       [HEADER_SCRIPT_NAME,     "Script Name"],
       [JOB_NAME,               "Job Name"],
+      [JOB_PARTITION,          "Partition"],
+      [JOB_SUBMISSION_TIME,    "Submission Time"],
       ["Start",                "Start Time"],
       ["End",                  "End Time"],
       [JOB_STATUS_ID,          "Status"]

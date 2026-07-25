@@ -1,5 +1,18 @@
 require "uri"
 
+# Group manifests by category for the page listings.
+#
+# A manifest's "category" may be a single string or a list. Grouping on the raw
+# value would make a list its own group whose heading renders as a Ruby array
+# literal, so expand each entry instead: an application listed under several
+# categories appears under each of them. Category order follows the order the
+# manifests are already sorted in, so the caller's sort is preserved.
+def group_manifests_by_category(manifests)
+  manifests.each_with_object({}) do |m, groups|
+    Array(m.category).each { |cat| (groups[cat] ||= []) << m }
+  end
+end
+
 # Return true if the provided icon is in a valid URL format.
 def valid_url?(icon)
   return false if icon.nil? || (!icon.start_with?("http://") && !icon.start_with?("https://"))

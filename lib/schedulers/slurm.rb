@@ -164,10 +164,10 @@ class Slurm < Scheduler
   # Run scontrol show job --json for one job ID.
   # Returns [hash, nil, command] on success, [nil, nil, nil] when the job is not found,
   # or [nil, error_message, command] on failure.
-  def scontrol_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def scontrol_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     scontrol = get_command_path("scontrol", bin, bin_overrides)
     command  = [ssh_wrapper, scontrol, "show job", job_id, "--json"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
@@ -204,11 +204,11 @@ class Slurm < Scheduler
   # Key fields are placed first in the format string so they are always in the
   # earliest columns and unaffected if a later field's value contains a pipe character.
   # Returns [hash, nil, command] on success or [nil, error_message, command] on failure.
-  def sacct_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_job(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     sacct = get_command_path("sacct", bin, bin_overrides)
 
     help_cmd = [ssh_wrapper, sacct, "--helpformat"].compact.join(" ")
-    help_out, help_err, help_status = Open3.capture3(help_cmd)
+    help_out, help_err, help_status = capture_scheduler_command(scheduler_env, help_cmd)
     help_out = to_utf8(help_out)
     return nil, "sacct --helpformat failed: #{[help_out, help_err].join(' ').strip}", nil unless help_status.success?
 
@@ -240,7 +240,7 @@ class Slurm < Scheduler
 
     command = [ssh_wrapper, SLURM_ENV, sacct, "-j", job_id, "-X",
                "--format=#{fields.join(',')}", "--parsable2"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
@@ -291,11 +291,11 @@ class Slurm < Scheduler
     end
   end
 
-  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     sacct = get_command_path("sacct", bin, bin_overrides)
 
     help_cmd = [ssh_wrapper, sacct, "--helpformat"].compact.join(" ")
-    help_out, _help_err, help_status = Open3.capture3(help_cmd)
+    help_out, _help_err, help_status = capture_scheduler_command(scheduler_env, help_cmd)
     help_out = to_utf8(help_out)
     available = help_status.success? ? help_out.split : []
 
@@ -312,7 +312,7 @@ class Slurm < Scheduler
                "--starttime=#{effective_from}",
                "--endtime=#{effective_to}T23:59:59"].compact.join(" ")
 
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
     stdout = to_utf8(stdout)
@@ -358,13 +358,13 @@ class Slurm < Scheduler
   # Fetch estimated start times for a list of pending jobs via squeue --start.
   # Returns a hash of job_id => start_time_string for jobs that have an estimate.
   # N/A and blank values are excluded so callers can treat missing keys as unknown.
-  def squeue_start_times(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def squeue_start_times(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     return [{}, nil] if job_ids.empty?
 
     squeue  = get_command_path("squeue", bin, bin_overrides)
     command = [ssh_wrapper, SLURM_ENV, squeue, "--start", "--noheader", "--parsable2",
                "--Format=jobid,starttime", "-j", job_ids.join(",")].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     stdout = to_utf8(stdout)
     return [{}, [stdout, stderr].join(" ")] unless status.success?
 
@@ -376,7 +376,7 @@ class Slurm < Scheduler
       start_time = parts[1].strip
       next if start_time.empty? || start_time.upcase == "N/A"
       # Normalize to ISO 8601 if squeue didn't honour SLURM_TIME_FORMAT=standard
-      # (e.g. NeSI squeue returns "Jun 01 15:15" by default)
+      # (e.g. some squeue builds return "Jun 01 15:15" by default)
       unless start_time =~ /\A\d{4}-\d{2}-\d{2}T/
         begin
           time_str = start_time =~ /\d{4}/ ? start_time : "#{Date.today.year} #{start_time}"
@@ -395,19 +395,19 @@ class Slurm < Scheduler
   # Fetch all currently active (queued/running) jobs for the current user via squeue.
   # Returns entries with the same key names as sacct_all_jobs so they can be merged
   # directly into sacct_map for any job IDs sacct did not report (e.g. freshly queued jobs).
-  def squeue_active_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def squeue_active_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     user = ENV['USER'].to_s.strip
     return [[], nil] if user.empty?
 
     squeue  = get_command_path("squeue", bin, bin_overrides)
-    # Use -o short format (same style as NeSI's qme alias) with @ as the field
+    # Use -o short format with @ as the field
     # separator. @ is not a shell metacharacter so it survives SSH wrapping
     # without any quoting, unlike | which gets interpreted as a pipe operator
     # by the remote shell. %i=JOBID %j=NAME %P=PARTITION %T=STATE %V=SUBMIT %S=START
     command = [ssh_wrapper, SLURM_ENV, squeue,
                "--user=#{user}", "--noheader",
                "-o", "%i@%j@%P@%T@%V@%S"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     stdout = to_utf8(stdout)
     return [[], [stdout, stderr].join(" ").strip] unless status.success?
 
@@ -434,11 +434,11 @@ class Slurm < Scheduler
 
   # Fetch node info via sinfo -N with fixed-width columns.
   # Deduplicates by node name (a node appears once per partition in -N output).
-  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     sinfo   = get_command_path("sinfo", bin, bin_overrides)
     fmt     = "nodelist:10,StateLong:15,cpusState:20,Memory:15,FreeMem:15,Gres:30,GresUsed:30"
     command = [ssh_wrapper, sinfo, "-N", "--Format=#{fmt}"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     stdout = to_utf8(stdout)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
@@ -466,10 +466,10 @@ class Slurm < Scheduler
 
   # Fetch the batch script for a job via sacct --batch-script (-B).
   # Returns [script_content, nil] or [nil, nil] when not available.
-  def batch_script(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def batch_script(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     sacct = get_command_path("sacct", bin, bin_overrides)
     command = [ssh_wrapper, SLURM_ENV, sacct, "-j", job_id, "-B"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     stdout = to_utf8(stdout)
     return nil, nil unless status.success?
 
@@ -484,7 +484,7 @@ class Slurm < Scheduler
 
   # Query the current status of specific job IDs via sacct (batched in groups of 100).
   # Returns [hash_of_job_id_to_row, error_or_nil].
-  def sacct_status_update(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_status_update(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     return {}, nil if job_ids.empty?
 
     sacct  = get_command_path("sacct", bin, bin_overrides)
@@ -495,7 +495,7 @@ class Slurm < Scheduler
       command = [ssh_wrapper, SLURM_ENV, sacct, "-X", "--parsable2",
                  "--format=JobID,JobName,State,Start,End",
                  "-j", batch.join(",")].compact.join(" ")
-      stdout, stderr, status = Open3.capture3(command)
+      stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
       stdout = to_utf8(stdout)
       unless status.success?
         last_error = [stdout, stderr].join(" ").strip
@@ -522,10 +522,10 @@ class Slurm < Scheduler
   end
 
   # Compute seff-style efficiency metrics using sacct --json.
-  def efficiency(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def efficiency(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     sacct = get_command_path("sacct", bin, bin_overrides)
     cmd   = [ssh_wrapper, sacct, "--json -j", job_id].compact.join(" ")
-    out, err, st = Open3.capture3(cmd)
+    out, err, st = capture_scheduler_command(scheduler_env, cmd)
     out = to_utf8(out)
     return [nil, [out, err].join(" ")] unless st.success?
 

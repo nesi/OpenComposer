@@ -1,19 +1,20 @@
 # The Miyabi Supercomputer at the University of Tokyo uses PBS Pro. Because it uses
-# special options for qstat, only the query() function is overridden from the PBS Pro class.
+# special options for qstat, the query() and sacct_all_jobs() functions are overridden
+# from the PBS Pro class; every other method is inherited unchanged.
 
 require 'open3'
 require './lib/schedulers/pbspro'
 
 class Miyabi < Pbspro
   # Miyabi uses qstat -H --hday for history instead of the generic PBS -x flag.
-  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     qstat    = get_command_path("qstat", bin, bin_overrides)
     command1 = [ssh_wrapper, qstat, "-f -t"].compact.join(" ")
-    stdout1, stderr1, status1 = Open3.capture3(command1)
+    stdout1, stderr1, status1 = capture_scheduler_command(scheduler_env, command1)
     return nil, [stdout1, stderr1].join(" ").strip, command1 unless status1.success?
 
     command2 = [ssh_wrapper, qstat, "-f -t -H --hday 7"].compact.join(" ")
-    stdout2, stderr2, status2 = Open3.capture3(command2)
+    stdout2, stderr2, status2 = capture_scheduler_command(scheduler_env, command2)
     return nil, [stdout2, stderr2].join(" ").strip, command2 unless status2.success?
 
     jobs    = []

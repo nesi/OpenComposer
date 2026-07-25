@@ -68,7 +68,7 @@ surround it.
 - [ ] (Optional) Pin Open Composer on the dashboard home page via `pinned_apps`.
 - [ ] (Optional, recommended) In Open Composer's `conf.yml.erb`, hide the
       elements OOD already provides: `show_home_directory`, `show_shell_access`,
-      `show_open_ondemand`, `show_navbar_apps`, `show_footer` → `false`.
+      `show_open_ondemand`, `show_footer` → `false`.
 - [ ] Restart the web server: **Help → Restart Web Server**, or
       `sudo systemctl reload httpd`.
 

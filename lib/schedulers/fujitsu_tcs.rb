@@ -71,15 +71,15 @@ class Fujitsu_tcs < Scheduler
 
   # Fetch all jobs from pjstat (active + historical) in the sacct_all_jobs format.
   # Historical window is the maximum pjstat supports: 365 days.
-  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sacct_all_jobs(date_from, date_to, bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     pjstat   = get_command_path("pjstat", bin, bin_overrides)
     choose   = "--choose=jid,jnam,rscg,st,adt,std,stde"
     command1 = [ssh_wrapper, pjstat, "-s -E --data", choose].compact.join(" ")
-    stdout1, stderr1, status1 = Open3.capture3(command1)
+    stdout1, stderr1, status1 = capture_scheduler_command(scheduler_env, command1)
     return nil, [stdout1, stderr1].join(" ").strip, command1 unless status1.success?
 
     command2 = command1 + " -H day=365"
-    stdout2, stderr2, status2 = Open3.capture3(command2)
+    stdout2, stderr2, status2 = capture_scheduler_command(scheduler_env, command2)
     return nil, [stdout2, stderr2].join(" ").strip, command2 unless status2.success?
 
     jobs = {}
@@ -106,10 +106,10 @@ class Fujitsu_tcs < Scheduler
 
   # Fetch resource-group availability from pjstat -A --data and return it in the sinfo_nodes format.
   # Fujitsu TCS manages resources at the group level; each resource group appears as a "node".
-  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+  def sinfo_nodes(bin = nil, bin_overrides = nil, ssh_wrapper = nil, scheduler_env = nil)
     pjstat  = get_command_path("pjstat", bin, bin_overrides)
     command = [ssh_wrapper, pjstat, "-A --data"].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
+    stdout, stderr, status = capture_scheduler_command(scheduler_env, command)
     return nil, [stdout, stderr].join(" ").strip, command unless status.success?
 
     rows = []

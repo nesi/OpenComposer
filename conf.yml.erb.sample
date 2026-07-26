@@ -2,8 +2,7 @@
 # ============================================================================
 # Open Composer configuration
 #
-# Every available setting is listed below with its DEFAULT value, so you can
-# change values directly here without consulting the documentation.
+# Every available setting is listed below with its DEFAULT value
 #
 # The site-specific connection settings (login_node, ssh_wrapper, bin,
 # bin_overrides, sge_root, scheduler_env, copy_environment) are left commented

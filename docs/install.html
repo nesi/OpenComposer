@@ -101,6 +101,10 @@ $ sudo bundle install</pre>
       </p>
       <pre>$ cd opencomposer
 $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
+      <p>
+        The groups below appear in the same order as the numbered sections of <code>conf.yml.erb.sample</code>, so the file and this document can be read side by side.
+        They run from what has to be set for Open Composer to work at all, through what it stores and shows, to how it looks — only the two settings under <strong>Required</strong> have to be given a value.
+      </p>
 
       <h4>Required</h4>
       <p>The <code>apps_dir</code> and <code>scheduler</code> are required. The <code>scheduler</code> may alternatively be defined per-cluster inside <code>clusters</code>.</p>
@@ -123,16 +127,57 @@ $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
         <tr><td>sge_root</td><td>Value assigned to <code>SGE_ROOT</code> for Grid Engine commands. It is exported on every request — the History table, the Nodes page and the job details modal as well as submission and cancellation — but only when <code>SGE_ROOT</code> is not already set in the environment, so a value inherited by the PUN always wins</td><td>(None)</td></tr>
       </table>
 
-      <h4 class="mt-4">Data &amp; History</h4>
+      <h4 class="mt-4">SSH Key Provisioning</h4>
+      <p>
+        When <code>ensure_ssh_key</code> is <code>true</code>, pressing <strong>Submit</strong> makes Open Composer check the user's <code>~/.ssh</code> directory before the job is submitted, and provision a key if none is present. This is intended for sites where jobs are submitted over SSH to a login node that shares the user's home directory.
+      </p>
+      <p>
+        The check creates <code>~/.ssh</code> if it is missing and sets its mode to <code>0700</code> in either case, then looks for any of <code>id_ed25519</code>, <code>id_rsa</code>, <code>id_ecdsa</code>, <code>id_dsa</code>, or <code>&lt;ssh_key_name&gt;_&lt;type&gt;</code> for the types <code>ed25519</code>, <code>rsa</code>, <code>ecdsa</code> and <code>dsa</code>. If any of these exists the check stops immediately: an existing key is never overwritten. Otherwise it:
+      </p>
+      <ul>
+        <li>runs <code>ssh-keygen</code> with an empty passphrase and the comment <code>Open Composer auto-generated key</code>, writing <code>~/.ssh/&lt;ssh_key_name&gt;_&lt;ssh_key_type&gt;</code> (mode <code>0600</code>) and its <code>.pub</code> file (mode <code>0644</code>);</li>
+        <li>appends the public key to <code>~/.ssh/authorized_keys</code> (mode <code>0600</code>) unless that file already contains it;</li>
+        <li>appends a <code>Host *</code> stanza with an <code>IdentityFile ~/.ssh/&lt;ssh_key_name&gt;_&lt;ssh_key_type&gt;</code> line to <code>~/.ssh/config</code> (mode <code>0600</code>) unless the key filename already appears there. The stanza applies to every SSH host, because <code>ssh</code> only offers <code>id_*</code> keys automatically.</li>
+      </ul>
+      <p>
+        The result is written to the PUN log unless a usable key already existed. A failure is logged but does not block the submission.
+      </p>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>ensure_ssh_key</td><td>Run the SSH key check described above when a job is submitted (<code>true</code> or <code>false</code>)</td><td><code>false</code></td></tr>
+        <tr><td>ssh_key_type</td><td>Key type passed to <code>ssh-keygen -t</code>. Accepted values are <code>ed25519</code>, <code>rsa</code> and <code>ecdsa</code>; <code>rsa</code> keys are generated with <code>-b 4096</code>. Any other value is silently replaced with <code>ed25519</code></td><td><code>ed25519</code></td></tr>
+        <tr><td>ssh_key_name</td><td>Base name of the generated key files, which are named <code>&lt;ssh_key_name&gt;_&lt;ssh_key_type&gt;</code>. Characters other than letters, digits, <code>_</code>, <code>.</code> and <code>-</code> are stripped; if nothing remains, <code>opencomposer</code> is used</td><td><code>opencomposer</code></td></tr>
+      </table>
+
+      <h4 class="mt-4">Data &amp; Modules</h4>
       <table class="table" style="vertical-align: middle;">
         <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
         <tr><td>data_dir</td><td>Directory where submitted job information is stored</td><td><code>${HOME}/composer</code></td></tr>
         <tr><td>modules_list_url</td><td>URL of the JSON catalogue of available environment modules, used by the <code>module_load</code> and <code>dependent_module_select</code> widgets and by the automatic GPU badge (see "Network and external dependencies" in <a href="#install">section 1</a>). Empty disables the feature</td><td>(None)</td></tr>
+      </table>
+
+      <h4 class="mt-4">Templates &amp; Scripts</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
         <tr><td>generic_apps_dir</td><td>Directory containing hidden generic apps (e.g. a generic Slurm form) that are not shown in the main app listing but can be linked to directly</td><td><code>./generic_apps</code></td></tr>
         <tr><td>external_reload_app</td><td>Subfolder inside <code>generic_apps_dir</code> to open when loading an external (non-OpenComposer) job from the History page</td><td><code>Slurm</code></td></tr>
+        <tr><td>show_load_script</td><td>Show the "Load or Create a Script from Disk" button, which opens the full-page file browser, on the Selected Templates and New Custom Template pages (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
+        <tr><td>load_script_label</td><td>Label of the "Load or Create a Script from Disk" button. Also used as the heading and page title of the file browser page</td><td><code>Load or Create a Script from Disk</code></td></tr>
+        <tr><td>new_script_featured_category</td><td>Name of the <code>manifest.yml</code> category whose templates are listed first on the All Templates and New Script pages. Matched case-insensitively; the remaining templates follow in alphabetical order</td><td><code>Slurm Submit Templates</code></td></tr>
+      </table>
+
+      <h4 class="mt-4">History</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
         <tr><td>history</td><td>Additional display fields on the history page (see <a href="#history">section 2.5</a>). If this setting is omitted, all seven special variables are shown</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code>, <code>OC_HISTORY_START_TIME</code>, <code>OC_HISTORY_END_TIME</code>, <code>OC_HISTORY_OUTPUT_FILE</code>, <code>OC_HISTORY_ERROR_FILE</code></td></tr>
         <tr><td>history_store_script</td><td>Whether to store the full batch script text in the history database. Set to <code>false</code> to always fetch it live via <code>sacct -B</code></td><td><code>true</code></td></tr>
         <tr><td>history_efficiency</td><td>Show a <strong>Job Efficiency</strong> section (Wall Time, CPU, Memory, optional GPU) in the job details modal for completed, failed, and cancelled jobs. Uses <code>sacct --json</code>, which requires Slurm 20.11+. Set to <code>true</code> to enable. <strong>Site note:</strong> Wall Time, CPU and Memory are site-independent, but the <em>GPU Memory</em> percentage is computed in <code>Slurm#efficiency</code> (<code>lib/schedulers/slurm.rb</code>) from a hard-coded table of GPU models — <code>l4</code> 23&nbsp;GB, <code>a100</code> 40&nbsp;GB when the job's partition is named <code>genoa</code> and 80&nbsp;GB otherwise, <code>h100</code> 94&nbsp;GB — matched against the job's allocated <code>gpu:&lt;model&gt;</code> resources. On a site with other GPU models the total resolves to zero and only the amount used is shown; on a site whose partition names differ the <code>a100</code> capacity, and therefore the percentage, can be wrong. Edit that table to match local hardware</td><td><code>false</code></td></tr>
+      </table>
+
+      <h4 class="mt-4">Form Behaviour</h4>
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
+        <tr><td>empty_script_warning</td><td>Show a confirmation dialog when the user submits a batch script that contains no real commands (only blank lines, comments, <code>#SBATCH</code> directives, and <code>module</code> lines). Set to <code>false</code> to disable.</td><td><code>true</code></td></tr>
       </table>
 
       <h4 class="mt-4">Navigation Bar</h4>
@@ -159,21 +204,6 @@ $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
         <tr><td>navbar_separator_color</td><td>Colour of the <code>solid</code>/<code>line</code> and <code>accent</code> separator styles. The <code>gradient</code> style uses a fixed grey and ignores this setting</td><td style="background-color: #C3C8C8;">#C3C8C8</td></tr>
       </table>
 
-      <h4 class="mt-4">Footer</h4>
-      <table class="table" style="vertical-align: middle;">
-        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
-        <tr><td>show_footer</td><td>Show or hide the footer bar (<code>true</code> or <code>false</code>). Set to <code>false</code> when embedding inside OOD so OOD's own footer is used</td><td><code>true</code></td></tr>
-        <tr><td>footer</td><td>Text or HTML shown in the footer bar. Defaults to a non-breaking space, so an unconfigured footer is still drawn at full height — use <code>show_footer: false</code> to remove the bar entirely</td><td><code>&amp;nbsp;</code></td></tr>
-        <tr><td>footer_color</td><td>Background color of footer</td><td rowspan="2" style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
-        <tr><td>footer_text_color</td><td>Text color of footer</td></tr>
-        <tr><td>footer_padding</td><td>Bootstrap padding class applied to the footer bar (e.g. <code>p-1</code> through <code>p-5</code>)</td><td><code>p-3</code></td></tr>
-        <tr><td>footer_ood_logo</td><td>Show the bundled Open OnDemand "Powered by" logo in the footer (<code>true</code> or <code>false</code>). Only consulted while <code>footer_brand_logo</code> is unset — a custom brand logo is always shown. Set <code>footer_ood_logo: false</code> <em>and</em> leave <code>footer_brand_logo</code> empty for no footer logo at all</td><td><code>true</code></td></tr>
-        <tr><td>footer_logo_height</td><td>Height of the footer brand logo — either <code>footer_brand_logo</code>, or the bundled Open OnDemand logo when that is unset. Any CSS length</td><td><code>24px</code></td></tr>
-        <tr><td>footer_brand_logo</td><td>Filename of the "Powered by" brand image shown at the bottom left of the footer (must be placed in <code>public/</code>). When unset, the Open OnDemand logo is used instead unless <code>footer_ood_logo</code> is <code>false</code></td><td>(None)</td></tr>
-        <tr><td>footer_brand_url</td><td>URL opened by the footer brand logo</td><td><code>https://openondemand.org/</code></td></tr>
-        <tr><td>footer_brand_alt</td><td>Alt text of the footer brand logo</td><td><code>Powered by Open OnDemand</code> when the Open OnDemand logo is used, otherwise <code>Powered by</code></td></tr>
-      </table>
-
       <h4 class="mt-4">Appearance</h4>
       <table class="table" style="vertical-align: middle;">
         <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
@@ -183,7 +213,7 @@ $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
         <tr><td>directive_color</td><td>Text color of scheduler directives in the <code>script</code>/<code>submit</code> sections</td><td style="background-color: #D73A49;">#D73A49</td></tr>
         <tr><td>category_color</td><td>Background color of the home page category headers</td><td rowspan="2" style="color: white; background-color: #5522BB;">#5522BB</td></tr>
         <tr><td>category_text_color</td><td>Text color of the home page category headers</td></tr>
-        <tr><td>description_color</td><td>Background color of the band at the top of the application page, which holds the application title, its description and the header fields</td><td style="color: white; background-color: #5522BB;">#5522BB</td></tr>
+        <tr><td>description_color</td><td>Background color of the band at the top of the application page, which holds the application title, its description and the header fields. Falls back to <code>category_color</code>, so recolouring the home page category headers recolours this band with them unless it is set explicitly</td><td style="color: white; background-color: #5522BB;">Value of category_color (#5522BB)</td></tr>
         <tr><td>description_text_color</td><td>Text color used on that band — including the header field labels ("Script location", "Script name", "Job name"). Also the fallback for the two settings below</td><td><code>#FFFFFF</code></td></tr>
         <tr><td>app_title_color</td><td>Color of the <strong>application title</strong> (the application name shown at the top of the application page). Set this separately when the title needs to differ from the rest of the band — for example because a heading color inherited from the surrounding theme is hard to read against <code>description_color</code></td><td>Value of <code>description_text_color</code></td></tr>
         <tr><td>app_description_text_color</td><td>Color of the <strong>application description</strong> shown beneath the title on the application page (taken from <code>description</code> in the app's <code>manifest.yml</code>)</td><td>Value of <code>description_text_color</code></td></tr>
@@ -199,40 +229,19 @@ $ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
         <tr><td>all_templates_footer</td><td>Note shown directly below the All Templates list, above the footer bar. HTML is allowed. Only rendered on the All Templates page, and only when <code>show_footer</code> is <code>true</code></td><td>(None)</td></tr>
       </table>
 
-      <h4 class="mt-4">Form Behaviour</h4>
+      <h4 class="mt-4">Footer</h4>
       <table class="table" style="vertical-align: middle;">
         <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
-        <tr><td>empty_script_warning</td><td>Show a confirmation dialog when the user submits a batch script that contains no real commands (only blank lines, comments, <code>#SBATCH</code> directives, and <code>module</code> lines). Set to <code>false</code> to disable.</td><td><code>true</code></td></tr>
-      </table>
-
-      <h4 class="mt-4">Templates &amp; Scripts</h4>
-      <table class="table" style="vertical-align: middle;">
-        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
-        <tr><td>show_load_script</td><td>Show the "Load or Create a Script from Disk" button, which opens the full-page file browser, on the Selected Templates and New Custom Template pages (<code>true</code> or <code>false</code>)</td><td><code>true</code></td></tr>
-        <tr><td>load_script_label</td><td>Label of the "Load or Create a Script from Disk" button. Also used as the heading and page title of the file browser page</td><td><code>Load or Create a Script from Disk</code></td></tr>
-        <tr><td>new_script_featured_category</td><td>Name of the <code>manifest.yml</code> category whose templates are listed first on the All Templates and New Script pages. Matched case-insensitively; the remaining templates follow in alphabetical order</td><td><code>Slurm Submit Templates</code></td></tr>
-      </table>
-
-      <h4 class="mt-4">SSH Key Provisioning</h4>
-      <p>
-        When <code>ensure_ssh_key</code> is <code>true</code>, pressing <strong>Submit</strong> makes Open Composer check the user's <code>~/.ssh</code> directory before the job is submitted, and provision a key if none is present. This is intended for sites where jobs are submitted over SSH to a login node that shares the user's home directory.
-      </p>
-      <p>
-        The check creates <code>~/.ssh</code> if it is missing and sets its mode to <code>0700</code> in either case, then looks for any of <code>id_ed25519</code>, <code>id_rsa</code>, <code>id_ecdsa</code>, <code>id_dsa</code>, or <code>&lt;ssh_key_name&gt;_&lt;type&gt;</code> for the types <code>ed25519</code>, <code>rsa</code>, <code>ecdsa</code> and <code>dsa</code>. If any of these exists the check stops immediately: an existing key is never overwritten. Otherwise it:
-      </p>
-      <ul>
-        <li>runs <code>ssh-keygen</code> with an empty passphrase and the comment <code>Open Composer auto-generated key</code>, writing <code>~/.ssh/&lt;ssh_key_name&gt;_&lt;ssh_key_type&gt;</code> (mode <code>0600</code>) and its <code>.pub</code> file (mode <code>0644</code>);</li>
-        <li>appends the public key to <code>~/.ssh/authorized_keys</code> (mode <code>0600</code>) unless that file already contains it;</li>
-        <li>appends a <code>Host *</code> stanza with an <code>IdentityFile ~/.ssh/&lt;ssh_key_name&gt;_&lt;ssh_key_type&gt;</code> line to <code>~/.ssh/config</code> (mode <code>0600</code>) unless the key filename already appears there. The stanza applies to every SSH host, because <code>ssh</code> only offers <code>id_*</code> keys automatically.</li>
-      </ul>
-      <p>
-        The result is written to the PUN log unless a usable key already existed. A failure is logged but does not block the submission.
-      </p>
-      <table class="table" style="vertical-align: middle;">
-        <tr><th>Item name</th><th>Setting</th><th>Default value</th></tr>
-        <tr><td>ensure_ssh_key</td><td>Run the SSH key check described above when a job is submitted (<code>true</code> or <code>false</code>)</td><td><code>false</code></td></tr>
-        <tr><td>ssh_key_type</td><td>Key type passed to <code>ssh-keygen -t</code>. Accepted values are <code>ed25519</code>, <code>rsa</code> and <code>ecdsa</code>; <code>rsa</code> keys are generated with <code>-b 4096</code>. Any other value is silently replaced with <code>ed25519</code></td><td><code>ed25519</code></td></tr>
-        <tr><td>ssh_key_name</td><td>Base name of the generated key files, which are named <code>&lt;ssh_key_name&gt;_&lt;ssh_key_type&gt;</code>. Characters other than letters, digits, <code>_</code>, <code>.</code> and <code>-</code> are stripped; if nothing remains, <code>opencomposer</code> is used</td><td><code>opencomposer</code></td></tr>
+        <tr><td>show_footer</td><td>Show or hide the footer bar (<code>true</code> or <code>false</code>). Set to <code>false</code> when embedding inside OOD so OOD's own footer is used</td><td><code>true</code></td></tr>
+        <tr><td>footer</td><td>Text or HTML shown in the footer bar. Defaults to a non-breaking space, so an unconfigured footer is still drawn at full height — use <code>show_footer: false</code> to remove the bar entirely</td><td><code>&amp;nbsp;</code></td></tr>
+        <tr><td>footer_color</td><td>Background color of footer. Falls back to <code>navbar_color</code>, so recolouring the navigation bar recolours the footer with it unless this is set explicitly</td><td style="color: white; background-color: #3D3B40;">Value of navbar_color (#3D3B40)</td></tr>
+        <tr><td>footer_text_color</td><td>Text color of footer</td><td>#FFFFFF</td></tr>
+        <tr><td>footer_padding</td><td>Bootstrap padding class applied to the footer bar (e.g. <code>p-1</code> through <code>p-5</code>)</td><td><code>p-3</code></td></tr>
+        <tr><td>footer_ood_logo</td><td>Show the bundled Open OnDemand "Powered by" logo in the footer (<code>true</code> or <code>false</code>). Only consulted while <code>footer_brand_logo</code> is unset — a custom brand logo is always shown. Set <code>footer_ood_logo: false</code> <em>and</em> leave <code>footer_brand_logo</code> empty for no footer logo at all</td><td><code>true</code></td></tr>
+        <tr><td>footer_logo_height</td><td>Height of the footer brand logo — either <code>footer_brand_logo</code>, or the bundled Open OnDemand logo when that is unset. Any CSS length</td><td><code>24px</code></td></tr>
+        <tr><td>footer_brand_logo</td><td>Filename of the "Powered by" brand image shown at the bottom left of the footer (must be placed in <code>public/</code>). When unset, the Open OnDemand logo is used instead unless <code>footer_ood_logo</code> is <code>false</code></td><td>(None)</td></tr>
+        <tr><td>footer_brand_url</td><td>URL opened by the footer brand logo</td><td><code>https://openondemand.org/</code></td></tr>
+        <tr><td>footer_brand_alt</td><td>Alt text of the footer brand logo</td><td><code>Powered by Open OnDemand</code> when the Open OnDemand logo is used, otherwise <code>Powered by</code></td></tr>
       </table>
 
       <h3 id="clusters">2.1. clusters</h3>

@@ -136,6 +136,15 @@
   open.
 - The generic per-scheduler script templates moved to `generic_apps_dir`, reachable at
   `/_generic/<directory>` and used as the fallback when an application's `form.yml` is missing.
+- **`conf.yml.erb.sample` reorganised into ten numbered sections** — Required, Cluster & job
+  scheduler, SSH key provisioning, Data & modules, Templates & scripts, History, Form behaviour,
+  Navigation bar, Appearance, Footer — ordered from what must be set for Open Composer to run at
+  all through to what is purely cosmetic. Section 2 of `docs/install.html` now uses the same
+  groups in the same order, so the file and the document can be read side by side. No setting,
+  value or default changed.
+- The user manual gained a **"Submitting"** section covering the two things that can happen when
+  Submit is pressed — the empty-script confirmation dialog and first-time SSH key provisioning —
+  which were previously described only in the installation and application-author documents.
 
 ### Fixed
 
@@ -166,7 +175,10 @@
 - **The Shell Access navbar link was rendered even with no `login_node` configured**,
   producing a link to an empty host. It is now hidden unless a login node is known, matching
   the equivalent links on the application and history pages.
-
+- **`description_color` and `footer_color` were documented with a fixed hex default.** Both
+  actually fall back to another setting — `category_color` and `navbar_color` respectively — so
+  recolouring the category headers or the navigation bar silently recolours them too. The
+  documented defaults now state the fallback.
 - **Script Content box not updating** when changing widgets on a template form.
 - **Syntax-highlight overlay misaligned** with the typed text in the embedded editor.
 - **"Show advanced CPU options" (and similar toggles) wrongly auto-ticked when loading a script.**

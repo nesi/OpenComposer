@@ -19,8 +19,9 @@
         <li class="nav-item"><a href="#all-templates" class="nav-link">3. All Templates Page</a></li>
         <li class="nav-item"><a href="#load-script" class="nav-link">4. Load or Create a Script from Disk</a></li>
         <li class="nav-item"><a href="#application" class="nav-link">5. Application Page</a></li>
-        <li class="nav-item ms-3"><a href="#save-template" class="nav-link">5.1. Save as Custom Template</a></li>
-        <li class="nav-item ms-3"><a href="#template-mode" class="nav-link">5.2. Template Mode</a></li>
+        <li class="nav-item ms-3"><a href="#submitting" class="nav-link">5.1. Submitting</a></li>
+        <li class="nav-item ms-3"><a href="#save-template" class="nav-link">5.2. Save as Custom Template</a></li>
+        <li class="nav-item ms-3"><a href="#template-mode" class="nav-link">5.3. Template Mode</a></li>
         <li class="nav-item"><a href="#history" class="nav-link">6. History Page</a></li>
         <li class="nav-item ms-3"><a href="#history-scope" class="nav-link">6.1. What the Table Contains</a></li>
         <li class="nav-item ms-3"><a href="#history-dates" class="nav-link">6.2. How Far Back the Page Looks</a></li>
@@ -188,7 +189,32 @@
         <li>If you manually edit the job script and then change a form field, only the lines corresponding to that field are updated in the script — the rest of your manual edits are preserved.</li>
       </ul>
 
-      <h3 id="save-template">5.1. Save as Custom Template</h3>
+      <p>
+        Applications provided by your site can be more elaborate than the generic form above.
+        The example below shows a quantum chemistry application whose form pulls the available software versions from the cluster's module system,
+        so the dropdowns only ever offer versions that are actually installed:
+      </p>
+      <img src="img/application_orca.png" width="800" alt="Application page for a site-provided application">
+
+      <h3 id="submitting">5.1. Submitting</h3>
+      <p>
+        Clicking <strong>Submit</strong> sends the job script to the cluster and takes you to the History page, where the new job appears at the top of the table.
+        Two things can happen first, depending on how your site has configured Open Composer:
+      </p>
+      <ul>
+        <li>
+          <strong>A warning that the script has no commands.</strong>
+          If the script contains nothing but blank lines, comments, scheduler directives and <code>module</code> lines, a dialog asks you to confirm before submitting.
+          This usually means a form field that was meant to add the command to the script is still empty. You can submit anyway — the job will run and do nothing.
+        </li>
+        <li>
+          <strong>An SSH key being set up for you.</strong>
+          At sites that submit jobs over SSH to a login node, the first submission may generate a passphrase-less SSH key in your <code>~/.ssh</code> directory and authorise it, so the job can be submitted without a password prompt.
+          This happens once and is silent; an SSH key you already have is never replaced.
+        </li>
+      </ul>
+
+      <h3 id="save-template">5.2. Save as Custom Template</h3>
       <p>
         The <strong>"Save as Custom Template"</strong> button appears in the left panel of every application page.
         Clicking it opens a dialog where you can give the template a name and an optional description.
@@ -200,7 +226,7 @@
           Clicking "Save" overwrites the existing template with the updated values — no dialog is shown.</li>
       </ul>
 
-      <h3 id="template-mode">5.2. Template Mode</h3>
+      <h3 id="template-mode">5.3. Template Mode</h3>
       <p>
         When you open an application page from the <strong>+ New Custom Template</strong> picker — or from "Load or Create a Script from Disk" and "New Script" started from that picker —
         the page opens in <em>template mode</em>. The page is then for building a template, not for running a job, so:

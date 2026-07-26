@@ -74,7 +74,9 @@
           <% end %>
         <% end %>
         <div>
-          <h3>
+          <%# Set the colour on the heading itself: Bootstrap styles headings with
+              their own colour, so an inherited value never reaches the link. %>
+          <h3 style="color:<%= @conf['app_title_color'] %>;">
             <a href="<%= @script_name %>/<%= @manifest['dirname'] %>" class="fw-semibold" style="color: inherit; text-decoration: none;">
               <%= @manifest['name'] %>
             </a>
@@ -82,7 +84,7 @@
           <input type="hidden" name="<%= JOB_APP_NAME %>" value="<%= @manifest['name'] %>">
           <input type="hidden" name="<%= JOB_DIR_NAME %>" value="<%= @dir_name %>">
           <input type="hidden" name="_tmpl_icon" value="<%= ERB::Util.h(@manifest['icon'].to_s) %>">
-          <p class="mb-1"><%= @manifest['description'] %></p>
+          <p class="mb-1" style="color:<%= @conf['app_description_text_color'] %>;"><%= @manifest['description'] %></p>
           <% if @manifest['homepage'].to_s.strip != '' %>
             <p class="mb-0 small"><a href="<%= ERB::Util.h(@manifest['homepage']) %>" target="_blank" rel="noopener" style="color: inherit; opacity: 0.75;"><%= ERB::Util.h(@manifest['homepage']) %></a></p>
           <% end %>

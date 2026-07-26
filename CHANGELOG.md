@@ -115,6 +115,9 @@
 - **Search box** can be shown/hidden (`show_search`) and now sits on the right of the navbar.
   It searches every template by name, category and description — hidden applications and your
   own saved templates included.
+- **`app_title_color` and `app_description_text_color`** — the application title and its
+  description on the application page can each be coloured independently of the rest of the
+  band. Both default to `description_text_color`, so existing configurations are unaffected.
 - **`favicon`**, **footer brand logo** (`footer_brand_logo`/`footer_brand_url`/`footer_brand_alt`,
   replacing the fixed OnDemand logo), an **app description** blurb (`app_description`), and a
   **separator** under the top bar (`show_navbar_separator`/`navbar_separator_color`) are all
@@ -156,6 +159,10 @@
   its categories, on both the home page and the New Custom Template picker.
 - **`dependent_module_select` values were not available to the `check` section**, leaving the
   corresponding `@` variable `nil`. They are now passed through like `module_load` values.
+- **The application title was unreadable on the application page.** The title inherited a
+  heading colour from the surrounding theme rather than the band's own text colour, so it
+  rendered dark on the coloured `description_color` band while the description beside it was
+  light. The colour is now applied to the heading directly, via `app_title_color`.
 - **The Shell Access navbar link was rendered even with no `login_node` configured**,
   producing a link to an empty host. It is now hidden unless a login node is known, matching
   the equivalent links on the application and history pages.

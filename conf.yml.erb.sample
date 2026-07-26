@@ -138,6 +138,12 @@ category_color:          "#5522BB"
 category_text_color:     "#FFFFFF"
 description_color:       "#5522BB"
 description_text_color:  "#FFFFFF"
+# Application page: colour of the application title (the application name shown
+# at the top of the form) and of its description text underneath. Both sit on the
+# description_color band and default to description_text_color when omitted, so
+# set them only if you want the title or the description to differ from it.
+app_title_color:            "#FFFFFF"
+app_description_text_color: "#FFFFFF"
 form_color:              "#BFCFE7"
 non_script_color:        "#FFE28A"
 non_script_button_color: "#FFBF00"

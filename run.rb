@@ -216,6 +216,10 @@ def create_conf
   conf["category_text_color"]     ||= "#FFFFFF"
   conf["description_color"]       ||= conf["category_color"]
   conf["description_text_color"] ||= "#FFFFFF"
+  # Application page: the title and the description sit on the description_color
+  # band and default to its text colour, but can each be set independently.
+  conf["app_title_color"]            ||= conf["description_text_color"]
+  conf["app_description_text_color"] ||= conf["description_text_color"]
   conf["form_color"]              ||= "#BFCFE7"
   conf["non_script_color"]        ||= "#FFE28A"
   conf["non_script_button_color"] ||= "#FFBF00"

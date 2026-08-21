@@ -1,0 +1,33 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['openfoam_module'] = {
+      'widget' => 'module_load',
+      'module' => "OpenFOAM",
+      'label'  => "OpenFOAM Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{openfoam_module}
+  source $FOAM_BASH
+
+  # Decompose the domain for parallel run (edit decomposeParDict for the number of subdomains)
+  decomposePar
+
+  # Run the solver in parallel (replace 'simpleFoam' with your solver)
+  srun simpleFoam -parallel
+
+  # Reconstruct the decomposed case after the run
+  reconstructPar
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

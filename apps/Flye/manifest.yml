@@ -1,0 +1,5 @@
+name: Flye
+category: Biology
+description: Flye is a de novo assembler for long and noisy reads, such as those produced by PacBio and Oxford Nanopore Technologies.
+homepage: https://github.com/fenderglass/Flye
+hidden: true

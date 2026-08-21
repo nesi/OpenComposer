@@ -1,0 +1,10 @@
+# General
+.DS_Store
+
+# bundle
+Gemfile
+Gemfile.lock
+vendor/
+.bundle
+*.pyc
+__pycache__/

@@ -1,0 +1,5 @@
+name: GenomeThreader
+category: Biology
+description: GenomeThreader is a software tool to compute gene structure predictions.
+homepage: http://genomethreader.org
+hidden: true

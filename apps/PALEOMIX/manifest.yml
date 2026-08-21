@@ -1,0 +1,5 @@
+name: PALEOMIX
+category: Biology
+description: Pipelines and tools designed to aid the rapid processing of High-Throughput Sequencing (HTS) data.
+homepage: https://paleomix.readthedocs.io/en/latest/index.html
+hidden: true

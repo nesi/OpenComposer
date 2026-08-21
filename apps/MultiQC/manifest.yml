@@ -1,0 +1,6 @@
+name: MultiQC
+category: Biology
+description: Aggregate results from bioinformatics analyses across many samples into a single report.
+homepage: http://multiqc.info
+icon: icon.png
+hidden: true

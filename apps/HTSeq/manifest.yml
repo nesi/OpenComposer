@@ -1,0 +1,5 @@
+name: HTSeq
+category: Biology
+description: HTSeq is a Python library to facilitate processing and analysis of data from high-throughput sequencing (HTS) experiments.
+homepage: https://github.com/simon-anders/htseq
+hidden: true

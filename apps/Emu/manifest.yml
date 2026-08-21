@@ -1,0 +1,6 @@
+name: Emu
+category: Biology
+description: Species-level taxonomic abundance for full-length 16S reads.
+homepage: https://gitlab.com/treangenlab/emu
+icon: icon.png
+hidden: true

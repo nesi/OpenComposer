@@ -1,0 +1,5 @@
+name: LUMPY
+category: Biology
+description: A probabilistic framework for structural variant discovery.
+homepage: https://github.com/arq5x/lumpy-sv
+hidden: true

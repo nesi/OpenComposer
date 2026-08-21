@@ -1,0 +1,6 @@
+name: MAKER
+category: Biology
+description: Genome annotation pipeline.
+homepage: http://www.yandell-lab.org/software/maker.html
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/MAKER/

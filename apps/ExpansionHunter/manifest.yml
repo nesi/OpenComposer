@@ -1,0 +1,5 @@
+name: ExpansionHunter
+category: Biology
+description: Tool for estimating repeat sizes.
+homepage: https://github.com/Illumina/ExpansionHunter
+hidden: true

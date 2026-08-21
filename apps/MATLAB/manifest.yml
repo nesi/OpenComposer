@@ -1,0 +1,7 @@
+name: MATLAB
+category: Engineering
+description: A high-level language and interactive environment for numerical computing.
+homepage: http://www.mathworks.com/products/matlab
+icon: icon.png
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/MATLAB/

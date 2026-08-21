@@ -1,0 +1,5 @@
+name: InterProScan
+category: Biology
+description: Sequence analysis application (nucleotide and protein sequences) that combines different protein signature recognition methods into one resource.
+homepage: http://www.ebi.ac.uk/interpro/
+hidden: true

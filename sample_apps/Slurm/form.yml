@@ -1,0 +1,70 @@
+---
+form:
+  partition:
+    widget: select
+    label: Partition
+    options:
+      - [ gpu1,              gpu1,              set-label-cores_memory_1: Number of cores (1 - 72),  set-max-cores_memory_1:  72, set-label-cores_memory_2: Memory (up to 186GB),  set-max-cores_memory_2:  186, set-label-time_1: Max run time hours (0 - 3), set-max-time_1: 3 ]
+      - [ gpu2,              gpu2,              set-label-cores_memory_1: Number of cores (1 - 36),  set-max-cores_memory_1:  36, set-label-cores_memory_2: Memory (up to 93GB),   set-max-cores_memory_2:   93 ]
+      - [ mem1,              mem1,              set-label-cores_memory_1: Number of cores (1 - 224), set-max-cores_memory_1: 224, set-label-cores_memory_2: Memory (up to 5020GB), set-max-cores_memory_2: 5020, set-label-time_1: Max run time hours (0 - 3), set-max-time_1: 3 ]
+      - [ mem2,              mem2,              set-label-cores_memory_1: Number of cores (1 - 56),  set-max-cores_memory_1:  56, set-label-cores_memory_2: Memory (up to 1500GB), set-max-cores_memory_2: 1500 ]
+      - [ ondemand-reserved, ondemand-reserved, set-label-cores_memory_1: Number of cores (1 - 8),   set-max-cores_memory_1:   8, set-label-cores_memory_2: Memory (up to 250GB),  set-max-cores_memory_2:  250, set-label-time_1: Max run time hours (0 - 720), set-max-time_1: 720 ]
+  
+  cores_memory:
+    widget: number
+    label: [Number of cores, Memory]
+    size:  2
+    value: [ 1, 4 ]
+
+  time:
+    widget:   number
+    label:    [ Max run time hours (0 - 24), Max run minutes (0 - 59) ]
+    size:     2
+    value:    [  1,  0 ]
+    min:      [  0,  0 ]
+    max:      [ 24, 59 ]
+    step:     [  1,  1 ]
+
+  show_advanced_option:
+    widget: checkbox
+    label:
+    options:
+      - ["Show advanced option", "", show-email, show-mail_option, show-array, show-log ]
+
+  array:
+    widget: number
+    label: [ Array Job (start index), Array Job (last index) ]
+    size: 2
+    indent: 1
+    min:  [0, 0]
+    help: Each job executed from an array job is assigned a task ID, which can be referenced in the shell script via the environment variable SLURM_ARRAY_TASK_ID.
+    
+  mail_option:
+    label: Mail option
+    widget: checkbox
+    direction: horizontal
+    separator: ","
+    indent: 1
+    options:
+      - [ "Beginning of job execution", 'BEGIN',   enable-email ]
+      - [ "End of job execution",       'END',     enable-email ]
+      - [ "Fail of job",                'FAIL',    enable-email ]
+      - [ "When the job is requeued",   'REQUEUE', enable-email ]
+      - [ "All",                        'ALL',     enable-email ]
+      
+  email:
+    widget: email
+    label:  Email
+    indent: 2
+    
+script: |
+  #!/bin/bash
+  #SBATCH -p #{partition}
+  #SBATCH -n #{cores_memory_1}
+  #SBATCH --mem #{cores_memory_2}G
+  #SBATCH -t #{time_1}:#{time_2}:00
+  #SBATCH --array=#{array_1}-#{array_2}
+  #SBATCH --mail-user=#{email}
+  #SBATCH --mail-type=#{mail_option}
+
+  

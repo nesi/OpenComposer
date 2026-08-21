@@ -1,0 +1,5 @@
+name: psmc
+category: Biology
+description: Infers population size history from a diploid sequence using the PSMC model.
+homepage: https://github.com/lh3/psmc
+hidden: true

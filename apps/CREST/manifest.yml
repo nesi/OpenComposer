@@ -1,0 +1,6 @@
+name: CREST
+category: Chemistry
+description: CREST is an utility/driver program for the xtb program.
+homepage: https://xtb-docs.readthedocs.io/en/latest/crest.html
+icon: icon.jpg
+hidden: true

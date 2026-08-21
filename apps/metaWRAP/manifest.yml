@@ -1,0 +1,5 @@
+name: metaWRAP
+category: Biology
+description: Flexible pipeline for genome-resolved metagenomic data analysis.
+homepage: http://qiime2.org/
+hidden: true

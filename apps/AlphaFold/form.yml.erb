@@ -1,0 +1,71 @@
+<%
+require 'json'
+
+base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
+base = read_yaml(base_path)
+
+# Load AlphaFold/AlphaFold2DB/AlphaFold3DB version lists from the module-list
+# cache (~/.composer/.module-list-cache.json). Falls back to hard-coded defaults
+# if the cache file hasn't been written yet.
+cache_path = File.join(ENV["HOME"], "composer", ".module-list-cache.json")
+if File.exist?(cache_path)
+  all_mods       = JSON.parse(File.read(cache_path))
+  af_versions    = (all_mods.dig("AlphaFold",   "versions") || []).sort.reverse
+  af2db_versions = (all_mods.dig("AlphaFold2DB", "versions") || []).sort.reverse
+  af3db_versions = (all_mods.dig("AlphaFold3DB", "versions") || []).sort.reverse
+else
+  af_versions    = ["3.0.2", "3.0.1", "3.0.0", "2.3.2"]
+  af2db_versions = ["2023-04", "2022-06"]
+  af3db_versions = ["2024-12"]
+end
+
+af_options = af_versions.map { |v| full = "AlphaFold/#{v}"; [full, full] }
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['alphafold_module'] = {
+      'widget'  => 'select',
+      'label'   => 'AlphaFold Module',
+      'options' => af_options,
+      'value'   => af_options.first ? af_options.first[0] : ""
+    }
+    new_form['alphafold_db_module'] = {
+      'widget'  => 'dependent_module_select',
+      'label'   => 'AlphaFold Database Module',
+      'driver'  => 'alphafold_module',
+      'options' => [
+        {'contains' => 'AlphaFold/2.', 'module' => 'AlphaFold2DB'},
+        {'contains' => 'AlphaFold/3.', 'module' => 'AlphaFold3DB'}
+      ]
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{alphafold_module}
+  module load #{alphafold_db_module}
+
+  INPUT=/nesi/project/nesi12345/alphafold/input_data
+  OUTPUT=/nesi/project/nesi12345/alphafold/results
+
+  run_alphafold.py --use_gpu_relax \
+  --data_dir              =$AF2DB \
+  --uniref90_database_path=$AF2DB/uniref90/uniref90.fasta \
+  --mgnify_database_path  =$AF2DB/mgnify/mgy_clusters_2022_05.fa \
+  --bfd_database_path     =$AF2DB/bfd/bfd_metaclust_clu_complete_id30_c90_final_seq.sorted_opt \
+  --uniref30_database_path=$AF2DB/uniref30/UniRef30_2021_03 \
+  --pdb70_database_path   =$AF2DB/pdb70/pdb70 \
+  --template_mmcif_dir    =$AF2DB/pdb_mmcif/mmcif_files \
+  --obsolete_pdbs_path    =$AF2DB/pdb_mmcif/obsolete.dat \
+  --model_preset          =monomer \
+  --max_template_date     =2022-6-1 \
+  --db_preset             =full_dbs \
+  --output_dir            =$OUTPUT \
+  --fasta_paths           =${INPUT}/rcsb_pdb_3GKI.fasta
+APP_SCRIPT
+-%>
+<%= base.to_yaml -%>

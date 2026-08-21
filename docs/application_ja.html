@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Open Composerアプリケーション作成マニュアル</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="container-fluid">
+    <nav class="sidebar bg-body-secondary">
+      <h5 class="ps-3 pe-1 d-inline">目次</h5>
+      <ul class="nav flex-column px-2 py-2">
+        <li class="nav-item"><a href="#intro" class="nav-link">1. はじめに</a></li>
+        <li class="nav-item ms-3"><a href="#manifest" class="nav-link">1.1. manifest.yml</a></li>
+        <li class="nav-item ms-3"><a href="#form" class="nav-link">1.2. form.yml</a></li>
+        <li class="nav-item"><a href="#widget" class="nav-link">2. ウィジットの説明</a></li>
+        <li class="nav-item ms-3"><a href="#number" class="nav-link">2.1. numberウィジット</a></li>
+        <li class="nav-item ms-3"><a href="#text" class="nav-link">2.2. textウィジット</a></li>
+        <li class="nav-item ms-3"><a href="#email" class="nav-link">2.3. emailウィジット</a></li>
+        <li class="nav-item ms-3"><a href="#select" class="nav-link">2.4. selectウィジット</a></li>
+        <li class="nav-item ms-3"><a href="#multi_select" class="nav-link">2.5. multi_selectウィジット</a></li>
+        <li class="nav-item ms-3"><a href="#radio" class="nav-link">2.6. radioウィジット</a></li>
+        <li class="nav-item ms-3"><a href="#checkbox" class="nav-link">2.7. checkboxウィジット</a></li>
+        <li class="nav-item ms-3"><a href="#path" class="nav-link">2.8. pathウィジット</a></li>
+        <li class="nav-item ms-3"><a href="#functions" class="nav-link">2.9. 関数</a></li>
+        <li class="nav-item"><a href="#dynamic" class="nav-link">3. Dynamic Form Widget</a></li>
+        <li class="nav-item ms-3"><a href="#set" class="nav-link">3.1. ウィジットの設定</a></li>
+        <li class="nav-item ms-3"><a href="#disable" class="nav-link">3.2. ウィジットの無効化</a></li>
+        <li class="nav-item ms-3"><a href="#hide" class="nav-link">3.3. ウィジットの非表示化</a></li>
+        <li class="nav-item"><a href="#combination" class="nav-link">4. 利用可能な組合せ</a></li>
+        <li class="nav-item"><a href="#script" class="nav-link">5. scriptセクション</a></li>
+        <li class="nav-item ms-3"><a href="#label" class="nav-link">5.1. ラベルの変更</a></li>
+        <li class="nav-item ms-3"><a href="#save" class="nav-link">5.2. ファイルの保存</a></li>
+        <li class="nav-item ms-3"><a href="#hide-script" class="nav-link">5.3. 非表示化</a></li>
+        <li class="nav-item ms-3"><a href="#variables" class="nav-link">5.4. 特殊な変数</a></li>
+        <li class="nav-item"><a href="#check" class="nav-link">6. checkセクション</a></li>
+        <li class="nav-item"><a href="#submit" class="nav-link">7. submitセクション</a></li>
+        <li class="nav-item"><a href="#header" class="nav-link">8. headerセクション</a></li>
+        <li class="nav-item"><a href="#supplement" class="nav-link">9. 補足</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1>Open Composerアプリケーション作成マニュアル</h1>
+      <h2 id="intro">1. はじめに</h2>
+      <ol>
+  <li>すべてのアプリケーションの保存するためのディレクトリ名を<code>./conf.yml.erb</code>の<code>apps_dir</code>に設定します。ここでは、<code>apps_dir: ./apps</code>とします。</li>
+  <li><code>./apps</code>以下にアプリケーション用のディレクトリを作成します。アプリケーション名を<code>test</code>とした場合、<code>./apps/test</code>を作成します。</li>
+  <li>アプリケーションの説明ファイルである<code>manifest.yml</code>とWebフォームの設定ファイルである<code>form.yml</code>を<code>./apps/test</code>の中に作成します。Embedded Ruby形式で作成する場合は、各ファイル名を<code>manifest.yml.erb</code>と<code>form.yml.erb</code>にしてください。</li>
+      </ol>
+
+      <h3 id="manifest">1.1. manifest.yml</h3>
+      <p>
+  アプリケーションの説明を記述します。サンプルは下記の通りです。
+      </p>
+      <pre>name: Gaussian
+category: Quantum Chemistry
+icon: icon.png
+description: |
+  [Gaussian](https://gaussian.com) is a general purpose computational chemistry software package.
+related_apps:
+  OVITO:
+    icon: ovito.png
+  GrADS:
+    icon: bi-airplane-fill
+  ImageJ:</pre>
+
+      <ul>
+  <li>name: アプリケーション名（このキーを省略した場合はディレクトリ名が代わりに用いられます）</li>
+  <li>category：カテゴリ名</li>
+  <li>icon: アイコンのための画像ファイルへのパス。URL、<a target="_blank" href="https://icons.getbootstrap.com/">Bootstrapアイコン</a>、<a target="_blank" href="https://fontawesome.com">Font Awesomeアイコン</a>が利用可能です。Bootstrapアイコンの場合は<code>icon: bi-airplane-fill</code>のように記述します。Font Awesomeアイコンの場合は<code>icon: fa-solid fa-gear</code>のように記述します</li>
+  <li>description: アプリケーションの説明</li>
+  <li>related_apps: Open OnDemandに登録されているアプリケーションを指定します。指定されたアプリケーションは履歴ページで表示されます。<code>icon:</code>と同様にアイコン画像などの指定が可能です。画像を指定しない場合、Open OnDemandで用意された画像が代わりに用いられます。</li>
+      </ul>
+
+      <h3 id="form">1.2. form.yml</h3>
+      <p>
+        <code>form.yml</code>は、<code>form</code>、<code>script</code>、<code>header</code>、<code>check</code>、<code>submit</code>というセクションで構成されています。<code>form</code>と<code>script</code>は必須項目ですが、<code>header</code>、<code>check</code>、<code>submit</code>は省略できます。
+      </p>
+      <p>
+  次の図は<code>form</code>、<code>script</code>、<code>header</code>の担当範囲を示しています。<code>form</code>と<code>script</code>と<code>header</code>からジョブスクリプトが生成されます。<code>header</code>を省略した場合は<code>./lib/header.yml.erb</code>が代わりに利用されます。そのため、ほとんどの場合、<code>header</code>を定義する必要はないでしょう。なお、左上のアプリケーションの説明などは<code>manifest.yml</code>の担当範囲です。<code>check</code>はウィジットに設定された値のチェックをジョブの投入前に行います。<code>submit</code>はジョブを投入する際の前処理を定義します。
+      </p>
+      <img src="img/sections.png" width="800" alt="Sections">
+
+      <h2 id="widget">2. ウィジットの説明</h2>
+      <p>
+        <code>form</code>、<code>header</code>、<code>submit</code>セクションでは下記のウィジットを利用して、ジョブスクリプトを生成します。
+      </p>
+      <ul>
+  <li>numberウィジット：数値の入力欄を表示します。</li>
+  <li>textウィジット：テキストの入力欄を表示します。</li>
+  <li>emailウィジット：Emailの入力欄を表示します。</li>
+  <li>selectウィジット：セレクトボックスを表示します。</li>
+  <li>multi_selectウィジット：複数の項目を選択できる入力欄を表示します。</li>
+  <li>radioウィジット：ラジオボタンを表示します。</li>
+  <li>checkboxウィジット：チェックボックスを表示します。</li>
+  <li>pathウィジット：Open Composerが動作しているサーバ上のファイルやディレクトリのパスを選択できる入力欄を表示します。</li>
+      </ul>
+
+      <h3 id="number">2.1. numberウィジット</h3>
+      <p>
+  数値の入力欄を表示します。下の例の<code>nodes</code>はウィジットの変数名です。<code>label</code>はラベル、<code>value</code>は初期値、<code>min</code>は最小値、<code>max</code>は最大値、<code>step</code>はステップ幅です。<code>required</code>は必須であるかどうかを指定します。<code>help</code>は入力欄の下に表示されるヘルプメッセージです。ジョブスクリプトには<code>script</code>セクション内の文字列が表示されます。<code>script</code>セクション内の<code>#{nodes}</code>は入力した値に置き換えられます。
+      </p>
+      <pre>form:
+  nodes:
+    widget:   number
+    label:    Number of nodes (1 - 128)
+    value:    4
+    min:      1
+    max:      128
+    step:     1
+    required: false
+    help:     The larger the number, the longer the wait time.
+
+script: |
+  #SBATCH --nodes=#{nodes}</pre>
+      <img width="800" src="img/number.png" alt="number widget">
+      <p>
+  複数の数値の入力欄を1行で表示することも可能です。その場合、<code>size</code>で入力欄の数を記述し、各項目を配列形式で記述します。<code>script</code>セクションの<code>#{time_1}</code>と<code>#{time_2}</code>は、1つ目と2つ目に入力した値に置き換えられます。
+      </p>
+      <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time (0 - 24 h), Maximum run time (0 - 59 m) ]
+    size:   2
+    value:  [  1,  0 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH -t #{time_1}:#{time_2}:00</pre>
+      <img width="800" src="img/label1.png" alt="label">
+      <p>
+  <code>label</code>が配列形式ではない場合、一行の長いラベルを記述することができます。<code>help</code>も同様です。
+      </p>
+      <pre>form:
+  time:
+    widget: number
+    label:  Maximum run time (0 - 24 h, 0 - 59 m)
+    size:   2
+    value:  [  1,  0 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{time_2}:00</pre>
+      <img src="img/label2.png" alt="label">
+      <p>
+  項目ごとのラベルと一行の長いラベルを記述することもできます。配列形式の最初の要素に長いラベルを、2つ目の要素を配列形式で記述ください。
+      </p>
+      <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time, [0 - 24 h, 0 - 59 m] ]
+    size:   2
+    value:  [  1,  0 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{time_2}:00</pre>
+      <img src="img/label3.png" alt="label">
+
+      <h3 id="text">2.2. textウィジット</h3>
+      <p>
+  テキストの入力欄を表示します。
+      </p>
+      <pre>form:
+  comment:
+    widget: text
+    label: Comment
+    value: test
+
+script: |
+  #SBATCH --comment=#{comment}</pre>
+      <img width="800" src="img/text1.png" alt="text">
+      <p>
+  複数のテキストの入力欄を1行で表示することも可能です。
+      </p>
+      <pre>form:
+  option:
+    widget: text
+    label: [ option, argument ]
+    value: [ --comment=, test ]
+    size: 2
+
+script: |
+  #SBATCH #{option_1}#{option_2}</pre>
+      <img width="800" src="img/text2.png" alt="text">
+
+      <h3 id="email">2.3. emailウィジット</h3>
+      <p>
+  Emailの入力欄を表示します。<code>text</code>ウィジットとほぼ同じですが、「Submit」ボタンをクリックする際にメールアドレスの形式がチェックされます。
+      </p>
+      <pre>form:
+  email:
+    widget: email
+    label:  Email
+
+script: |
+  #SBATCH --mail-user=#{email}</pre>
+
+      <h3 id="select">2.4. selectウィジット</h3>
+      <p>
+  セレクトボックスを表示します。<code>options</code>に選択肢を配列形式で記述します。配列の1つ目の要素はセレクトボックスの項目名です。<code>script</code>セクションの<code>#{partition}</code>は<code>options</code>の2つ目の要素に置き換えられます。
+      </p>
+      <pre>form:
+  partition:
+    widget: select
+    label: Partition
+    value: Large Queue
+    options:
+      - [ Small Queue, small ]
+      - [ Large Queue, large ]
+
+script: |
+  #SBATCH --partition=#{partition}</pre>
+      <img width="800" src="img/select1.png" alt="select">
+      <p>
+  <code>options</code>の2つ目の要素は配列で記述することも可能です。下記の例では、<code>script</code>セクションの<code>#{package_1}</code>と<code>#{package_2}</code>は、配列の第1要素と第2要素に置き換えられます。後述の<code>multi_select</code>ウィジット、<code>radio</code>ウィジット、<code>checkbox</code>ウィジットも同様です。注意点として、すべての2つ目の要素の配列のサイズは同じにしてください。
+      </p>
+      <pre>form:
+  package:
+    widget: select
+    label: Select package
+    options:
+      - [ A, [packageA, a.out] ]
+      - [ B, [packageB, b.out] ]
+
+script: |
+  module load #{package_1}
+  mpiexec #{package_2}</pre>
+      <img width="800" src="img/select2.png" alt="select">
+
+      <h3 id="multi_select">2.5. multi_selectウィジット</h3>
+      <p>
+  複数の項目を選択できる入力欄を表示します。<code>options</code>に選択肢を配列形式で記述します。
+  <code>options</code>にない値を入力欄に直接入力して追加することもできます。
+  <code>options</code>から選択した項目は配列の2つ目の要素に置き換えられ、直接入力した項目は入力した文字列そのものに置き換えられます。
+      </p>
+      <pre>form:
+  load_modules:
+    widget: multi_select
+    label: Add modules
+    value: mpi/mpich-x86_64
+    options:
+      - [ mpi/mpich-x86_64, mpi/mpich-x86_64 ]
+      - [ mpi/openmpi-x86_64, mpi/openmpi-x86_64 ]
+      - [ nvhpc/24.3, nvhpc/24.3 ]
+      - [ nvhpc/24.5, nvhpc/24.5 ]
+      - [ nvhpc/24.7, nvhpc/24.7 ]
+
+script: |
+  module load #{load_modules}</pre>
+      <p>
+  例えば<code>mpi/mpich-x86_64</code>と<code>nvhpc/24.7</code>を選択した場合は、ジョブスクリプトは下記のように複数行で表示されます。
+      </p>
+      <img width="800" src="img/multi_select1.png" alt="multi select">
+      <p>
+  1行で表示したい場合は、<code>separator</code>で区切り文字を設定します。
+      </p>
+      <pre>form:
+  load_modules:
+    widget: multi_select
+    label: Add modules
+    value: mpi/mpich-x86_64
+    separator: " "
+    options:
+      - [ mpi/mpich-x86_64, mpi/mpich-x86_64 ]
+      - [ mpi/openmpi-x86_64, mpi/openmpi-x86_64 ]
+      - [ nvhpc/24.3, nvhpc/24.3 ]
+      - [ nvhpc/24.5, nvhpc/24.5 ]
+      - [ nvhpc/24.7, nvhpc/24.7 ]
+
+script: |
+  module load #{load_modules}</pre>
+      <img width="800" src="img/multi_select2.png" alt="multi select">
+      <p>
+  <code>value</code>に複数の初期値を設定する場合は、配列形式で記述します。
+      </p>
+      <pre>form:
+  load_modules:
+    widget: multi_select
+    label: Add modules
+    value: [mpi/mpich-x86_64, nvhpc/24.7 ]
+    options:
+      - [ mpi/mpich-x86_64, mpi/mpich-x86_64 ]
+      - [ mpi/openmpi-x86_64, mpi/openmpi-x86_64 ]
+      - [ nvhpc/24.3, nvhpc/24.3 ]
+      - [ nvhpc/24.5, nvhpc/24.5 ]
+      - [ nvhpc/24.7, nvhpc/24.7 ]
+
+script: |
+  module load #{load_modules}</pre>
+
+      <h3 id="radio">2.6. radioウィジット</h3>
+      <p>
+  ラジオボタンを表示します。selectウィジットとほぼ同じですが、<code>direction: horizontal</code>が設定可能です。<code>direction: horizontal</code>を設定すると水平方向にラジオボタンを表示できます。<code>direction: horizontal</code>がない場合は、垂直方向にラジオボタンを表示します。
+      </p>
+      <pre>form:
+  jupyter:
+    widget: radio
+    label: Jupyter
+    direction: horizontal
+    value: Jupyter Lab
+    options:
+      - [ Jupyter Lab,      jupyterlab ]
+      - [ Jupyter Notebook, jupyter    ]
+
+script: |
+  module load #{jupyter}</pre>
+      <img width="800" src="img/radio1.png" alt="radio">
+      <pre>form:
+  jupyter:
+    widget: radio
+    label: Jupyter
+    value: Jupyter Lab
+    options:
+      - [ Jupyter Lab,      jupyterlab ]
+      - [ Jupyter Notebook, jupyter    ]
+
+script: |
+  module load #{jupyter}</pre>
+      <img width="800" src="img/radio2.png" alt="radio">
+
+      <h3 id="checkbox">2.7. checkboxウィジット</h3>
+      <p>
+  チェックボックスを表示します。次のように<code>required</code>を配列形式で設定した場合、チェックボックスの各項目が必須かどうかを設定します。
+      </p>
+      <pre>form:
+  mail_option:
+    label: Mail option
+    widget: checkbox
+    direction: horizontal
+    value: [ Fail of job,  When the job is requeued ]
+    required: [ true, false, true, false, false ]
+    options:
+      - [ Beginning of job execution, BEGIN   ]
+      - [ End of job execution,       END     ]
+      - [ Fail of job,                FAIL    ]
+      - [ When the job is requeued,   REQUEUE ]
+      - [ All,                        ALL     ]
+
+script: |
+  #SBATCH --mail-type=#{mail_option}</pre>
+      <img width="800" src="img/checkbox1.png" alt="checkbox">
+      <p>
+  次のように<code>required</code>が配列形式でない場合かつ値が<code>true</code>の場合、そのチェックボックスで1つ以上の項目がチェックがされていないとジョブの投入を行うことができない、という設定になります。
+      </p>
+      <pre>form:
+  mail_option:
+    label: Mail option
+    widget: checkbox
+    direction: horizontal
+    value: [ Fail of job,  When the job is requeued ]
+    required: true
+    options:
+      - [ Beginning of job execution, BEGIN   ]
+      - [ End of job execution,       END     ]
+      - [ Fail of job,                FAIL    ]
+      - [ When the job is requeued,   REQUEUE ]
+      - [ All,                        ALL     ]
+
+script: |
+  #SBATCH --mail-type=#{mail_option}</pre>
+      <img width="800" src="img/checkbox2.png" alt="checkbox">
+      <p>
+  <code>multi_select</code>ウィジットと同様に<code>separator</code>の設定を行うことや、<code>radio</code>ウィジットと同様に<code>direction</code>の設定を行うことができます。
+      </p>
+
+      <h3 id="path">2.8. pathウィジット</h3>
+      <p>
+  Open Composerが動作しているサーバ上のファイルやディレクトリのパスを選択できる入力欄を表示します。<code>show_files</code>はファイルを表示するかどうかのフラグであり、デフォルトは<code>true</code>です。<code>favorites</code>はショートカットパスを設定できます。
+      </p>
+      <pre>form:
+  working_dir:
+    widget: path
+    label: Working Directory
+    show_files: false
+    favorites:
+      - /lvs0/rccs-aot
+
+script: |
+  cd #{working_dir}</pre>
+      <img width="800" src="img/path1.png" alt="path">
+      <p>
+  <code>text</code>ウィジットのように任意の文字列を入力することができます。また、「Select Path」ボタンをクリックすると、下記のようなモーダルを利用してファイルやディレクトリを選択できます。
+      </p>
+      <img style="border-style: solid; border-width: 1px;" width="600" src="img/path2.png" alt="path">
+
+    <h3 id="functions">2.9. 関数</h3>
+    <p>
+      関数<code>zeropadding(key, digit)</code>は数値に対してゼロパディングを行います。第2引数<code>digit</code>に指定した桁数に満たない場合、不足分を「0」で埋めます。
+    </p>
+    <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time (0 - 24 h), Maximum run time (0 - 59 m) ]
+    size:   2
+    value:  [  1,  5 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{zeropadding(time_2, 2)}:00</pre>
+    <img width="800" src="img/zeropadding.png" alt="Zero Padding">
+
+    <p>
+      関数<code>calc(expr[, decimalPlaces, roundingMode])</code>は、式<code>expr</code>を計算して結果を返します。第2引数<code>decimalPlaces</code>には、小数点以下の桁数を指定します。省略した場合は0になります。第3引数<code>roundingMode</code>には、丸め方式を指定します。<code>OC_ROUNDING_ROUND</code>（四捨五入）、<code>OC_ROUNDING_FLOOR</code>（切り捨て）、<code>OC_ROUNDING_CEIL</code>（切り上げ）のいずれかを指定できます。省略した場合は<code>OC_ROUNDING_ROUND</code>になります。
+    </p>
+  <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time (0 - 24 h), Maximum run time (0 - 59 m) ]
+    size:   2
+    value:  [  1, 10 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #{calc(time_1 + time_2 / 60)}
+  #{calc(time_1 + time_2 / 60, 2)}
+  #{calc(time_1 + time_2 / 60, 2, OC_ROUNDING_FLOOR)}</pre>
+    <img src="img/calc.png" width="800" alt="Calculation">
+
+    <p>
+      関数<code>dirname(FILE_PATH)</code>と関数<code>basename(FILE_PATH)</code>はディレクトリ名とファイル名を含むパス名から、<code>dirname()</code>はディレクトリ部分を、<code>basename()</code>はファイル部分だけを返します。
+    </p>
+      <pre>form:
+  input_file:
+    widget: path
+    label: Input file
+    value: /home/test/foo.txt
+
+script: |
+  cd #{dirname(input_file)}
+  mpiexec ./#{basename(input_file)}</pre>
+      <img width="800" src="img/path3.png" alt="path">
+
+      <h2 id="dynamic">3. Dynamic Form Widget</h2>
+      <p>
+        ウィジットの設定を動的に変更できます。<code>select</code>、<code>radio</code>、<code>checkbox</code>ウィジットのoptionで設定します。
+      </p>
+      <h3 id="set">3.1. ウィジットの設定</h3>
+      <p>
+        <code>min</code>、<code>max</code>、<code>step</code>、<code>label</code>、<code>value</code>、<code>required</code>、<code>help</code>の各キーの設定を行います。<code>options</code>の各配列の第3要素以降に<code>set-(min|max|step|label|value|required|help)-(KEY)[_(num|1st element in options)]:(VALUE)</code>を指定します。
+      </p>
+      <p>
+  次の例では、<code>node_type</code>で<code>Medium</code>を選択すると、<code>cores</code>のラベルと最大値は<code>Number of Cores (1-8)</code>と<code>8</code>になります。
+      </p>
+      <pre>form:
+  node_type:
+    widget: select
+    label: Node Type
+    options:
+      - [ Small,  small ]
+      - [ Medium, medium, set-label-cores: Number of Cores (1-8),  set-max-cores: 8  ]
+      - [ Large,  large,  set-label-cores: Number of Cores (1-16), set-max-cores: 16 ]
+
+  cores:
+    widget: number
+    label: Number of Cores (1-4)
+    value: 1
+    min: 1
+    max: 4
+    step: 1
+
+script: |
+  #SBATCH --partition=#{node_type}
+  #SBATCH --cpus-per-task=#{cores}</pre>
+      <img width="400" src="img/setting1.png" alt="setting">
+      <p>
+  <code>number</code>、<code>text</code>、<code>email</code>ウィジットにおいて複数の入力欄を作っていた場合、設定対象の入力欄の指定に<code>_(num)</code>を用います。次の例では、<code>node_type</code>で<code>GPU</code>を選択すると、<code>time</code>の1つ目の入力欄のラベルと最大値が<code>Maximum run time hours (0 - 24)</code>と<code>24</code>になります。
+      </p>
+
+      <pre>form:
+  node_type:
+    widget: select
+    label: Node Type
+    options:
+      - [ 'Standard', 'standard' ]
+      - [ 'GPU',      'gpu', set-label-time_1: Maximum run time (0 - 24h), set-max-time_1: 24 ]
+
+  time:
+    widget:  number
+    label:   [ Maximum run time (0 - 72 h), Maximum run time (0 - 59 m) ]
+    size:    2
+    value:   [  1,  0 ]
+    max:     [ 72, 59 ]
+    min:     [  0,  0 ]
+    step:    [  1,  1 ]
+
+script: |
+  #SBATCH --partition=#{node_type}
+  #SBATCH --time=#{time_1}:#{time_2}:00</pre>
+      <img width="400" src="img/setting2.png" alt="setting">
+      <p>
+  <code>select</code>、<code>radio</code>、<code>checkbox</code>ウィジットの場合、設定対象のオプションの指定に<code>1st element in options</code>を用います。次の例では、<code>node_type</code>で<code>GPU</code>を選択すると、<code>enable_gpu</code>の<code>Enable GPU</code>がチェックされます。
+      </p>
+      <pre>form:
+  node_type:
+    widget: select
+    label: Node Type
+    options:
+      - [ 'Standard', '' ]
+      - [ 'GPU',      '', set-value-enable_gpu: Enable GPU ]
+
+  enable_gpu:
+    widget: checkbox
+    options:
+      - [ Enable GPU, gpu ]
+
+script:	|
+  #SBATCH --partition=#{node_type}</pre>
+      <img width="400" src="img/setting3.png" alt="setting">
+
+      <h3 id="disable">3.2. ウィジットの無効化</h3>
+      <p>
+  ウィジットとオプションを無効化・有効化します。<code>options</code>の各配列の第3要素以降に<code>[disable|enable]-(KEY)[-(1st element in options)][_num]</code>を指定します。
+      </p>
+      <p>
+  次の例では<code>cluster</code>で<code>Fugaku</code>を選択すると、<code>node_type</code>の<code>GPU</code>のオプションと<code>cuda_ver</code>のウィジットが無効化されます。キーを無効化された場合は、そのキーを利用している<code>script</code>セクション中の行も削除されます。
+      </p>
+      <pre>form:
+  cluster:
+    widget: select
+    label:  Cluster system
+    options:
+      - [ Fugaku,  fugaku, disable-node_type-GPU, disable-cuda_ver ]
+      - [ Tsubame, tsubame ]
+
+  node_type:
+    widget: select
+    label:  Node type
+    options:
+      - [ Standard, standard ]
+      - [ GPU,      gpu      ]
+
+  cuda_ver:
+    widget: number
+    label: CUDA version
+    value: 12
+    min: 12
+    max: 14
+
+script: |
+  module load system/#{node_type}
+  module load cuda/#{cuda_ver}</pre>
+      <img width="400" src="img/disable1.png" alt="disable"><br><br>
+      <img width="800" src="img/disable2.png" alt="disable">
+      <p>
+  上の例の<code>options</code>は下記のように記述することもできます。この場合、<code>Tsubame</code>を選択したときのみ、<code>node_type</code>と<code>cuda_ver</code>が有効になります。
+      </p>
+      <pre>options:
+  - [ Fugaku,  fugaku ]
+  - [ Tsubame, tsubame, enable-node_type-GPU, enable-cuda_ver ]</pre>
+
+      <h3 id="hide">3.3. ウィジットの非表示化</h3>
+      <p>
+  ウィジットを非表示・表示します。<code>options</code>の各配列の第3要素以降に<code>[hide|show]-(KEY)</code>を指定します。
+      </p>
+      <p>
+  次の例では、<code>hide_advanced_options</code>をチェックすると<code>comment</code>が非表示になります。無効化とは異なり、そのキーのウィジットが表示されないだけであり、そのキーを利用している<code>script</code>セクションの行には影響しません。<code>indent</code>はWebフォームの左側にインデントを作成します。数値は1〜5が入力でき、数値が大きくなるほどインデント幅は大きくなります。
+      </p>
+      <pre>form:
+  hide_advanced_option:
+    widget: checkbox
+    options:
+      - [ 'Hide advanced option', '', hide-comment ]
+
+  comment:
+    widget: text
+    label: Comment
+    value: test
+    indent: 1
+
+script: |
+  #SBATCH --comment=#{comment}</pre>
+      <img width="800" src="img/hide1.png" alt="hide">
+      <p>
+  次の例では、<code>show_advanced_options</code>をチェックすると<code>comment</code>が表示されます。
+      </p>
+
+      <pre>form:
+  show_advanced_options:
+    widget: checkbox
+    options:
+      - [ 'Show advanced option', '', show-comment ]
+
+  comment:
+    widget: text
+    label: Comment
+    value: test
+    indent: 1
+
+script: |
+  #SBATCH --comment=#{comment}</pre>
+      <img width="800" src="img/hide2.png" alt="hide">
+
+      <h2 id="combination">4. 利用可能な組合せ</h2>
+      <p>
+  <code>form</code>セクションと<code>header</code>セクションにおいて、各ウィジットと利用可能なオプションとの組合せは下記の表の通りです。<code>options</code>のみは必須項目ですが、他の項目は省略可能です。
+      </p>
+      <table class="table">
+  <thead>
+    <tr style="vertical-align:middle">
+      <th>Widget</th><th>label, value, help,<br>required, indent</th><th>options<br>(Dynamic Form Widget)</th><th>size</th><th>separator</th><th>direction</th><th>min, max,<br>step</th>
+      <th>show_files,<br>favorites</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>number</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td>OK</td><td></td>
+    </tr>
+    <tr>
+      <td>text, email</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>select</td><td>OK</td><td>OK (OK)</td><td></td><td></td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>multi_select</td><td>OK</td><td>OK</td><td></td><td>OK</td><td></td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>radio</td><td>OK</td><td>OK (OK)</td><td></td><td></td>
+      <td>OK</td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>checkbox</td><td>OK</td><td>OK (OK)</td> <td></td><td>OK</td><td>OK</td><td></td><td></td>
+    </tr>
+    <tr>
+      <td>path</td><td>OK</td><td></td><td></td><td></td><td></td><td></td><td>OK</td>
+    </tr>
+  </tbody>
+      </table>
+
+      <h2 id="script">5. scriptセクション</h2>
+      <h3 id="label">5.1. ラベルの変更</h3>
+      <p>
+        ジョブスクリプトのラベル（デフォルトは「Script Content」）を変更したい場合は<code>script</code>セクションで<code>label</code>を設定します。その場合、ジョブスクリプトは<code>content</code>に記述します。
+      </p>
+      <pre>form:
+  nodes:
+    widget: number
+    label: Number of nodes
+
+script:
+  label: Script Details
+  content: |
+    #SBATCH --nodes=#{nodes}</pre>
+      <img src="img/label.png" width="200" alt="label">
+
+      <h3 id="save">5.2. ファイルの保存</h3>
+      <p>
+  Open Composerはジョブスクリプトの生成だけでなく、アプリケーションで利用するパラメータファイルや設定ファイルの生成も行うことができます。そのような場合、ジョブスクリプトを投入せずに、ジョブスクリプトの保存のみを行う方が適しています。ジョブスクリプトの保存のみを行いたい場合、<code>script</code>セクションで<code>action: save</code>を設定します。
+      </p>
+      <pre>form:
+  nodes:
+    widget: number
+    label: Number of nodes
+    value: 1
+
+script:
+  label: Parameter file
+  action: save
+  content: |
+    num_of_nodes: #{nodes}</pre>
+
+      <p>
+  この設定を行うと、ボタンのラベルが「Submit」から「Save」に変化します。
+      </p>
+      <img src="img/save.png" width="400" alt="Save">
+      <p>
+  ボタンをクリックすると保存が実行され、画面上部にその保存先が表示されます。その文字のリンクをクリックすると、Open OnDemandのHome Directoryが起動します。また、ターミナルのアイコンがある場合、そのアイコンをクリックするとOpen OnDemandのTerminalアプリケーションが起動します。
+      </p>
+      <img src="img/save2.png" width="400" alt="Save">
+
+      <h3 id="hide-script">5.3. 非表示化</h3>
+      <p>
+  <code>script</code>セクションを非表示化することができます。特殊な変数<code>OC_SCRIPT_CONTENT</code>とDynamic Form Widgetの<code>hide-</code>とを下記のように組み合せて利用します（ERBを用いるため、ファイル名は<code>form.yml.erb</code>であることに注意ください）。
+      </p>
+      <pre>form:
+  script_content:
+    widget: checkbox
+    value: "Hide script content"
+    options:
+      - [ "Hide script content", "", hide-&lt;%= OC_SCRIPT_CONTENT %&gt; ]</pre>
+
+      <img src="img/hide-script.png" width="600" alt="Hide script">
+
+      <p>
+  チェックボックスを表示させずに、ジョブスクリプトを隠したい場合は、そのチェックボックスに対して<code>hide-</code>を設定します。
+      </p>
+      <pre>form:
+  script_content:
+    widget: checkbox
+    value: "Hide script content"
+    options:
+      - [ "Hide script content", "", hide-&lt;%= OC_SCRIPT_CONTENT %&gt;, hide-script_content ]</pre>
+
+      <h3 id="variables">5.4. 特殊な変数</h3>
+      <p>
+        <code>script</code>セクションでは、下記の特殊な変数も利用できます。
+      </p>
+      <ul>
+        <li>#{OC_APP_NAME}: <code>manifest.yml</code>の<code>name</code>で定義しているアプリケーション名</li>
+        <li>#{OC_DIR_NAME}: <code>manifest.yml</code>などのファイルが保存されているディレクトリ名（各アプリケーションのURLの最後のパス要素）</li>
+        <li>#{OC_SCRIPT_LOCATION}: ヘッダで定義されている<code>Script location</code></li>
+        <li>#{OC_CLUSTER_NAME}: ヘッダで定義されている<code>Cluster name</code>（<code>./conf.yml.erb</code>で<code>cluster</code>が定義されている場合に有効）</li>
+        <li>#{OC_SCRIPT_NAME}: ヘッダで定義されている<code>Script Name</code></li>
+        <li>#{OC_JOB_NAME}: ヘッダで定義されている<code>Job Name</code></li>
+      </ul>
+
+      <h2 id="check">6. checkセクション</h2>
+      <p>
+  <code>check</code>セクションでは、ウィジットに設定された値のチェックをRuby言語を用いて定義します。このチェックはジョブの投入前に行われます。<code>check</code>セクションでは、関数<code>oc_assert(condition, message)</code>を利用できます。この関数は<code>condition</code>が<code>false</code>の場合、<code>message</code>を出力して処理を終了します。
+      </p>
+      <p>
+  <code>check</code>セクションのサンプルは下記の通りです。<code>form</code>セクションの変数を参照する場合は、@マークの後に変数名を記述してください。下記のサンプルでは、24時間よりも大きな値が入力された状態で「Submit」ボタンをクリックすると、エラーメッセージが出力され、ジョブスクリプトの投入は行わないことを意味しています。
+      </p>
+      <pre>form:
+  time:
+    widget: number
+    label:  [ Maximum run time (0 - 24 h), Maximum run time (0 - 59 m) ]
+    size:   2
+    value:  [  1,  0 ]
+    min:    [  0,  0 ]
+    max:    [ 24, 59 ]
+    step:   [  1,  1 ]
+
+script: |
+  #SBATCH --time=#{time_1}:#{time_2}:00
+
+check: |
+  message = "Exceeded Time"
+  oc_assert(@time_1 != 24 || @time_2 == 0, message)</pre>
+      <p>
+        <code>check</code>セクションでは、<code>script</code>セクションと同様に下記の特殊な変数も利用できます。
+      </p>
+      <ul>
+        <li>@OC_APP_NAME: <code>manifest.yml</code>の<code>name</code>で定義しているアプリケーション名</li>
+        <li>@OC_DIR_NAME: <code>manifest.yml</code>などのファイルが保存されているディレクトリ名（各アプリケーションのURLの最後のパス要素）</li>
+        <li>@OC_SCRIPT_LOCATION: ヘッダで定義されている<code>Script location</code></li>
+  <li>@OC_CLUSTER_NAME: ヘッダで定義されている<code>Cluster name</code>（<code>./conf.yml.erb</code>で<code>cluster</code>が定義されている場合に有効）</li>
+  <li>@OC_SCRIPT_NAME: ヘッダで定義されている<code>Script Name</code></li>
+        <li>@OC_JOB_NAME: ヘッダで定義されている<code>Job Name</code></li>
+      </ul>
+
+      <h2 id="submit">7. submitセクション</h2>
+      <p>
+        <code>section</code>セクションでは、ジョブ投入前（<code>check</code>セクションによるチェックの後）に実行する処理をbash言語を用いて定義します。
+      </p>
+      <p>
+        <code>submit</code>セクションのサンプルは下記の通りです。<code>script</code>セクションと同様の記法が可能です。さらに、<code>submit</code>セクションだけで利用できる特殊な変数<code>OC_SUBMIT_OPTIONS</code>があり、ジョブスクリプト投入コマンドに追加のオプションを設定できます。この処理の実行後に、ジョブスクリプトを投入するためのコマンド（例えば、<code>sbatch #{OC_SUBMIT_OPTIONS} -J #{OC_JOB_NAME} #{OC_SCRIPT_NAME}</code>）が実行されます。
+      </p>
+      <pre>form:
+  nodes:
+    widget: number
+    label: Number of nodes
+    value: 1
+
+script:
+  label: Parameter file
+  content: |
+    num_of_nodes: #{nodes}
+
+submit: |
+  #!/bin/bash
+  set -e
+  cd #{OC_SCRIPT_LOCATION}
+  mv #{OC_SCRIPT_NAME} param_#{nodes}.conf
+  genjs_ct param_#{nodes}.conf > #{OC_SCRIPT_NAME}
+  OC_SUBMIT_OPTIONS="-n 1 --export=NONE"</pre>
+      <p>
+  <code>submit</code>セクションの内容をジョブ投入前に閲覧したい場合、<code>action: confirm</code>を記述します。その場合、処理の内容は<code>content</code>に記述します。
+      </p>
+      <pre>form:
+  nodes:
+    widget: number
+    label: Number of nodes
+    value: 1
+
+script:
+  label: Parameter file
+  content: |
+    num_of_nodes: #{nodes}
+
+submit:
+  action: confirm
+  content: |
+    #!/bin/bash
+    set -e
+    cd #{OC_SCRIPT_LOCATION}
+    mv #{OC_SCRIPT_NAME} param_#{nodes}.conf
+    genjs_ct param_#{nodes}.conf > #{OC_SCRIPT_NAME}
+    OC_SUBMIT_OPTIONS="-n 1 --export=NONE"</pre>
+      <p>
+  この設定を行うと、ボタンのラベルが「Submit」から「Confirm」に変化します。「Confirm」ボタンをクリックすると、変数に値が代入された<code>submit</code>セクションの内容が表示されます。その内容は編集することも可能です。「Submit」ボタンをクリックすると、<code>submit</code>セクションの内容の実行後にジョブが投入されます。注意点として、スクリプト中でエラーが発生したときに、処理を中断するには<code>set -e</code>コマンドが必要です。
+      </p>
+      <img src="img/submit.png" width="600" alt="Submit">
+      <p>
+  なお、<code>script</code>セクションで<code>action: save</code>も設定した場合、<code>script</code>セクションの内容を保存した後、<code>submit</code>セクションの内容を実行するという動作になります。「Confirm」の画面下のボタンは下記のように「Submit」から「Save」という表示になります。
+      </p>
+      <img src="img/submit2.png" width="600" alt="Submit">
+
+      <h2 id="header">8. headerセクション</h2>
+      <p>
+  <code>header</code>セクションを定義できます。ただし、<code>lib/header.yml.erb</code>で定義されているウィジットは必ず定義してください。
+      </p>
+      <p>
+  下記の例は、ジョブスクリプトを隠す新しいウィジット<code>script_content</code>を定義しています。<code>_script_location</code>と<code>_script</code>は<code>lib/header.yml.erb</code>で定義されているウィジットです（<code>./conf.yml.erb</code>で<code>cluster</code>が定義されている場合は、<code>_cluster_name</code>の定義も必要です）。
+      </p>
+
+      <pre>header:
+  _script_location:
+    widget:     path
+    value:      &lt;%= Dir.home %&gt;
+    label:      Script Location
+    show_files: false
+    required:   true
+
+  _script:
+    widget:   text
+    size :    2
+    label:    [ Script Name, Job Name ]
+    value:    [ job.sh, "" ]
+    required: [ true, false ]
+
+  script_content:
+    widget: checkbox
+    value: "Hide script content"
+    options:
+      - [ "Hide script content", "", hide-&lt;%= OC_SCRIPT_CONTENT %&gt; ]</pre>
+
+      <img src="img/hide-script-header.png" width="600" alt="Hide script in header">
+      <p>
+      なお、上の例はアプリケーション毎にヘッダを設定する場合ですが、すべてのアプリケーションのヘッダを設定したい場合は<code>lib/header.yml.erb</code>を直接編集します。その場合、<code>script</code>セクションと同様に下記の特殊な変数も利用できます（<code>header</code>や<code>form</code>セクションでも利用可能ですが、ファイル名は<code>form.yml.erb</code>である必要があります）。
+      </p>
+      <ul>
+        <li>@OC_APP_NAME: <code>manifest.yml</code>の<code>name</code>で定義しているアプリケーション名</li>
+        <li>@OC_DIR_NAME: <code>manifest.yml</code>などのファイルが保存されているディレクトリ名（各アプリケーションのURLの最後のパス要素）</li>
+      </ul>
+      <p>
+      下記に特定のアプリケーションだけ処理を変更する例を示します。
+      </p>
+      <pre>&lt;% if @OC_DIR_NAME == "Slurm" %&gt;
+queue:
+  widget: select
+  label: Queue
+  options:
+    - [small]
+    - [large]
+&lt;% end %&gt;</pre>
+
+      <h2 id="supplement">9. 補足</h2>
+      <ul>
+  <li>本ページのサンプルはすべてbash言語で記述されていますが、他のシェルも利用することができます。ただし、<code>submit</code>セクションだけはbash言語しか記述できません。</li>
+  <li>ウィジット名に利用できるのは英数字とアンダースコアのみです。数字とアンダースコアを先頭に用いることもできません。末尾がアンダースコア+数字のウィジット名（例：<code>nodes_1</code>）も利用しないで下さい。アプリケーションを保存するディレクトリ名も同様です。ただし、<code>header</code>セクションを<code>form.yml</code>で定義する場合、<code>lib/header.yml.erb</code>で用いられているアンダースコアで始まるウィジット名（例：<code>_script_location</code>）は利用可能です。</li>
+  <li><code>options</code>で2つ目の要素がない場合、1つ目の要素が代わりに用いられます。</li>
+  <li><code>script</code>セクションにおいて、ある行で利用されている変数が値を持たない場合、その行は表示されません。ただし、その変数の先頭にコロンを付加する（例：<code>#{:nodes}</code>や<code>#{basename(:input_file)}</code>）と、その変数が値を持たなくても行は出力されます。</li>
+  <li>Open Composerがジョブスクリプトを投入するまでに行われる処理の順番は下記の通りです。
+    <ol>
+      <li>アプリケーションページで「Submit」ボタンがクリックされる</li>
+      <li><code>form.yml</code>の<code>check</code>セクションに記述されたスクリプトを実行（<code>check</code>セクションがある場合）</li>
+      <li><code>form.yml</code>の<code>submit</code>セクションに記述されたスクリプトを実行（<code>submit</code>セクションがある場合）</li>
+      <li>ジョブスクリプトが投入される</li>
+    </ol>
+  </li>
+      </ul>
+    </main>
+  </div>
+
+  <footer class="d-flex justify-content-center">
+    <p class="mb-0 text-white">&copy; RIKEN Center for Computational Science</p>
+  </footer>
+</body>
+</html>

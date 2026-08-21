@@ -1,0 +1,6 @@
+name: SPAdes
+category: Biology
+description: Genome assembler for single-cell and isolates data sets.
+homepage: https://ablab.github.io/spades/
+icon: icon.png
+hidden: true

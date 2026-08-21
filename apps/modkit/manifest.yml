@@ -1,0 +1,6 @@
+name: modkit
+category: Biology
+description: Tool for working with modified bases from Oxford Nanopore.
+homepage: https://github.com/nanoporetech/modkit
+icon: icon.png
+hidden: true

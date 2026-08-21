@@ -1,0 +1,29 @@
+<%
+# Inherit all widgets from GPU Job Script (Slurm), then splice in lammps_module
+# immediately before time_days_hours_minutes so it works with any base template
+# (GPU or non-GPU) without needing to know which GPU widgets are present.
+slurm_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
+base = read_yaml(slurm_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['lammps_module'] = {
+      'widget' => 'module_load',
+      'module' => 'LAMMPS',
+      'label'  => 'LAMMPS Module'
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{lammps_module}
+
+  # See https://docs.nesi.org.nz/Software/Available_Applications/LAMMPS/#examples for how to set up 
+  # your LAMMPS scripts.
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

@@ -1,0 +1,6 @@
+name: SMRT-Link
+category: Biology
+description: PacBio’s open-source software suite is designed for use with Single Molecule, Real-Time (SMRT) Sequencing data.
+homepage: https://www.pacb.com/support/software-downloads/
+icon: icon.png
+hidden: true

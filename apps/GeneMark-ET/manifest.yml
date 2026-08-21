@@ -1,0 +1,5 @@
+name: GeneMark-ET
+category: Others
+description: Eukaryotic gene prediction suite with automatic training.
+homepage: http://exon.gatech.edu/GeneMark
+hidden: true

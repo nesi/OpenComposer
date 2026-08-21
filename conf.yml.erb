@@ -1,0 +1,174 @@
+---
+# Required settings
+apps_dir: "./apps"
+
+# Scheduler type — controls job submission, history, cancellation, and
+# which generic script template appears under "New Template".
+# Valid values: slurm, pbspro, miyabi, sge, fujitsu_tcs
+#
+# Single-cluster (no "clusters:" block):
+#   scheduler: "slurm"
+#
+# Multi-cluster: set per cluster under "clusters:" (see below).
+clusters:
+  mahuika:
+    scheduler: "slurm"
+
+# Optional settings
+# General
+data_dir:  <%= ENV['HOME'] %>/composer
+login_node: "login.hpc.nesi.org.nz"
+ssh_wrapper: "ssh login.hpc.nesi.org.nz"
+
+# SSH key check on the first page view (and again on Submit). When true, opening
+# Open Composer checks that the user has an SSH key that is actually authorized —
+# owning ~/.ssh/id_ed25519 is no help if it was never added to authorized_keys. If
+# none is, Open Composer generates a passphrase-less key of its own (named
+# "<ssh_key_name>_<ssh_key_type>", e.g. opencomposer_ed25519), authorizes it
+# (appends the public key to ~/.ssh/authorized_keys) and adds an IdentityFile line
+# to ~/.ssh/config so ssh actually offers this non-default-named key. A key the
+# user already owns is never authorized on their behalf. This runs before the
+# Project dropdown is populated (which queries sacctmgr over SSH), so a brand-new
+# user's first visit works. Set to false to disable.
+ensure_ssh_key: true
+ssh_key_type:   "ed25519"      # Key type generated when missing: ed25519 (recommended) or rsa
+ssh_key_name:   "opencomposer" # Base name for the generated key files
+bin: "/usr/bin"
+bin_overrides:
+  sbatch:   "/usr/bin/sbatch"
+  scontrol: "/usr/bin/scontrol"
+  scancel:  "/usr/bin/scancel"
+  sacct:    "/usr/bin/sacct"
+#sge_root: "/apps/t4/rhel9/uge/latest"
+
+# Directory containing hidden generic apps (not shown in the main app listing).
+generic_apps_dir: "./generic_apps"
+
+# When loading an external/generic job (one not submitted through Open Composer)
+# from the History page, open this subfolder inside generic_apps_dir.
+external_reload_app: "Slurm"
+
+# "Load or Create a Script from Disk" button (shown on the Selected Templates
+# and New Custom Template pages — it opens the full-page file browser).
+# Set show_load_script to false to hide the button, or change load_script_label
+# to rename it to whatever you like.
+show_load_script:   true
+load_script_label:  "Load or Create a Script from Disk"
+
+## History
+# Set to false to never store the batch script in the DB.
+# When false, "Load parameters" always fetches the script live via sacct -B.
+history_store_script: false
+# Set to true to show the Job Efficiency section in the history job details modal.
+# Requires sacct --json support (Slurm 20.11+). Defaults to false.
+history_efficiency: true
+history:
+  OC_HISTORY_JOB_NAME:
+  OC_HISTORY_START_TIME:
+    label: "Start Time"
+  OC_HISTORY_END_TIME:
+    label: "End Time"
+  OC_HISTORY_OUTPUT_FILE:
+    label: "Output File"
+  OC_HISTORY_ERROR_FILE:
+    label: "Error File"
+  
+## Layout
+favicon:                 "favicon.ico"             # Browser tab icon (file in the public/ dir). Set to "" to disable.
+
+# A horizontal separator line drawn directly under the top navbar, above the
+# template list / page content. Choose a style:
+#   false             hide it (default)
+#   true / gradient   a soft 6px gradient rule that fades to transparent
+#   solid / line      a normal 1px solid rule
+#   accent            a thicker 3px coloured accent bar
+show_navbar_separator:   solid
+
+# Colour of the solid / accent separator styles above (ignored for gradient).
+navbar_separator_color:  "#C3C8C8"
+
+# Optional descriptive blurb shown under the separator line and above the
+# template categories on the Selected Templates page. HTML is allowed. Leave
+# empty ("") to hide it.
+app_description:         '<p class="mb-2">Slurm Composer is designed to allow you to write slurm scripts on OnDemand directly. These can be submitted to slurm without using a terminal.</p><p class="mb-2">See <strong>History</strong> to see what jobs you have run/are running on slurm.</p><p class="mb-0">See <a href="https://docs.nesi.org.nz/Interactive_Computing/OnDemand/Apps/Slurm_Composer" target="_blank">Documentation on the Slurm Composer</a> for details about how to use it.</p>'
+
+footer:                  '<a href="https://www.nesi.org.nz/copyright" target="_blank">Copyright &copy; 2026 &middot; REANNZ</a> | <a href="https://www.nesi.org.nz/disclaimer" target="_blank">Disclaimer</a> | <a href="https://www.nesi.org.nz/about-us/security-privacy/privacy-policy" target="_blank">Privacy</a>'
+home_format:             "big"
+thumbnail_width:         "100"
+highlight_theme:         "vs"
+directive_color:         "#001C36"
+navbar_color:            "#FFFFFF"
+navbar_text_color:       "#191919"
+dropdown_color:          "#FFFFFF"
+dropdown_text_color:     "#191919"
+show_footer:             false                       # Set to true to show the footer
+footer_color:            "#000000"
+footer_text_color:       "#FFFFFF"
+footer_padding:          "p-3"       # Bootstrap padding class: p-1, p-2, p-3, p-4, p-5
+footer_ood_logo:         false       # Set to false to hide the OpenOnDemand logo
+footer_logo_height:      "50px"      # Height of the footer brand logo
+# Footer brand logo (the "Powered by …" image, bottom-left of the footer).
+# Image file lives in the public/ dir. Clicking it opens footer_brand_url.
+# Leave footer_brand_logo empty ("") to fall back to the OpenOnDemand logo
+# (controlled by footer_ood_logo above).
+footer_brand_logo:       "RIKEN_powered_by.svg"
+footer_brand_url:        "https://github.com/RIKEN-RCCS/OpenComposer"
+footer_brand_alt:        "Powered by RIKEN"
+category_color:          "#FFFFFF"
+category_text_color:     "#191919"
+description_color:       "#FFFFFF"
+description_text_color:  "#191919"
+form_color:              "#F3F4F4"
+non_script_color:        "#FFFFFF"
+non_script_button_color: "#00B9E4"
+submit_color:            "#EBF8FD"
+submit_button_color:     "#25545E"
+history_action_color:    "#DC3545"
+
+## Submission warnings
+empty_script_warning: true                        # Set to false to disable the warning when submitting a script with no real commands
+
+## Navbar links (set to false to hide)
+# Each navbar item's label and icon can be customised. Icons accept either a
+# Font Awesome class (e.g. "fas fa-folder") or a Bootstrap Icons class
+# (e.g. "bi bi-terminal-fill") — both icon sets are loaded.
+show_home_directory:        false
+home_directory_label:       "File Directory"
+home_directory_icon:        "fas fa-folder"        # "file directory" icon (use "fas fa-file" for a document icon)
+
+show_shell_access:          false
+shell_access_label:         "Mahuika SSH Copy"
+shell_access_icon:          "bi bi-terminal-fill"  # terminal icon
+
+# Search box. Set show_search to false to hide it. It is rendered just to the
+# left of the File/Home Directory item on the right-hand side of the navbar.
+show_search:                true
+
+navbar_search_placeholder:  "Search templates…"
+category_badge_colors:                             # Background colours for category badges
+  Application:        "#495057"
+  Astronomy:          "#5a189a"
+  Biology:            "#198754"
+  Chemistry:          "#0097a7"
+  Climate Science:    "#0277bd"
+  Data Analytics:     "#e65100"
+  Earth Science:      "#5d4037"
+  Engineering:        "#1565c0"
+  Language:           "#ad1457"
+  Machine Learning:   "#6f42c1"
+  Mathematics:        "#c62828"
+  Others:             "#6c757d"
+  Physics:            "#283593"
+  Workflow Management: "#2e7d32"
+  Slurm Submit Templates: "#25545E"
+all_templates_footer: "If you cannot find the template you are looking for, use either <strong>Job Script</strong> or <strong>GPU Job Script</strong>."
+show_open_ondemand:      false
+# open_ondemand_url is intentionally left unset: the "Return to OnDemand" link
+# and the navbar logo automatically point to <this host>/pun/sys/dashboard
+# (the same host the page is served from). Set open_ondemand_url here only to
+# override that with a fixed URL.
+open_ondemand_label:     "Return to Ondemand"
+open_ondemand_icon:      "fas fa-house"             # house icon
+open_ondemand_new_tab:   false                      # Set to false to open in the same tab
+show_navbar_logo: false                           # Set to false to hide the navbar logo (top-left) without unsetting navbar_logo
+navbar_logo: "REANNZ_logo.svg"                    # Set to e.g. "REANNZ_logo.svg" to show a logo

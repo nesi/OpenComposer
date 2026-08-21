@@ -1,0 +1,5 @@
+name: MetaPhlAn
+category: Biology
+description: MetaPhlAn is a computational tool for profiling the composition of microbial communities (Bacteria, Archaea, Eukaryotes and Viruses) from metagenomic shotgun sequencing data (i.e. not 16S) with species-level.
+homepage: https://huttenhower.sph.harvard.edu/metaphlan/
+hidden: true

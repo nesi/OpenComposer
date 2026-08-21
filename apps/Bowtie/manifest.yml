@@ -1,0 +1,6 @@
+name: Bowtie
+category: Biology
+description: Ultrafast, memory-efficient short read aligner.
+homepage: http://bowtie-bio.sourceforge.net/index.shtml
+icon: icon.png
+hidden: true

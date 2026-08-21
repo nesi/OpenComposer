@@ -1,0 +1,6 @@
+name: phyx
+category: Biology
+description: Phyx performs phylogenetics analyses on trees and sequences.
+homepage: https://github.com/FePhyFoFum/phyx
+icon: icon.png
+hidden: true

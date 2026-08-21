@@ -1,0 +1,6 @@
+name: xtb
+category: Chemistry
+description: Xtb - An extended tight-binding semi-empirical program package.
+homepage: https://xtb-docs.readthedocs.io
+icon: icon.svg
+hidden: true

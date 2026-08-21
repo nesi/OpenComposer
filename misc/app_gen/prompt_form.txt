@@ -1,0 +1,151 @@
+App: <<<APP_NAME>>>
+
+Support documentation:
+<<<SUPPORT_MD>>>
+
+Generate a JSON object for an HPC job submission form.
+
+## HPC context
+The form already includes Slurm resource fields. In ERB (Ruby), these are available as variables:
+  cores_simple          — total cores requested (simple mode, maps to --ntasks)
+  cores_advanced_1      — number of tasks (advanced mode, --ntasks)
+  cores_advanced_2      — CPUs per task (advanced mode, --cpus-per-task)
+  gpu_any / gpu_genoa / gpu_milan — GPU type selected (empty string or 'None' means no GPU)
+
+Derive ntasks, cpus, and has_gpu at the top of every erb_logic:
+  ntasks  = cores_advanced_1.to_i > 1 ? cores_advanced_1.to_i : cores_simple.to_i
+  cpus    = cores_advanced_2.to_i > 1 ? cores_advanced_2.to_i : 1
+  has_gpu = [gpu_any, gpu_genoa, gpu_milan].any? { |g| g.to_s != '' && g.to_s != 'None' }
+
+Parallelisation rules (apply in this priority order):
+  1. GPU: any GPU field is non-empty and not 'None' → use GPU flags
+  2. Distributed memory (MPI): ntasks > 1 → use MPI mode
+     MPI takes precedence over threads even if cpus > 1 too.
+  3. Shared memory (OMP/threads): cpus > 1 → set OMP env vars / thread flags
+  4. Serial: ntasks <= 1 AND cpus <= 1 AND no GPU
+
+The app command flags should be determined from these resource variables in ERB Ruby,
+NOT via a user-facing mode dropdown.
+
+At job runtime, Slurm sets: $SLURM_NTASKS, $SLURM_CPUS_PER_TASK, $SLURM_GPUS_PER_NODE.
+
+## srun — when and how to use it
+
+`srun` is the SLURM-native job step launcher. It replaces `mpirun` in SLURM scripts.
+
+**When to always prefix with srun:**
+Check the documentation examples. If ALL parallelisation modes (including serial) show `srun`,
+then prefix the command with `srun` in every branch of the erb_logic. Many apps do this:
+GROMACS serial uses `srun gmx mdrun`, LAMMPS serial uses `srun lmp`, VASP always uses `srun vasp_std`.
+
+**For MPI specifically:**
+`srun myapp` replaces `mpirun -np N myapp`. srun reads the task count from the job allocation —
+no -np flag needed. If documentation shows `mpirun -np N myapp`, translate to `srun myapp`.
+
+**Do NOT prefix with srun when:**
+- The app is a Python/R/shell script that manages its own parallelism (Dask, joblib, PyTorch
+  DDP, MPI4Py with internal MPI_Init). These use ntasks=1, cpus-per-task > 1, or GPU.
+- The docs never show srun (e.g., MATLAB: `matlab -batch "..."`, AlphaFold: `run_alphafold.py ...`)
+- A wrapper script handles MPI launching internally.
+- The app is an HPC container runner (Apptainer/Singularity): containers require the HOST MPI
+  (mpiexec/mpirun) to launch parallel tasks so that the host MPI library can be bound into the
+  container. Use `mpiexec -n ${SLURM_NTASKS} apptainer exec ... sif_file /app` for MPI containers;
+  use `apptainer exec --nv ... sif_file /app` for GPU containers (no launcher needed).
+
+## Binary variants (MPI vs non-MPI executables)
+
+Some apps provide separate binaries for MPI and non-MPI execution. Common patterns:
+  - `gmx` vs `gmx_mpi`  (GROMACS)
+  - `lmp` vs `lmp_mpi`  (some LAMMPS builds)
+  - `vasp_std` (always, all modes)
+
+When docs show two binary variants: use the standard binary for serial/OMP/GPU, and the
+`_mpi`-suffixed binary when ntasks > 1. Both variants should still be prefixed with `srun`
+if the docs show srun on all examples.
+
+Some apps provide three or more executables for different modes (e.g., OpenSees: `OpenSees`
+for serial, `OpenSeesSP` for large single models, `OpenSeesMP` for parallel parametric studies).
+In these cases the erb_logic switches the binary name in each branch rather than adding a launcher prefix.
+
+Note: `_mpi`-suffixed binaries should still be launched with `srun`. The "do NOT prefix with
+srun" rule above applies to scripting-language wrappers, NOT to compiled _mpi binaries.
+
+## Apps without MPI support
+
+Some apps explicitly do not support MPI and must always use ntasks=1:
+  - MATLAB: uses parpool for threading (cpus-per-task) or GPU. Never srun, never ntasks > 1.
+  - Most Python/ML scripts (AlphaFold, TensorFlow, PyTorch): GPU + cpus-per-task only.
+
+For these, erb_logic should ignore ntasks entirely and only branch on cpus vs GPU.
+
+## Multi-step and environment setup commands
+
+Some apps require setup steps before the main command (e.g., domain decomposition, sourcing
+an environment script). Include these as extra lines in app_cmd using \n:
+
+  app_cmd = "source ${FOAM_BASH}\ndecomposePar\nsrun simpleFoam -parallel\nreconstructPar -latestTime"
+
+If docs show a post-processing step (e.g., `reconstructPar`), include it after the solver command.
+
+## Thread parallelism and environment variables
+
+For OMP/thread parallelism, set environment variables before the app command. In erb_logic,
+combine them into a single multi-line string using \n:
+
+  app_cmd = "export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}\nsrun myapp -nthreads ${SLURM_CPUS_PER_TASK} #{myapp_input}"
+
+Some apps use a flag instead of (or as well as) the env var:
+  - GROMACS: `-ntomp ${SLURM_CPUS_PER_TASK}`
+  - LAMMPS: `-sf omp -pk omp ${SLURM_CPUS_PER_TASK}` (also export OMP_NUM_THREADS)
+
+## Input file handling
+
+Input method varies by app — extract from docs:
+  1. Flag-based: `-in input.lj`, `-s input.tpr`, `--fasta_paths input.fasta` → add a text_field,
+     insert the flag + value in the command.
+  2. Stdin redirection: `srun g09 < input.gjf` → add a text_field, insert `< #{field}` in command.
+  3. Working directory: some apps (VASP, CP2K) read from fixed filenames (POSCAR, INCAR, etc.)
+     in the working directory. Do NOT add an input file field for these; add a help note instead.
+
+## Environment variables set by modules
+
+Some apps rely on env vars set by their module or a companion data module. These are already
+in the job environment after `module load` and can be used directly in erb_logic command strings.
+Example: AlphaFold sets `$AF2DB` via `module load AlphaFold2DB`. Use it as: `--data_dir=$AF2DB`.
+
+## Return JSON with exactly these keys
+
+"profile": "gpu" if any documentation example uses GPUs, otherwise "basic"
+
+"form_fields": fields to add after the module selector. Each field has:
+  name (snake_case), widget, label, and optionally help, value, options.
+
+  widget types:
+    "text_field"  — free text input. Use for file paths, arguments.
+                    Optional "value" sets the default (e.g. "value": "11111" for a port).
+    "select"      — dropdown. Requires "options": [[label, value], ...].
+                    Use for fixed-choice parameters (e.g. model preset, output format).
+
+  Include an input file / input path field unless the app reads from the working directory.
+  Do NOT add a run-mode select — mode is inferred from resources.
+
+  Help text style: be concrete. Mention the expected file extension and a NeSI path example:
+    "Path to your input file (.tpr). Use the full path, e.g. /nesi/project/nesi99999/run.tpr"
+
+"erb_logic": a string of Ruby ERB code that defines the local variable `app_cmd`.
+  Rules:
+  - Use Ruby #{...} to embed form field values (e.g. #{myapp_input})
+  - Use ${SLURM_...} literally for Slurm runtime variables
+  - Branch on ntasks, cpus, has_gpu using if/elsif/else/end
+  - Multi-line commands: use \n inside a double-quoted Ruby string
+  - Do NOT include module load, #SBATCH, or shebang lines
+
+## Example response
+{
+  "profile": "basic",
+  "form_fields": [
+    {"name": "myapp_input", "widget": "text_field", "label": "Input File",
+     "help": "Path to your input file (e.g. /nesi/project/nesi99999/run.in)"}
+  ],
+  "erb_logic": "ntasks = cores_advanced_1.to_i > 1 ? cores_advanced_1.to_i : cores_simple.to_i\ncpus = cores_advanced_2.to_i > 1 ? cores_advanced_2.to_i : 1\nhas_gpu = [gpu_any, gpu_genoa, gpu_milan].any? { |g| g.to_s != '' && g.to_s != 'None' }\nif has_gpu\n  app_cmd = \"srun myapp --gpu #{myapp_input}\"\nelsif ntasks > 1\n  app_cmd = \"srun myapp_mpi #{myapp_input}\"\nelsif cpus > 1\n  app_cmd = \"export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}\\nsrun myapp -nt ${SLURM_CPUS_PER_TASK} #{myapp_input}\"\nelse\n  app_cmd = \"srun myapp #{myapp_input}\"\nend"
+}

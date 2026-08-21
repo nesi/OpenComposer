@@ -1,0 +1,5 @@
+---
+name: Job Script (Grid Engine)
+icon: "./logo.png"
+description: |
+  This application generates an arbitrary job script in Grid Engine.

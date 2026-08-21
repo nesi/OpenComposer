@@ -1,0 +1,5 @@
+name: EMAN2
+category: Biology
+description: Greyscale scientific image processing suite with a primary focus on processing data from transmission electron microscopes.
+homepage: http://blake.bcm.edu/emanwiki/EMAN2/
+hidden: true

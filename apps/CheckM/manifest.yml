@@ -1,0 +1,5 @@
+name: CheckM
+category: Biology
+description: CheckM provides a set of tools for assessing the quality of genomes recovered from isolates, single cells, or metagenomes.
+homepage: https://github.com/Ecogenomics/CheckM
+hidden: true

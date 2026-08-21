@@ -1,0 +1,5 @@
+name: STAR
+category: Biology
+description: Fast universal RNA-seq aligner.
+homepage: https://github.com/alexdobin/STAR
+hidden: true

@@ -1,0 +1,5 @@
+name: SSAHA2
+category: Biology
+description: Pairwise sequence alignment program designed for the efficient mapping of sequencing reads onto genomic reference sequences.
+homepage: http://www.sanger.ac.uk/resources/software/ssaha2/
+hidden: true

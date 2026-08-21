@@ -1,0 +1,38 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['ollama_module'] = {
+      'widget' => 'module_load',
+      'module' => "ollama",
+      'label'  => "ollama Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{ollama_module}
+
+  # Slurm sets this to 0; ollama manages the GPU itself
+  unset CUDA_VISIBLE_DEVICES
+
+  # Will assign a random free port number to `PORT`
+  PORT=$(python3 -c "import socket; s=socket.socket(); s.bind(('', 0)); print(s.getsockname()[1]); s.close()")
+
+  export OLLAMA_HOST=${HOSTNAME}:${PORT}
+
+  # pipe server output to `/dev/null` to avoid noise.
+  ollama serve &>/dev/null & 
+
+  until ollama list &>/dev/null; do sleep 1; done
+
+  echo "What is the capital of France" | ollama run llama3.1:8b
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

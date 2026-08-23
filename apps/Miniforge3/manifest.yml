@@ -1,0 +1,7 @@
+name: Miniforge3
+category: Others
+description: Community-led recipes, infrastructure and distributions for conda.
+homepage: https://conda-forge.org
+icon: icon.svg
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/Miniforge3/

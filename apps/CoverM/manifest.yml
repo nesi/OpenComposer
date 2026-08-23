@@ -1,0 +1,6 @@
+name: CoverM
+category: Biology
+description: DNA read coverage and relative abundance calculator focused on metagenomics applications.
+homepage: https://github.com/wwood/CoverM
+icon: icon.png
+hidden: true

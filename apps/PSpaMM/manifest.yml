@@ -1,0 +1,5 @@
+name: PSpaMM
+category: Others
+description: Generates inline-Assembly for sparse Matrix Multiplication.
+homepage: https://github.com/SeisSol/PSpaMM
+hidden: true

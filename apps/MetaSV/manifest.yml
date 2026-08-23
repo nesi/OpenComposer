@@ -1,0 +1,5 @@
+name: MetaSV
+category: Biology
+description: Structural-variant caller.
+homepage: http://bioinform.github.io/metasv/
+hidden: true

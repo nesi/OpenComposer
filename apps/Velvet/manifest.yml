@@ -1,0 +1,5 @@
+name: Velvet
+category: Biology
+description: Sequence assembler for very short reads.
+homepage: http://www.ebi.ac.uk/~zerbino/velvet/
+hidden: true

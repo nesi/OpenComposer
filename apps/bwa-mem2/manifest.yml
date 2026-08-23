@@ -1,0 +1,5 @@
+name: bwa-mem2
+category: Others
+description: The tool bwa-mem2 is the next version of the bwa-mem algorithm in bwa.
+homepage: https://github.com/bwa-mem2/bwa-mem2
+hidden: true

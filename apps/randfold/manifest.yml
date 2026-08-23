@@ -1,0 +1,5 @@
+name: randfold
+category: Biology
+description: Minimum free energy of folding randomization test software.
+homepage: http://bioinformatics.psb.ugent.be/software/details/Randfold
+hidden: true

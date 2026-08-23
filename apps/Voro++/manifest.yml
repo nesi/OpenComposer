@@ -1,0 +1,5 @@
+name: Voro++
+category: Others
+description: Voro++ is a software library for carrying out three-dimensional computations of the Voronoi tessellation.
+homepage: http://math.lbl.gov/voro++/
+hidden: true

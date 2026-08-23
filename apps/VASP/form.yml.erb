@@ -1,0 +1,33 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmGPU/form.yml')
+base = read_yaml(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['vasp_module'] = {
+      'widget' => 'module_load',
+      'module' => "VASP",
+      'label'  => "VASP Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{vasp_module}
+
+  # update a VASP job log once the job starts running.
+  echo "Job ${SLURM_JOB_ID} was submitted on $(date) from directory $(pwd)" >> ~/VASP_job_log.txt
+
+  # Start two job steps, one that prints MPI process CPU binding and another that starts VASP.
+  srun --job-name=print_binding_stats bash -c "echo -e \"Task #\${SLURM_PROCID} is running on node \$(hostname). \n\$(hostname) has the following NUMA configuration:\n\$(lscpu | grep -i --color=none numa)\nTask #\${SLURM_PROCID} has \$(nproc) CPUs, their core IDs are \$(taskset -c -p \$\$ | awk '{print \$NF}')\n===========================================\""
+  echo -e "\n====== Finished printing CPU binding information, now launching VASP ======\n"
+
+  # Run VASP
+  srun vasp_std
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

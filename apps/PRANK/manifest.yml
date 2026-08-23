@@ -1,0 +1,6 @@
+name: PRANK
+category: Biology
+description: Probabilistic multiple alignment program for DNA, codon and amino-acid sequences.
+homepage: http://wasabiapp.org/software/prank/
+icon: icon.png
+hidden: true

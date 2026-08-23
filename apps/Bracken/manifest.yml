@@ -1,0 +1,5 @@
+name: Bracken
+category: Biology
+description: Hghly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.
+homepage: https://ccb.jhu.edu/software/bracken/
+hidden: true

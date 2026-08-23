@@ -1,0 +1,7 @@
+name: AlphaFold
+category: Biology
+description: AlphaFold can predict protein structures with atomic accuracy even where no similar structure is known.
+homepage: https://github.com/deepmind/alphafold
+icon: icon.png
+hidden: true
+documentation: https://docs.nesi.org.nz/Software/Available_Applications/AlphaFold/

@@ -1,0 +1,6 @@
+name: SeqAn3
+category: Biology
+description: C++ library of efficient algorithms and data structures for the analysis of sequences with the focus on biological data.
+homepage: https://github.com/seqan/seqan3
+icon: icon.png
+hidden: true

@@ -1,0 +1,5 @@
+name: swarm
+category: Biology
+description: A robust and fast clustering method for amplicon-based studies.
+homepage: https://github.com/torognes/swarm
+hidden: true

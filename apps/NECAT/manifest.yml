@@ -1,0 +1,5 @@
+name: NECAT
+category: Biology
+description: Rrror correction and de-novo assembly tool for Nanopore long noisy reads.
+homepage: https://github.com/xiaochuanle/NECAT
+hidden: true

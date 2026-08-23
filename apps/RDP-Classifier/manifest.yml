@@ -1,0 +1,5 @@
+name: RDP-Classifier
+category: Biology
+description: The RDP Classifier is a naive Bayesian classifier that can rapidly and accurately provides taxonomic assignments from domain to genus, with confidence estimates for each assignment.
+homepage: http://sourceforge.net/projects/rdp-classifier
+hidden: true

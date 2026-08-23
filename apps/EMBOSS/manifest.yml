@@ -1,0 +1,6 @@
+name: EMBOSS
+category: Biology
+description: EMBOSS is 'The European Molecular Biology Open Software Suite'.
+homepage: http://emboss.sourceforge.net/
+icon: icon.jpg
+hidden: true

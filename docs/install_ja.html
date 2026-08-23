@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Open Composerインストールマニュアル</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+  <div class="container-fluid">
+    <nav class="sidebar bg-body-secondary">
+      <h5 class="ps-3 pe-1 d-inline">目次</h5>
+      <ul class="nav flex-column px-2 py-2">
+        <li class="nav-item"><a href="#install" class="nav-link">1. インストール</a></li>
+        <li class="nav-item"><a href="#setting" class="nav-link">2. 設定</a></li>
+        <li class="nav-item ms-3"><a href="#clusters" class="nav-link">2.1. clusters</a></li>
+        <li class="nav-item ms-3"><a href="#scheduler_env" class="nav-link">2.2. scheduler_env</a></li>
+        <li class="nav-item ms-3"><a href="#copy_environment" class="nav-link">2.3. copy_environment</a></li>
+        <li class="nav-item ms-3"><a href="#bin_overrides" class="nav-link">2.4. bin_overrides</a></li>
+        <li class="nav-item ms-3"><a href="#history" class="nav-link">2.5. history</a></li>
+        <li class="nav-item"><a href="#registor" class="nav-link">3. Open OnDemandへの登録</a></li>
+        <li class="nav-item"><a href="#general" class="nav-link">4. 一般ユーザによるインストール</a></li>
+        <li class="nav-item"><a href="#local" class="nav-link">5. ローカルにおける開発方法</a></li>
+        <li class="nav-item"><a href="#jobscheduler" class="nav-link">6. ジョブスケジューラの追加</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <h1>Open Composerインストールマニュアル</h1>
+      <h2 id="install">1. インストール</h2>
+      <p>
+        Open Composerは<a target="_blank" href="https://openondemand.org/">Open OnDemand</a>上で動作します。Open OnDemandのアプリケーションディレクトリ<code>/var/www/ood/apps/sys/</code>にOpen Composerを保存してください。
+      </p>
+      <pre>
+$ cd /var/www/ood/apps/sys/
+$ sudo git clone https://github.com/RIKEN-RCCS/OpenComposer.git</pre>
+
+      <h2 id="setting">2. 設定</h2>
+      <p>
+        <code>./conf.yml.erb.sample</code>を参考にして<code>./conf.yml.erb</code>を作成してください。
+      </p>
+      <pre>$ cd OpenComposer
+$ sudo cp conf.yml.erb.sample conf.yml.erb</pre>
+
+      <table class="table" style="vertical-align: middle;">
+        <tr><th>項目名</th><th>設定内容</th><th>デフォルト値</th></tr>
+        <tr><td>apps_dir</td><td>アプリケーションのディレクトリ</td><td>(None)</td></tr>
+        <tr><td>scheduler</td><td>利用するスケジューラ（<code>slurm</code>、<code>pbspro</code>、<code>sge</code>、<code>fujitsu_tcs</code>）</td><td>(None)</td></tr>
+        <tr><td>clusters</td><td>クラスタの定義</td><td>(None)</td></tr>
+        <tr><td>data_dir</td><td>投入したジョブの情報の保存先</td><td><code>${HOME}/composer</code></td></tr>
+        <tr><td>login_node</td><td>Open OnDemandのWebターミナルを起動した際のログイン先</td><td>(None)</td></tr>
+        <tr><td>ssh_wrapper</td><td>SSHを用いて他のノードのジョブスケジューラを用いる場合のコマンド</td><td>(None)</td></tr>
+        <tr><td>bin</td><td>ジョブスケジューラのコマンドのパス</td><td>(None)</td></tr>
+        <tr><td>bin_overrides</td><td>ジョブスケジューラの各コマンドのパス</td><td>(None)</td></tr>
+        <tr><td>scheduler_env</td><td>ジョブスケジューラのコマンド実行時に追加する環境変数</td><td>(None)</td></tr>
+        <tr><td>copy_environment</td><td>Slurmのジョブ投入時にPUNの環境変数をコピーするかどうか</td><td><code>false</code></td></tr>
+        <tr><td>sge_root</td><td>Grid Engineのルート用ディレクトリ（<code>SGE_ROOT</code>）</td><td> (None)</td></tr>
+        <tr><td>history</td><td>履歴ページの追加表示項目</td><td><code>OC_HISTORY_JOB_NAME</code>, <code>OC_HISTORY_PARTITION</code>, <code>OC_HISTORY_SUBMISSION_TIME</code></td></tr>
+        <tr><td>footer</td><td>フッタに記載する文字</td><td>(None)</td></tr>
+        <tr><td>thumbnail_width</td><td>ホームページの各アプリケーションのサムネイルの横幅</td><td>100</td></tr>
+        <tr><td>highlight_theme</td><td><code>script</code>/<code>submit</code>セクションに使用する<a target="_blank" href="https://highlightjs.org/">highlight.js</a>のテーマ名</td><td><code>vs</code></td></tr>
+        <tr><td>directive_color</td><td><code>script</code>/<code>submit</code>セクションのスケジューラ指示文の文字色</td><td style="background-color: #D73A49;">#D73A49</td></tr>
+        <tr><td>navbar_color</td><td>ナビゲーションバーの色</td><td rowspan="3" style="color: white; background-color: #3D3B40;">#3D3B40</td></tr>
+        <tr><td>dropdown_color</td><td>ドロップダウンメニューの色</td></tr>
+        <tr><td>footer_color</td><td>フッタの色</td></tr>
+        <tr><td>category_color</td><td>ホームページのカテゴリの背景色</td><td rowspan="2" style="color: white; background-color: #5522BB;">#5522BB</td></tr>
+        <tr><td>description_color</td><td>アプリケーションページのアプリケーション説明の背景色</td></tr>
+        <tr><td>form_color</td><td>アプリケーションページのテキストエリアの背景色</td><td style="background-color: #BFCFE7;">#BFCFE7</td></tr>
+        <tr><td>non_script_color</td><td><code>script</code>セクションに影響を与えないフォームの背景色</td><td style="background-color: #FFE28A;">#FFE28A</td></tr>
+        <tr><td>non_script_button_color</td><td><code>script</code>セクションに影響を与えないボタンの背景色</td><td style="background-color: #FFBF00;">#FFBF00</td></tr>
+        <tr><td>submit_color</td><td><code>submit</code>セクションのみに影響を与えるフォームの背景色</td><td style="background-color: #FFCCCC;">#FFCCCC</td></tr>
+        <tr><td>submit_button_color</td><td><code>submit</code>セクションのみに影響を与えるボタンの背景色</td><td style="background-color: #FFAAAA">#FFAAAA</td></tr>
+      </table>
+
+      <p>
+        <code>apps_dir</code>および<code>scheduler</code>は必須です（<code>scheduler</code>は<code>clusters</code>の中に定義しても構いません）。
+      </p>
+
+      <h3 id="clusters">2.1. clusters</h3>
+      <p>
+        複数のクラスタを設定します。本設定では、<code>scheduler</code>、<code>login_node</code>、<code>ssh_wrapper</code>、<code>bin</code>、<code>bin_overrides</code>、<code>scheduler_env</code>、<code>copy_environment</code>、<code>sge_root</code>がクラスタ毎に設定できます。1つのクラスタのみを使う場合、本設定は省略可能です。
+      </p>
+      <p>
+        下記では、<code>fugaku</code>と<code>prepost</code>というクラスタにおいて、それぞれ<code>fujitsu_tcs</code>と<code>slurm</code>のジョブスケジューラを利用することを定義しています。
+      </p>
+      <pre>clusters:
+  fugaku:
+    scheduler: "fujitsu_tcs"
+  prepost:
+    scheduler: "slurm"
+    bin_overrides:
+      sbatch: "/usr/local/bin/sbatch"</pre>
+
+      <p>
+        下記では、<code>fugaku</code>と<code>prepost</code>というクラスタにおいて、両方とも<code>slurm</code>のジョブスケジューラを利用していますが、異なるマシンから<code>slurm</code>を実行することを定義しています。
+      </p>
+      <pre>scheduler: "slurm"
+clusters:
+  fugaku:
+    ssh_wrapper "ssh fugaku.example.net"
+  prepost:
+    ssh_wrapper "ssh prepost.example.net"</pre>
+
+      <h3 id="scheduler_env">2.2. scheduler_env</h3>
+      <p>
+  ジョブスケジューラのコマンドを実行するときに追加する環境変数を設定します。本設定は省略可能です。
+  例えばSlurmのconfigless構成で<code>SLURM_CONF_SERVER</code>が必要な場合に利用できます。
+      </p>
+<pre>scheduler_env:
+  SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
+      <p>
+  <code>clusters</code>を利用している場合は、クラスタごとに設定できます。
+      </p>
+      <pre>clusters:
+  prepost:
+    scheduler: "slurm"
+    scheduler_env:
+      SLURM_CONF_SERVER: "slurmctld.example.com"</pre>
+      <p>
+  <code>ssh_wrapper</code>を利用してリモートホスト上でジョブスケジューラを実行する場合、<code>scheduler_env</code>はローカルで起動する<code>ssh</code>コマンドの環境変数です。
+  リモート側にも環境変数が必要な場合は、SSHの設定またはwrapperスクリプトで設定してください。
+      </p>
+
+      <h3 id="copy_environment">2.3. copy_environment</h3>
+      <p>
+  Slurmのジョブ投入時に<code>--export=ALL</code>を使う場合は、<code>true</code>を設定します。デフォルトは<code>false</code>であり、従来通り<code>--export=NONE</code>でジョブを投入します。
+  この設定はSlurmでのみ使われます。
+      </p>
+      <pre>copy_environment: false</pre>
+      <p>
+  <code>clusters</code>を利用している場合は、クラスタごとに設定できます。
+      </p>
+      <pre>clusters:
+  prepost:
+    scheduler: "slurm"
+    copy_environment: true</pre>
+      <p>
+  これはSlurmのコマンド実行時にPUNの環境変数をコピーします。PUNの環境は通常のログインシェル環境とは異なる場合があるため、注意してください。
+      </p>
+
+      <h3 id="bin_overrides">2.4. bin_overrides</h3>
+      <p>
+  各コマンドのパスを設定します。本設定は省略可能です。
+      </p>
+      <p>
+  ジョブスケジューラが<code>slurm</code>の場合は、<code>sbatch</code>、<code>scontrol</code>、<code>scancel</code>、<code>sacct</code>を設定できます。
+      </p>
+      <pre>bin_overrides:
+  sbatch:   "/usr/local/bin/sbatch"
+  scontrol: "/usr/local/bin/scontrol"
+  scancel:  "/usr/local/bin/scancel"
+  sacct:    "/usr/local/bin/sacct"</pre>
+
+      <p>
+  ジョブスケジューラが<code>pbspro</code>の場合は、<code>qsub</code>、<code>qstat</code>、<code>qdel</code>を設定できます。
+      </p>
+      <pre>bin_overrides:
+  qsub:   "/usr/local/bin/qsub"
+  qstat: "/usr/local/bin/qstat"
+  qdel:  "/usr/local/bin/qdel"</pre>
+
+      <p>
+  ジョブスケジューラが<code>sge</code>の場合は、<code>qsub</code>、<code>qstat</code>、<code>qdel</code>、<code>qacct</code>を設定できます。
+      </p>
+      <pre>bin_overrides:
+  qsub:   "/usr/local/bin/qsub"
+  qstat: "/usr/local/bin/qstat"
+  qdel:  "/usr/local/bin/qdel"
+  qacct: "/usr/local/bin/qacct"</pre>
+
+      <p>
+  ジョブスケジューラが<code>fujitsu_tcs</code>の場合は、<code>pjsub</code>、<code>pjstat</code>、<code>pjdel</code>を設定できます。
+      </p>
+      <pre>bin_overrides:
+  pjsub:  "/usr/local/bin/pjsub"
+  pjstat: "/usr/local/bin/pjstat"
+  pjdel:  "/usr/local/bin/pjdel"</pre>
+
+      <h3 id="history">2.5. history</h3>
+      <p>
+        履歴ページの必須表示項目は「Job ID」、「Application」、「Script Location」、「Script Name」、「Status」です。それに対して、<code>history</code>では追加表示項目を設定します。本設定を省略した場合、「Job Name」、「Partiton」、「Submission Time」が自動的に設定されます。下記のコードと同じです。<code>OC_HISTORY_JOB_NAME</code>、<code>OC_HISTORY_PARTITION</code>、<code>OC_HISTORY_SUBMISSION_TIME</code>は特殊な変数であり、「Job Name」、「Partiton」、「Submission Time」をそれぞれ指します。
+      </p>
+      <pre>history:
+  OC_HISTORY_JOB_NAME:
+  OC_HISTORY_PARTITION:
+  OC_HISTORY_SUBMISSION_TIME:</pre>
+      <img alt="history table" width="800" src="./img/history_page.png">
+      <p>
+  追加表示項目をなくしたい場合は、空配列を定義します。
+      </p>
+      <pre>history: []</pre>
+      <img alt="history table" width="800" src="./img/history_page2.png">
+      <p>
+  ジョブスケジューラから得られるプロファイルの値を表示項目に設定することができます。「Job ID」をクリックすると表示される表の左の値を<code>history</code>に設定します。また、<code>label</code>を用いると、表示ラベルを設定できます。<code>label</code>を用いない場合は、そのままの値が用いられます。
+      </p>
+      <img alt="history table" width="400" src="./img/history_table3.png">
+      <pre>history:
+  OC_HISTORY_JOB_NAME:
+  Account:
+  AllocCPUS:
+    label: Allocated CPUs</pre>
+      <img alt="history table" width="800" src="./img/history_page3.png">
+
+      <h2 id="registor">3. Open OnDemandへの登録</h2>
+      <p>
+  Open Composerを<code>/var/www/ood/apps/sys/</code>に保存すると、Open OnDemandのホームページにOpen Composerのアイコンが表示されます。Open Composerのアイコンが表示されない場合は、Open OnDemand用の設定ファイル<code>/var/www/ood/apps/sys/OpenComposer/manifest.yml</code>を確認してください。
+      </p>
+      <p>
+  Open Composer上のアプリケーションをOpen OnDemandのホームページに表示することもできます。例えば、<code>/var/www/ood/apps/sys/OpenComposer/sample_apps/Slurm</code>というアプリケーションを表示させたい場合は、同名のディレクトリをOpen OnDemandのアプリケーションディレクトリに作成します（<code># mkdir /var/www/ood/apps/sys/Slurm</code>）。そして、そのディレクトリ内に下記のようなOpen OnDemand用の設定ファイル<code>manifest.yml</code>を作成します。
+      </p>
+
+      <pre># /var/www/ood/apps/sys/Slurm/manifest.yml
+---
+name: Slurm
+url: https://&lt;your Open OnDemand URL&gt;/pun/sys/OpenComposer/Slurm</pre>
+
+      <h2 id="general">4. 一般ユーザによるインストール</h2>
+      <p>
+  一般ユーザ権限でOpen Composerをインストールすることもできます。ただし、事前に管理者権限でOpen OnDemandの<a target="_blank" href="https://osc.github.io/ood-documentation/latest/how-tos/app-development/enabling-development-mode.html">App Development</a>の機能を有効化する必要があります。
+      </p>
+      <p>
+  ナビゲーションバーの「&lt;/&gt; Develop」の「My Sandbox Apps (Development)」を選択します（Webブラウザのウィンドウサイズが小さい場合は、「&lt;/&gt; Develop」ではなく「&lt;/&gt;」と表示されます）。
+      </p>
+      <img src="img/navbar.png" width="250" alt="Navbar">
+      <p>
+  「New App」をクリックします。
+      </p>
+      <img src="img/newapp.png" width="250" alt="New App">
+      <p>
+  「Clone Existing App」をクリックします。
+      </p>
+      <img src="img/clone.png" width="400" alt="Clone an existing app">
+      <p>
+  「Directory name」に任意の名前（ここではOpenComposer）、「Git remote」に「<a target="_blank" href="https://github.com/RIKEN-RCCS/OpenComposer.git">https://github.com/RIKEN-RCCS/OpenComposer.git</a>」を記入し、「Submit」をクリックします。
+      </p>
+      <img src="img/new_repo.png" width="800" alt="New repository">
+      <p>
+        「Files」をクリックし、<code>conf.yml.erb.sample</code>を<code>conf.yml.erb</code>にリネームしください。その後、「Launch Open Composer」をクリックします。
+      </p>
+      <img src="img/bundle.png" width="800" alt="Bundle Install">
+
+      <h2 id="local">5. ローカルにおける開発方法</h2>
+      <p>
+        ローカルでOpen Composerを起動させる手順は下記の通りです。
+      </p>
+      <pre>$ git clone https://github.com/RIKEN-RCCS/OpenComposer.git
+$ cd OpenComposer
+$ cp misc/Gemfile .
+$ bundle install
+$ cp conf.yml.erb.sample conf.yml.erb
+$ RACK_ENV=development bundle exec rackup</pre>
+      <p>
+        Webブラウザで<code>http://localhost:9292</code>にアクセスしてください。なお、ジョブ投入が行えないなどの制限があります。
+      </p>
+
+      <h2 id="jobscheduler">6. ジョブスケジューラの追加</h2>
+      <p>
+        ジョブスケジューラを追加したい場合、スーパークラスSchedulerが定義された<code>lib/scheduler.rb</code>を参考にして、<code>lib/schedulers/</code>以下にジョブスケジューラのためのRubyスクリプトを作成してください。下記のPBS Pro（<code>lib/schedulers/pbspro.rb</code>）のようにSchedulerクラスを継承してください。ジョブを投入する<code>submit()</code>メソッド、ジョブをキャンセルする<code>cancel()</code>メソッド、ジョブの情報を問い合わせる<code>query()</code>メソッドを定義する必要があります。
+      </p>
+      <pre>class Pbspro &lt; Scheduler</pre>
+      <p>
+        また、いくつかのクラスタでは、ジョブスケジューラのコマンド（例：<code>qstat</code>）がラッパースクリプトになっていて、オリジナルのコマンドをユーザが実行できない場合があります。そのような場合、既存のスケジューラのスクリプトを少し変更することで対応できることがあります。例えば、<code>lib/schedulers/miyabi.rb</code>では、下記のようにPBS Proのスケジューラを継承して新しいクラスMiyabiを定義しています。Miyabiクラスでは<code>query()</code>メソッドだけが定義されており、他のメソッドは<code>lib/schedulers/pbspro.rb</code>で定義されたものを利用しています。
+      </p>
+      <pre>class Miyabi &lt; Pbspro</pre>
+      <p>
+        ジョブスケジューラのスクリプトの作成後、<code>./conf.yml.erb</code>で下記のようにスケジューラを指定します。
+      </p>
+      <pre>scheduler: miyabi</pre>
+    </main>
+  </div>
+
+  <footer class="d-flex justify-content-center">
+    <p class="mb-0 text-white">&copy; RIKEN Center for Computational Science</p>
+  </footer>
+</body>
+</html>

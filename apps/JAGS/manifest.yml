@@ -1,0 +1,5 @@
+name: JAGS
+category: Mathematics
+description: Just Another Gibbs Sampler - a program for the statistical analysis of Bayesian hierarchical models by Markov Chain Monte Carlo.
+homepage: http://mcmc-jags.sourceforge.net
+hidden: true

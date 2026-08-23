@@ -1,0 +1,6 @@
+name: ANNOVAR
+category: Biology
+description: Efficient software tool to utilize update-to-date information to functionally annotate genetic variants detected from diverse genomes.
+homepage: http://annovar.openbioinformatics.org/en/latest/
+icon: icon.png
+hidden: true

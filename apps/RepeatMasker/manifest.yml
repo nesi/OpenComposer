@@ -1,0 +1,5 @@
+name: RepeatMasker
+category: Biology
+description: RepeatMasker is a program that screens DNA sequences for interspersed repeats and low complexity DNA sequences.
+homepage: https://www.repeatmasker.org/
+hidden: true

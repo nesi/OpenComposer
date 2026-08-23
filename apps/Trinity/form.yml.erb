@@ -1,0 +1,39 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+phase1_flags = 'Trinity --no_distributed_trinity_exec --CPU ${SLURM_CPUS_PER_TASK} --max_memory 200G [your_other_trinity_options]'
+phase2_flags = 'Trinity --CPU ${SLURM_CPUS_PER_TASK} --max_memory 20G --grid_exec "hpc_cmds_GridRunner.pl --grid_conf ${SLURM_SUBMIT_DIR}/SLURM.conf -c" [your_other_trinity_options]'
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['trinity_module'] = {
+      'widget' => 'module_load',
+      'module' => "Trinity",
+      'label'  => "Trinity Module"
+    }
+    new_form['trinity_phase'] = {
+      'widget'    => 'radio',
+      'label'     => 'Phase',
+      'value'     => phase1_flags,
+      'direction' => 'horizontal',
+      'options'   => [
+        ['Phase 1', phase1_flags],
+        ['Phase 2', phase2_flags],
+        ['Custom',  'Trinity ...']
+      ]
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{trinity_module}
+
+  srun #{trinity_phase}
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

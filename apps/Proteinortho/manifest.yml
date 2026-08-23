@@ -1,0 +1,6 @@
+name: Proteinortho
+category: Others
+description: Proteinortho is a tool to detect orthologous genes within different species.
+homepage: https://gitlab.com/paulklemm_PHD/proteinortho
+icon: icon.png
+hidden: true

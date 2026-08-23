@@ -1,0 +1,5 @@
+name: nullarbor
+category: Biology
+description: Reads to report pipeline for bacterial isolate NGS data.
+homepage: https://github.com/tseemann/nullarbor
+hidden: true

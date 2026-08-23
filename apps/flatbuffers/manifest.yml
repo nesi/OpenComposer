@@ -1,0 +1,6 @@
+name: flatbuffers
+category: Others
+description: 'FlatBuffers: Memory Efficient Serialization Library.'
+homepage: https://github.com/google/flatbuffers/
+icon: icon.svg
+hidden: true

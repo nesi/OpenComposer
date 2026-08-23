@@ -1,0 +1,6 @@
+name: Bandage
+category: Biology
+description: Bandage is a program for visualising de novo assembly graphs.
+homepage: http://rrwick.github.io/Bandage/
+icon: icon.png
+hidden: true

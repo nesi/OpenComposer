@@ -1,0 +1,26 @@
+<%
+base_path = File.join(File.dirname(yml_path), '../SlurmBasic/form.yml')
+base = read_yaml(base_path)
+
+new_form = {}
+base['form'].each do |k, v|
+  if k == 'time_days_hours_minutes'
+    new_form['braker_module'] = {
+      'widget' => 'module_load',
+      'module' => "BRAKER",
+      'label'  => "BRAKER Module"
+    }
+  end
+  new_form[k] = v
+end
+
+base['form']   = new_form
+base['script'] = base['script'].rstrip + "\n\n" + <<~'APP_SCRIPT'
+  module -q purge
+  module load #{braker_module}
+
+  export AUGUSTUS_CONFIG_PATH=/path/to/augustus/config
+  srun braker.pl --threads=${SLURM_CPUS_PER_TASK} --genome=genome.fa --prot_seq=proteins.fa
+APP_SCRIPT
+%>
+<%= base.to_yaml -%>

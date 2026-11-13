@@ -101,13 +101,14 @@ class Scheduler
   # Fetch the jobs of ALL users that are currently in the queue, for the Jobs page
   # and for the per-node job list on the Nodes page.
   # @param node [String] when given, only the jobs allocated to that node.
+  # @param job [String] when given (a numeric job ID), only that job.
   # @param details [Boolean] also fetch the fields behind the job details view.
   # @return [Array<Array, String, String>] [jobs_array_or_nil, error_or_nil, command_or_nil]
   #         Each job is a Hash of raw scheduler strings. It contains other users'
   #         job IDs, job names and usernames, so it must go through
   #         normalize_cluster_job and redact_cluster_job (lib/jobs.rb) before any
   #         of it is sent to the browser.
-  def cluster_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, node: nil, details: false)
+  def cluster_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, node: nil, job: nil, details: false)
     [nil, "Listing jobs is not supported for this scheduler.", nil]
   end
 

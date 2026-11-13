@@ -1,5 +1,8 @@
 require "etc"
+require "fileutils"
 require "open3"
+require "openssl"
+require "securerandom"
 
 # Support for the Jobs page and the per-node job list on the Nodes page: who may
 # see which details of a job, and how jobs are sorted into categories.
@@ -58,6 +61,7 @@ STAFF_CACHE_TTL        ||= 300
 LARGE_MEMORY_CACHE_TTL ||= 3600
 STAFF_CACHE            ||= { mutex: Mutex.new, entries: {} }
 LARGE_MEMORY_CACHE     ||= { mutex: Mutex.new, entries: {} }
+JOB_REF_KEYS           ||= { mutex: Mutex.new, keys: {} }
 
 # ── Who is looking ────────────────────────────────────────────────────────────
 
@@ -266,8 +270,9 @@ end
 
 # The copy of a job that is sent to the browser. Every viewer gets the public
 # keys; the keys that say whose job it is (and the full pending reason) are
-# added only for staff and for the viewer's own jobs.
-def redact_cluster_job(job, staff:, viewer:)
+# added only for staff and for the viewer's own jobs. With ref:, also the job's
+# reference (see job_ref), for fetching its details later.
+def redact_cluster_job(job, staff:, viewer:, ref: nil)
   mine = !viewer.to_s.empty? && job["user"] == viewer
   out  = job.slice(*JOB_PUBLIC_KEYS)
   out["mine"] = mine
@@ -279,7 +284,95 @@ def redact_cluster_job(job, staff:, viewer:)
   if job["details"]
     out["details"] = job["details"].slice(*(staff || mine ? JOB_DETAIL_PUBLIC_KEYS + JOB_DETAIL_PRIVATE_KEYS : JOB_DETAIL_PUBLIC_KEYS))
   end
+  out["ref"] = ref.call(job["id"]) if ref
   out
+end
+
+# ── Job references ────────────────────────────────────────────────────────────
+#
+# On the Jobs page a job's details are fetched when it is clicked. The page must
+# be able to name the job without knowing its ID (other people's IDs are hidden
+# from users who are not staff), so each job in the list carries a reference:
+# its cluster and ID, encrypted with a key only this app reads. Asking for a
+# job's details by reference follows the same rules as the lists, so a reference
+# can never show more than the list it came from.
+
+# The key: 32 random bytes in the user's data_dir, made on first use and shared
+# by every process of the app, so references outlive a restart of one process.
+def job_ref_key(conf)
+  path = File.join(conf["data_dir"].to_s, ".job-ref.key")
+  JOB_REF_KEYS[:mutex].synchronize do
+    JOB_REF_KEYS[:keys][path] ||= read_or_create_job_ref_key(path)
+  end
+end
+
+def read_or_create_job_ref_key(path)
+  existing = File.exist?(path) ? File.binread(path) : nil
+  return existing if existing && existing.bytesize == 32
+
+  FileUtils.mkdir_p(File.dirname(path))
+  tmp = "#{path}.#{Process.pid}.#{SecureRandom.hex(4)}.tmp"
+  File.open(tmp, File::WRONLY | File::CREAT | File::EXCL, 0o600) { |f| f.write(SecureRandom.random_bytes(32)) }
+  begin
+    # link never replaces a key that another process has just made; a damaged
+    # key is replaced.
+    existing ? File.rename(tmp, path) : File.link(tmp, path)
+  rescue Errno::EEXIST
+    nil # another process made the key first: use that one
+  rescue NotImplementedError, Errno::EPERM, Errno::EOPNOTSUPP
+    File.rename(tmp, path) unless File.exist?(path) # no hard links on this filesystem
+  ensure
+    File.unlink(tmp) if File.exist?(tmp)
+  end
+  key = File.binread(path)
+  raise "The job reference key #{path} is damaged." unless key.bytesize == 32
+
+  key
+end
+
+# The reference of job `id` on `cluster` (AES-256-GCM, as URL-safe base64).
+def job_ref(cluster, id, key)
+  cipher = OpenSSL::Cipher.new("aes-256-gcm").encrypt
+  cipher.key = key
+  iv = cipher.random_iv
+  cipher.auth_data = ""
+  data = cipher.update("#{cluster}\n#{id}") + cipher.final
+  [iv + cipher.auth_tag + data].pack("m0").tr("+/", "-_").delete("=")
+end
+
+# The job ID in a reference made by job_ref, or nil when the reference is not
+# one of ours, has been altered, or is for another cluster.
+def job_ref_id(ref, cluster, key)
+  text = ref.to_s.tr("-_", "+/")
+  raw  = (text + ("=" * ((4 - text.length % 4) % 4))).unpack1("m0")
+  return nil if raw.bytesize <= 28
+
+  cipher = OpenSSL::Cipher.new("aes-256-gcm").decrypt
+  cipher.key      = key
+  cipher.iv       = raw.byteslice(0, 12)
+  cipher.auth_tag = raw.byteslice(12, 16)
+  cipher.auth_data = ""
+  ref_cluster, id = (cipher.update(raw.byteslice(28..)) + cipher.final).split("\n", 2)
+  ref_cluster == cluster.to_s && cluster_job_id?(id) ? id : nil
+rescue ArgumentError, OpenSSL::Cipher::CipherError
+  nil
+end
+
+# A job ID as squeue prints it: "123", "123_4", a waiting array "123_[5-20%4]"
+# (possibly cut short by its column), or a heterogeneous job component "123+1".
+def cluster_job_id?(id)
+  id.to_s.match?(/\A\d+(?:_(?:\d+|\[[0-9,%:\-]*\]?))?(?:\+\d+)?\z/)
+end
+
+# The job with ID `id` in a fresh squeue answer for its job (see the /jobs/job
+# route), or nil. A waiting job array whose range has changed since the list was
+# made (some of its tasks started) is found by its array's waiting record.
+def find_cluster_job(jobs, id)
+  found = jobs.find { |job| job["id"] == id }
+  return found if found
+  return nil unless id.match?(/\A\d+_\[/)
+
+  jobs.find { |job| job["status"] == "pending" && job["id"].start_with?("#{id[/\A\d+/]}_[") }
 end
 
 # Who is looking, for the job routes: [staff, staff_capable]. A staff member
@@ -449,11 +542,11 @@ def build_job_categories(jobs, thresholds, architecture_labels)
 end
 
 # Replace every job in the categories with the copy the viewer may see.
-def redact_job_categories(categories, staff:, viewer:)
+def redact_job_categories(categories, staff:, viewer:, ref: nil)
   categories.map do |category|
     groups = category["groups"].map do |group|
       redacted = %w[running pending].to_h do |status|
-        list = group[status]["list"].map { |job| redact_cluster_job(job, staff: staff, viewer: viewer) }
+        list = group[status]["list"].map { |job| redact_cluster_job(job, staff: staff, viewer: viewer, ref: ref) }
         [status, group[status].merge("list" => list)]
       end
       group.merge(redacted)

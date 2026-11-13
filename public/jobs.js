@@ -154,7 +154,7 @@ var ocJobs = (function() {
   //   options.staff      the viewer is staff (as reported by the server)
   //   options.layout     'node', 'running' or 'pending'
   //   options.emptyText  shown instead of a table when there are no jobs
-  //   options.onRowClick called with the job when a row is clicked (or Enter)
+  //   options.onRowClick called with (job, row) when a row is clicked (or Enter)
   function renderTable(container, jobs, options) {
     options = options || {};
     var keys      = identityColumns(jobs, !!options.staff).concat(LAYOUTS[options.layout] || LAYOUTS.running);
@@ -241,7 +241,7 @@ var ocJobs = (function() {
       // rows[] is re-sorted in place of the old array, so look it up on click.
       var open = function(e) {
         var tr = e.target.closest('tr[data-i]');
-        if (tr) options.onRowClick(rows[+tr.dataset.i]);
+        if (tr) options.onRowClick(rows[+tr.dataset.i], tr);
       };
       tbody.addEventListener('click', open);
       tbody.addEventListener('keydown', function(e) {
@@ -337,14 +337,15 @@ var ocJobs = (function() {
     }).join('');
   }
 
-  // [key, label, kind]. "d." keys are in job.details; the rest are the list
-  // fields. A detail the viewer may not see is not in the data at all, and is
-  // simply not shown.
+  // [key, label, kind, status]. "d." keys are in job.details; the rest are the
+  // list fields. A field with a status is shown only for jobs in that status
+  // ('running' or 'pending'). A detail the viewer may not see is not in the
+  // data at all, and is simply not shown.
   var DETAIL_SECTIONS = [
     { title: 'Job', fields: [
       ['id', 'Job ID', 'code'], ['name', 'Job name'], ['user', 'User'], ['d.group', 'Group'],
       ['account', 'Account'], ['d.array_job_id', 'Array job ID', 'array'], ['d.array_task_id', 'Array task ID'],
-      ['state', 'State', 'state'], ['reason', 'Reason'], ['partition', 'Partition'], ['d.qos', 'QOS'],
+      ['state', 'State', 'state'], ['reason', 'Waiting because', null, 'pending'], ['partition', 'Partition'], ['d.qos', 'QOS'],
       ['priority', 'Priority', 'number'], ['d.nice', 'Nice', 'nonzero'], ['d.reservation', 'Reservation'],
       ['d.dependency', 'Dependency'], ['d.wckey', 'WCKey'], ['d.mcs_label', 'MCS label'],
       ['d.comment', 'Comment'], ['d.system_comment', 'System comment']] },
@@ -361,13 +362,16 @@ var ocJobs = (function() {
       ['d.core_spec', 'Specialised cores'], ['d.oversubscribe', 'Shares nodes (OverSubscribe)'],
       ['d.contiguous', 'Contiguous nodes', 'bool']] },
     { title: 'Placement', fields: [
-      ['nodelist', 'Running on'], ['d.batch_host', 'Batch host'], ['d.req_nodes', 'Requested nodes'],
-      ['d.exc_nodes', 'Excluded nodes'], ['d.alloc_node', 'Submitted from']] },
+      ['nodelist', 'Running on', null, 'running'], ['d.batch_host', 'Batch host', null, 'running'],
+      ['d.req_nodes', 'Requested nodes'], ['d.exc_nodes', 'Excluded nodes'], ['d.alloc_node', 'Submitted from']] },
     { title: 'Times', fields: [
-      ['submit', 'Submitted', 'time'], ['d.eligible', 'Eligible', 'time'], ['start', 'Started', 'time'],
-      ['d.end', 'Expected end', 'time'], ['time_used', 'Elapsed'], ['d.time_left', 'Time left'],
-      ['time_limit', 'Time limit'], ['d.min_time', 'Minimum time', 'nonzero'], ['d.deadline', 'Deadline', 'time'],
-      ['d.pending_time', 'Waited before starting', 'seconds']] },
+      ['submit', 'Submitted', 'time'], ['d.eligible', 'Eligible', 'time'],
+      ['start', 'Started', 'time', 'running'], ['start', 'Expected start', 'time', 'pending'],
+      ['d.end', 'Expected end', 'time'], ['time_used', 'Elapsed', null, 'running'],
+      ['d.time_left', 'Time left', null, 'running'], ['time_limit', 'Time limit'],
+      ['d.min_time', 'Minimum time', 'nonzero'], ['d.deadline', 'Deadline', 'time'],
+      ['d.pending_time', 'Waited before starting', 'seconds', 'running'],
+      ['d.pending_time', 'Waiting for', 'seconds', 'pending']] },
     { title: 'Files and command', fields: [
       ['d.command', 'Command', 'path'], ['d.work_dir', 'Working directory', 'path'],
       ['d.stdout', 'Standard output', 'path'], ['d.stderr', 'Standard error', 'path'],
@@ -418,6 +422,7 @@ var ocJobs = (function() {
     }
     html += '<div class="row row-cols-1 row-cols-lg-2 g-2">' + DETAIL_SECTIONS.map(function(section) {
       var items = section.fields.map(function(f) {
+        if (f[3] && f[3] !== job.status) return '';
         var value = detailHtml(job, f[0], f[2]);
         return value === null ? '' :
           '<dt class="col-sm-5 text-muted fw-normal">' + esc(f[1]) + '</dt>' +

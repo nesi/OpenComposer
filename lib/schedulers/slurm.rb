@@ -572,24 +572,26 @@ class Slurm < Scheduler
 
   # Fetch every user's jobs in the queue via squeue (pending, running, suspended
   # and completing jobs — squeue's default set of states). With node:, only the
-  # jobs allocated to that node. With details:, also the SQUEUE_DETAIL_FIELDS
-  # (any of them this Slurm does not know are dropped). A pending job array is
-  # one entry; each running array task is its own entry.
+  # jobs allocated to that node; with job: (a numeric job ID), only that job (all
+  # the tasks and the waiting record of an array). With details:, also the
+  # SQUEUE_DETAIL_FIELDS (any of them this Slurm does not know are dropped). A
+  # pending job array is one entry; each running array task is its own entry.
   # Returns [jobs, nil, command] or [nil, error_message, command]; each job is a
   # Hash keyed as in SQUEUE_JOB_FIELDS (and SQUEUE_DETAIL_FIELDS), every value a
   # stripped String.
-  def cluster_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, node: nil, details: false)
-    # The node name goes into a command line that a remote shell will parse.
+  def cluster_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, node: nil, job: nil, details: false)
+    # The node name and job ID go into a command line that a remote shell will parse.
     unless node.nil? || node.to_s.match?(/\A[A-Za-z0-9][A-Za-z0-9._-]*\z/)
       return nil, "Invalid node name.", nil
     end
+    return nil, "Invalid job ID.", nil unless job.nil? || job.to_s.match?(/\A\d+\z/)
 
     squeue = get_command_path("squeue", bin, bin_overrides)
     fields = squeue_job_fields(details)
     loop do
       format  = fields.map { |_key, field, width| "#{field}:#{width}" }.join(",")
       command = [ssh_wrapper, SLURM_ENV, squeue, "--noheader", "--Format=#{format}",
-                 (node ? "--nodelist=#{node}" : nil)].compact.join(" ")
+                 (node ? "--nodelist=#{node}" : nil), (job ? "--jobs=#{job}" : nil)].compact.join(" ")
       stdout, stderr, status = Open3.capture3(command)
       return [parse_squeue_jobs(stdout, fields), nil, command] if status.success?
 

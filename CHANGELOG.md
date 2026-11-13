@@ -25,6 +25,11 @@
   and (for staff and the job's owner) its job ID, name, user, group, account, array IDs,
   dependency, reservation, comments, command, working directory and output files. Any detail
   field that an older Slurm's `squeue` does not know is left out instead of failing the list.
+- **Job details on the Jobs page** — clicking a job in the Jobs page opens the same details,
+  fetched for that one job when it is clicked (`GET /jobs/job`). The page names the job by an
+  encrypted reference rather than its ID, so other users' job IDs still never reach the browser
+  of a user who is not staff. The key for these references is kept in `data_dir` as
+  `.job-ref.key`, readable only by the user; without it the list still works, unclickable.
 - **User view for staff** — staff can switch the Jobs page and the node job lists to exactly what
   a user who is not staff sees, and back. The switch is remembered in the browser; the hiding is
   still done by the server, and the switch can only hide, never reveal.

@@ -1465,12 +1465,12 @@ def cluster_display_command(command, ssh_wrapper)
   command.to_s.sub(/\A#{Regexp.escape(ssh_wrapper.to_s)}\s*/, "")
 end
 
-# Fetch one cluster's jobs (all of them, or those on one node, optionally with
-# the job details) as normalized, NOT yet redacted jobs. Returns
-# [jobs, error, command].
-def fetch_cluster_jobs(ctx, node: nil, details: false)
+# Fetch one cluster's jobs (all of them, those on one node, or one job,
+# optionally with the job details) as normalized, NOT yet redacted jobs.
+# Returns [jobs, error, command].
+def fetch_cluster_jobs(ctx, node: nil, job: nil, details: false)
   raw, error, command = ctx[:scheduler].cluster_jobs(ctx[:bin], ctx[:bin_overrides], ctx[:ssh_wrapper],
-                                                     node: node, details: details)
+                                                     node: node, job: job, details: details)
   [(raw || []).filter_map { |row| normalize_cluster_job(row) }, error, command]
 end
 
@@ -1526,6 +1526,15 @@ get "/jobs/data" do
   jobs, error, command = fetch_cluster_jobs(ctx)
   next({ error: error }.to_json) if error
 
+  # A reference per job, for fetching its details when it is clicked. Without
+  # the key (e.g. data_dir is not writable) the list still works, unclickable.
+  ref_key = begin
+    job_ref_key(conf)
+  rescue StandardError
+    nil
+  end
+  ref = ref_key && ->(id) { job_ref(ctx[:cluster], id, ref_key) }
+
   thresholds    = large_memory_thresholds(conf, ctx[:cluster], ctx[:scheduler], ctx[:bin], ctx[:bin_overrides], ctx[:ssh_wrapper])
   architectures = conf["jobs_architectures"].is_a?(Hash) ? conf["jobs_architectures"].transform_keys(&:to_s) : {}
   categories    = build_job_categories(jobs, thresholds, architectures)
@@ -1535,13 +1544,48 @@ get "/jobs/data" do
     error:         error,
     staff:         staff,
     staff_capable: staff_capable,
-    categories: redact_job_categories(categories, staff: staff, viewer: viewer),
+    categories: redact_job_categories(categories, staff: staff, viewer: viewer, ref: ref),
     # Counted like the categories: a pending job array once per task.
     running:    categories.sum { |category| category["running"] },
     pending:    categories.sum { |category| category["pending"] },
     # How to list other people's jobs is only spelled out for staff.
     command:    staff ? cluster_display_command(command, ctx[:ssh_wrapper]) : nil,
     fetched_at: Time.now.strftime("%H:%M:%S")
+  }.to_json
+rescue StandardError => e
+  content_type :json
+  { error: e.message }.to_json
+end
+
+# All the details of one job, for the Jobs page. The job is named by the
+# reference the list gave it (job_ref), never by its ID, so the page never needs
+# the ID of anyone else's job; and what is shown follows the same rules as the
+# lists, so a reference can never show more than the list it came from.
+get "/jobs/job" do
+  content_type :json
+  conf = create_conf
+  next({ error: "The Jobs page is switched off." }.to_json) unless conf.fetch("show_jobs", true)
+
+  ctx = cluster_jobs_context(conf, params["cluster"])
+  next({ error: "Unknown cluster." }.to_json) if ctx.nil?
+
+  id = job_ref_id(params["ref"], ctx[:cluster], job_ref_key(conf))
+  next({ error: "This job link is out of date. Refresh the page and try again." }.to_json) if id.nil?
+
+  staff, staff_capable = job_viewer(conf, params)
+  gone = "This job is no longer in the queue."
+  jobs, error, = fetch_cluster_jobs(ctx, job: id[/\A\d+/], details: true)
+  next({ error: error.match?(/Invalid job id/i) ? gone : error }.to_json) if error
+
+  job = find_cluster_job(jobs, id)
+  next({ error: gone }.to_json) if job.nil?
+
+  {
+    error:         nil,
+    staff:         staff,
+    staff_capable: staff_capable,
+    job:           redact_cluster_job(job, staff: staff, viewer: current_user_name),
+    fetched_at:    Time.now.strftime("%H:%M:%S")
   }.to_json
 rescue StandardError => e
   content_type :json

@@ -47,7 +47,8 @@ VERSION                ||= "3.0.0"
 # ./conf.yml or ./generic_apps against the wrong directory.
 APP_ROOT               ||= File.expand_path(__dir__)
 SCHEDULERS_DIR_PATH    ||= "./lib/schedulers"
-HISTORY_ROWS           ||= 10
+HISTORY_ROWS           ||= 50 # jobs per page on the History page, unless the user picks another number
+HISTORY_MIN_ROWS       ||= 10 # the fewest jobs per page the user can pick
 JOB_STATUS             ||= { "queued" => "QUEUED", "running" => "RUNNING", "completed" => "COMPLETED", "failed" => "FAILED", "cancelled" => "CANCELLED", "unknown" => "UNKNOWN" }
 JOB_ID                 ||= "id"
 JOB_APP_NAME           ||= "appName"
@@ -590,7 +591,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     @date_to       = escape_html(raw_date_to)
     @filter_mode   = escape_html(params["filter_mode"] || "and")
     @detail_open   = escape_html(params["detail_open"] || "false")
-    requested_rows = [(params["rows"] || HISTORY_ROWS).to_i, HISTORY_ROWS].max
+    requested_rows = [(params["rows"] || HISTORY_ROWS).to_i, HISTORY_MIN_ROWS].max
     @current_page  = (params["p"] || 1).to_i
     offset         = (@current_page - 1) * requested_rows
 

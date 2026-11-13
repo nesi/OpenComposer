@@ -58,6 +58,8 @@
   Clicking a column heading sorts by it, and clicking it again reverses the order. Start and
   end times read `2026-11-13 21:15:27` (the full value on hover), and the job count, rows per
   page and page links sit under the table.
+- **History shows 50 jobs per page by default** (it was 10). You can still pick any number from
+  10 up.
 
 ### Fixed
 

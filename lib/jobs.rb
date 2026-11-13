@@ -22,6 +22,20 @@ JOB_PUBLIC_KEYS  ||= %w[status state partition cpus mem_mb nodes gpus gpu_types
 # viewer's own jobs.
 JOB_PRIVATE_KEYS ||= %w[id name user account].freeze
 
+# The job details shown when a job is clicked on the Nodes page (job["details"]),
+# split the same way. Again a whitelist: a detail not listed is never sent.
+JOB_DETAIL_PUBLIC_KEYS  ||= %w[qos batch_host alloc_node num_tasks cpus_per_task ntasks_per_node min_cpus
+                               min_memory min_tmp_disk sockets cores threads core_spec features licenses
+                               tres_alloc tres_per_node tres_per_job tres_per_task tres_per_socket
+                               cpus_per_tres mem_per_tres tres_bind tres_freq oversubscribe contiguous
+                               req_nodes exc_nodes eligible end time_left min_time deadline pending_time
+                               requeue restarts batch exit_code nice reboot network profile].freeze
+JOB_DETAIL_PRIVATE_KEYS ||= %w[array_job_id array_task_id group wckey reservation dependency mcs_label
+                               command work_dir stdin stdout stderr comment system_comment].freeze
+
+# What squeue prints for a value that is not set.
+JOB_DETAIL_UNSET ||= ["(null)", "N/A", "NA", "*", "NONE", "None", "Unknown", "NotSet"].freeze
+
 # Scheduler states of a job that is still waiting. A job in any other state that
 # squeue reports (running, completing, configuring, suspended, ...) holds an
 # allocation and is counted as running.
@@ -182,7 +196,7 @@ def normalize_cluster_job(raw)
   status  = JOB_PENDING_STATES.include?(state) ? "pending" : "running"
   running = status == "running"
   account = raw["account"].to_s.strip
-  {
+  job = {
     "id"         => id,
     "name"       => raw["name"].to_s.strip,
     "user"       => user,
@@ -206,6 +220,18 @@ def normalize_cluster_job(raw)
     # A pending job array is one row, but stands for all of its waiting tasks.
     "tasks"      => running ? 1 : array_task_count(id)
   }
+
+  # The job details, when they were asked for (see SQUEUE_DETAIL_FIELDS).
+  detail_keys = JOB_DETAIL_PUBLIC_KEYS + JOB_DETAIL_PRIVATE_KEYS
+  if raw.keys.any? { |key| detail_keys.include?(key) }
+    details = { "tres_alloc" => raw["tres"], "tres_per_node" => raw["tres_per_node"] }
+    detail_keys.each { |key| details[key] = raw[key] if raw.key?(key) }
+    job["details"] = details.transform_values do |value|
+      value = value.to_s.strip
+      JOB_DETAIL_UNSET.include?(value) ? "" : value
+    end
+  end
+  job
 end
 
 # The number of tasks in a pending job array's ID, e.g. 19 for "123_[2-20%4]"
@@ -250,7 +276,18 @@ def redact_cluster_job(job, staff:, viewer:)
   else
     out["reason"] = public_job_reason(job["reason"])
   end
+  if job["details"]
+    out["details"] = job["details"].slice(*(staff || mine ? JOB_DETAIL_PUBLIC_KEYS + JOB_DETAIL_PRIVATE_KEYS : JOB_DETAIL_PUBLIC_KEYS))
+  end
   out
+end
+
+# Who is looking, for the job routes: [staff, staff_capable]. A staff member
+# can switch to the view of a user who is not staff (view=user), to see exactly
+# what such a user is shown; the switch can only take away, never add.
+def job_viewer(conf, params)
+  capable = staff_user?(conf)
+  [capable && params["view"].to_s != "user", capable]
 end
 
 # ── Large-memory threshold ────────────────────────────────────────────────────

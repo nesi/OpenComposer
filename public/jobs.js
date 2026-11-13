@@ -151,17 +151,19 @@ var ocJobs = (function() {
   }
 
   // Draw a sortable job table into `container`, 50 rows at a time.
-  //   options.staff     the viewer is staff (as reported by the server)
-  //   options.layout    'node', 'running' or 'pending'
-  //   options.emptyText shown instead of a table when there are no jobs
+  //   options.staff      the viewer is staff (as reported by the server)
+  //   options.layout     'node', 'running' or 'pending'
+  //   options.emptyText  shown instead of a table when there are no jobs
+  //   options.onRowClick called with the job when a row is clicked (or Enter)
   function renderTable(container, jobs, options) {
     options = options || {};
-    var keys     = identityColumns(jobs, !!options.staff).concat(LAYOUTS[options.layout] || LAYOUTS.running);
-    var pageSize = options.pageSize || 50;
-    var rows     = jobs.slice();
-    var shown    = pageSize;
-    var sortKey  = null;
-    var sortAsc  = true;
+    var keys      = identityColumns(jobs, !!options.staff).concat(LAYOUTS[options.layout] || LAYOUTS.running);
+    var pageSize  = options.pageSize || 50;
+    var rows      = jobs.slice();
+    var shown     = pageSize;
+    var sortKey   = null;
+    var sortAsc   = true;
+    var clickable = typeof options.onRowClick === 'function';
 
     container.innerHTML = '';
     if (!jobs.length) {
@@ -193,8 +195,10 @@ var ocJobs = (function() {
     });
 
     function draw() {
-      tbody.innerHTML = rows.slice(0, shown).map(function(job) {
-        return '<tr' + (job.mine ? ' class="table-success"' : '') + '>' + keys.map(function(key) {
+      tbody.innerHTML = rows.slice(0, shown).map(function(job, i) {
+        return '<tr data-i="' + i + '"' + (job.mine ? ' class="table-success"' : '') +
+               (clickable ? ' tabindex="0" style="cursor:pointer;" title="Show all the details of this job"' : '') +
+               '>' + keys.map(function(key) {
           return '<td' + (COLUMNS[key].numeric ? ' class="text-end text-nowrap"' : '') + '>' + COLUMNS[key].html(job) + '</td>';
         }).join('') + '</tr>';
       }).join('');
@@ -233,6 +237,18 @@ var ocJobs = (function() {
       draw();
     }
 
+    if (clickable) {
+      // rows[] is re-sorted in place of the old array, so look it up on click.
+      var open = function(e) {
+        var tr = e.target.closest('tr[data-i]');
+        if (tr) options.onRowClick(rows[+tr.dataset.i]);
+      };
+      tbody.addEventListener('click', open);
+      tbody.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(e); }
+      });
+    }
+
     thead.appendChild(headTr);
     table.appendChild(thead);
     table.appendChild(tbody);
@@ -242,23 +258,186 @@ var ocJobs = (function() {
     draw();
   }
 
-  // The line that tells the viewer what they are, and are not, being shown.
-  function privacyNotice(staff) {
-    if (staff) {
-      return '<span class="badge bg-dark me-1">Staff view</span>' +
+  // ── Staff view / user view ────────────────────────────────────────────────
+  // A staff member can look at the job lists as a user who is not staff sees
+  // them. The choice is remembered in this browser, and sent to the server,
+  // which does the hiding (so the user view is exactly what users get).
+  var VIEW_KEY  = 'ocJobsView';
+  var viewInMem = 'staff';
+
+  function getView() {
+    try {
+      return window.localStorage.getItem(VIEW_KEY) === 'user' ? 'user' : 'staff';
+    } catch (e) {
+      return viewInMem;
+    }
+  }
+
+  function setView(view) {
+    viewInMem = view;
+    try { window.localStorage.setItem(VIEW_KEY, view); } catch (e) { /* remembered for this page only */ }
+  }
+
+  // The query parameter asking the server for the user view, or ''.
+  function viewParam() {
+    return getView() === 'user' ? 'view=user' : '';
+  }
+
+  // The line that tells the viewer what they are, and are not, being shown,
+  // with the staff/user view switch for staff. onChange() reloads the data.
+  function renderPrivacy(el, data, onChange) {
+    var html;
+    if (data.staff) {
+      html = '<span class="badge bg-dark me-1">Staff view</span>' +
              '<span class="text-muted">You can see job IDs, job names, users and accounts because you are staff. ' +
              'Other users cannot.</span>';
+    } else if (data.staff_capable) {
+      html = '<span class="badge bg-warning text-dark me-1">User view</span>' +
+             '<span class="text-muted">You are seeing exactly what a user who is not staff sees. ' +
+             'Your own jobs are still marked <span class="badge bg-success">Yours</span>.</span>';
+    } else {
+      html = '<i class="fas fa-lock text-muted me-1" aria-hidden="true"></i>' +
+             '<span class="text-muted">Job IDs, job names and users are shown to staff only. ' +
+             'You can see them for your own jobs, which are marked <span class="badge bg-success">Yours</span>.</span>';
     }
-    return '<i class="fas fa-lock text-muted me-1" aria-hidden="true"></i>' +
-           '<span class="text-muted">Job IDs, job names and users are shown to staff only. ' +
-           'You can see them for your own jobs, which are marked <span class="badge bg-success">Yours</span>.</span>';
+    if (data.staff_capable) {
+      html += ' <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline jobs-view-toggle">' +
+              (data.staff ? 'See what users see' : 'Back to the staff view') + '</button>';
+    }
+    el.innerHTML = html;
+    var toggle = el.querySelector('.jobs-view-toggle');
+    if (toggle) {
+      toggle.addEventListener('click', function() {
+        setView(data.staff ? 'user' : 'staff');
+        if (onChange) onChange();
+      });
+    }
+  }
+
+  // ── All the details of one job ────────────────────────────────────────────
+  function detailTime(v) {
+    var m = String(v).match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
+    return esc(m ? m[1] + ' ' + m[2] : v);
+  }
+
+  function detailSeconds(v) {
+    var s = parseInt(v, 10);
+    if (isNaN(s)) return esc(v);
+    var parts = [];
+    if (s >= 86400) parts.push(Math.floor(s / 86400) + 'd');
+    if (s >= 3600)  parts.push(Math.floor(s % 86400 / 3600) + 'h');
+    if (s >= 60)    parts.push(Math.floor(s % 3600 / 60) + 'm');
+    parts.push(s % 60 + 's');
+    return parts.join(' ');
+  }
+
+  function detailTres(v) {
+    return String(v).split(',').filter(Boolean).map(function(t) {
+      return '<span class="badge text-bg-light border fw-normal me-1">' + esc(t) + '</span>';
+    }).join('');
+  }
+
+  // [key, label, kind]. "d." keys are in job.details; the rest are the list
+  // fields. A detail the viewer may not see is not in the data at all, and is
+  // simply not shown.
+  var DETAIL_SECTIONS = [
+    { title: 'Job', fields: [
+      ['id', 'Job ID', 'code'], ['name', 'Job name'], ['user', 'User'], ['d.group', 'Group'],
+      ['account', 'Account'], ['d.array_job_id', 'Array job ID', 'array'], ['d.array_task_id', 'Array task ID'],
+      ['state', 'State', 'state'], ['reason', 'Reason'], ['partition', 'Partition'], ['d.qos', 'QOS'],
+      ['priority', 'Priority', 'number'], ['d.nice', 'Nice', 'nonzero'], ['d.reservation', 'Reservation'],
+      ['d.dependency', 'Dependency'], ['d.wckey', 'WCKey'], ['d.mcs_label', 'MCS label'],
+      ['d.comment', 'Comment'], ['d.system_comment', 'System comment']] },
+    { title: 'Resources', fields: [
+      ['nodes', 'Nodes', 'number'], ['cpus', 'CPUs', 'number'], ['mem_mb', 'Memory', 'mem'], ['gpus', 'GPUs', 'gpus'],
+      ['d.num_tasks', 'Tasks'], ['d.ntasks_per_node', 'Tasks per node', 'nonzero'], ['d.cpus_per_task', 'CPUs per task'],
+      ['d.min_cpus', 'Minimum CPUs per node'], ['d.min_memory', 'Memory requested'],
+      ['d.min_tmp_disk', 'Temporary disk', 'nonzero'], ['d.tres_alloc', 'Allocated (TRES)', 'tres'],
+      ['d.tres_per_node', 'Per node (TRES)', 'tres'], ['d.tres_per_job', 'Per job (TRES)', 'tres'],
+      ['d.tres_per_task', 'Per task (TRES)', 'tres'], ['d.tres_per_socket', 'Per socket (TRES)', 'tres'],
+      ['d.cpus_per_tres', 'CPUs per TRES'], ['d.mem_per_tres', 'Memory per TRES'], ['d.tres_bind', 'TRES binding'],
+      ['d.tres_freq', 'TRES frequency'], ['d.features', 'Features'], ['d.licenses', 'Licenses'],
+      ['d.sockets', 'Sockets per node'], ['d.cores', 'Cores per socket'], ['d.threads', 'Threads per core'],
+      ['d.core_spec', 'Specialised cores'], ['d.oversubscribe', 'Shares nodes (OverSubscribe)'],
+      ['d.contiguous', 'Contiguous nodes', 'bool']] },
+    { title: 'Placement', fields: [
+      ['nodelist', 'Running on'], ['d.batch_host', 'Batch host'], ['d.req_nodes', 'Requested nodes'],
+      ['d.exc_nodes', 'Excluded nodes'], ['d.alloc_node', 'Submitted from']] },
+    { title: 'Times', fields: [
+      ['submit', 'Submitted', 'time'], ['d.eligible', 'Eligible', 'time'], ['start', 'Started', 'time'],
+      ['d.end', 'Expected end', 'time'], ['time_used', 'Elapsed'], ['d.time_left', 'Time left'],
+      ['time_limit', 'Time limit'], ['d.min_time', 'Minimum time', 'nonzero'], ['d.deadline', 'Deadline', 'time'],
+      ['d.pending_time', 'Waited before starting', 'seconds']] },
+    { title: 'Files and command', fields: [
+      ['d.command', 'Command', 'path'], ['d.work_dir', 'Working directory', 'path'],
+      ['d.stdout', 'Standard output', 'path'], ['d.stderr', 'Standard error', 'path'],
+      ['d.stdin', 'Standard input', 'path']] },
+    { title: 'Other', fields: [
+      ['d.batch', 'Batch job', 'bool'], ['d.requeue', 'Requeued if it fails', 'bool'], ['d.restarts', 'Restarts'],
+      ['d.exit_code', 'Exit code'], ['d.reboot', 'Reboots nodes first', 'bool'], ['d.profile', 'Profiling'],
+      ['d.network', 'Network']] }
+  ];
+
+  // The HTML of one detail, or null to leave it out.
+  function detailHtml(job, key, kind) {
+    if (kind === 'state') return stateBadge(job);
+    var v = key.indexOf('d.') === 0 ? (job.details || {})[key.slice(2)] : job[key];
+    if (v === undefined || v === null || v === '') return null;
+    switch (kind) {
+      // Slurm reports a job's own ID as its array job ID; only arrays have tasks.
+      case 'array':   return (job.details || {}).array_task_id ? esc(v) : null;
+      case 'code':    return '<code>' + esc(v) + '</code>';
+      case 'number':  return esc(formatNumber(v));
+      case 'mem':     return esc(formatMemory(v));
+      case 'gpus':    return v ? esc(gpuText(job)) : null;
+      case 'time':    return detailTime(v);
+      case 'bool':    return v === '1' ? 'Yes' : (v === '0' ? 'No' : esc(v));
+      case 'seconds': return detailSeconds(v);
+      case 'tres':    return detailTres(v);
+      case 'path':    return '<code class="text-break">' + esc(v) + '</code>';
+      case 'nonzero': return /^0+([:.]0+)*[KMGT]?$/.test(String(v)) ? null : esc(v);
+      default:        return esc(v);
+    }
+  }
+
+  // Draw every detail of `job` that the viewer is allowed to see.
+  function renderJobDetail(container, job) {
+    var title = job.id
+      ? 'Job <code>' + esc(job.id) + '</code>' + (job.name ? ' <span class="text-muted">·</span> ' + esc(job.name) : '')
+      : 'Another user\'s job';
+    var html = '<div class="d-flex flex-wrap align-items-center gap-2 mb-2">' +
+               '<span class="fw-semibold text-break" style="min-width:0;">' + title + '</span>' +
+               stateBadge(job) + (job.mine ? YOURS : '') + '</div>';
+    if (!job.id) {
+      html += '<p class="small text-muted mb-2"><i class="fas fa-lock me-1" aria-hidden="true"></i>' +
+              'Its job ID, name, user, group, account, files, command, dependencies and comments are shown only ' +
+              'to staff and to the job\'s owner.</p>';
+    }
+    if (!job.details) {
+      html += '<p class="small text-muted mb-2">This cluster did not report further details for this job.</p>';
+    }
+    html += '<div class="row row-cols-1 row-cols-lg-2 g-2">' + DETAIL_SECTIONS.map(function(section) {
+      var items = section.fields.map(function(f) {
+        var value = detailHtml(job, f[0], f[2]);
+        return value === null ? '' :
+          '<dt class="col-sm-5 text-muted fw-normal">' + esc(f[1]) + '</dt>' +
+          '<dd class="col-sm-7 mb-1 text-break">' + value + '</dd>';
+      }).join('');
+      return items ? '<div class="col"><div class="card h-100 border-secondary-subtle">' +
+                     '<div class="card-header py-1 small fw-semibold">' + esc(section.title) + '</div>' +
+                     '<div class="card-body py-2"><dl class="row small mb-0">' + items + '</dl></div></div></div>'
+                   : '';
+    }).join('') + '</div>';
+    container.innerHTML = html;
   }
 
   return {
-    esc:           esc,
-    formatMemory:  formatMemory,
-    formatNumber:  formatNumber,
-    renderTable:   renderTable,
-    privacyNotice: privacyNotice
+    esc:             esc,
+    formatMemory:    formatMemory,
+    formatNumber:    formatNumber,
+    renderTable:     renderTable,
+    renderPrivacy:   renderPrivacy,
+    renderJobDetail: renderJobDetail,
+    viewParam:       viewParam
   };
 })();

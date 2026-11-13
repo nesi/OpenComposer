@@ -332,7 +332,7 @@
     loadingEl.style.display = 'none';
     contentEl.style.display = '';
     fetchedEl.textContent   = 'Fetched at ' + data.fetched_at;
-    privacyEl.innerHTML     = ocJobs.privacyNotice(!!data.staff);
+    ocJobs.renderPrivacy(privacyEl, data, load);
 
     var largeMemory = (data.categories || []).filter(function(c) { return c.key === 'large_memory'; })[0];
     document.getElementById('_jobsInfoLargeMemory').textContent = largeMemory && largeMemory.note ? largeMemory.note : '';
@@ -356,7 +356,8 @@
     var token = ++state.token;
     refreshBtn.disabled   = true;
     errorEl.style.display = 'none';
-    var url = DATA_URL + (CLUSTER ? '?cluster=' + encodeURIComponent(CLUSTER) : '');
+    var query = [CLUSTER ? 'cluster=' + encodeURIComponent(CLUSTER) : '', ocJobs.viewParam()].filter(Boolean).join('&');
+    var url   = DATA_URL + (query ? '?' + query : '');
     fetch(url, { credentials: 'same-origin', cache: 'no-store' })
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);

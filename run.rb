@@ -1465,15 +1465,18 @@ def cluster_display_command(command, ssh_wrapper)
   command.to_s.sub(/\A#{Regexp.escape(ssh_wrapper.to_s)}\s*/, "")
 end
 
-# Fetch one cluster's jobs (all of them, or those on one node) as normalized,
-# NOT yet redacted jobs. Returns [jobs, error, command].
-def fetch_cluster_jobs(ctx, node: nil)
-  raw, error, command = ctx[:scheduler].cluster_jobs(ctx[:bin], ctx[:bin_overrides], ctx[:ssh_wrapper], node: node)
+# Fetch one cluster's jobs (all of them, or those on one node, optionally with
+# the job details) as normalized, NOT yet redacted jobs. Returns
+# [jobs, error, command].
+def fetch_cluster_jobs(ctx, node: nil, details: false)
+  raw, error, command = ctx[:scheduler].cluster_jobs(ctx[:bin], ctx[:bin_overrides], ctx[:ssh_wrapper],
+                                                     node: node, details: details)
   [(raw || []).filter_map { |row| normalize_cluster_job(row) }, error, command]
 end
 
-# The jobs running on one node, for the Nodes page. Job IDs, job names, users and
-# accounts are included only for staff and for the viewer's own jobs.
+# The jobs running on one node, with their details, for the Nodes page. Job IDs,
+# job names, users, accounts, paths and comments are included only for staff
+# (unless they asked for the user view) and for the viewer's own jobs.
 get "/nodes/jobs" do
   content_type :json
   conf = create_conf
@@ -1485,18 +1488,19 @@ get "/nodes/jobs" do
   node = params["node"].to_s.strip
   next({ error: "No node specified." }.to_json) if node.empty?
 
-  staff  = staff_user?(conf)
+  staff, staff_capable = job_viewer(conf, params)
   viewer = current_user_name
-  jobs, error, command = fetch_cluster_jobs(ctx, node: node)
+  jobs, error, command = fetch_cluster_jobs(ctx, node: node, details: true)
   jobs = jobs.select { |job| job["status"] == "running" }
              .sort_by { |job| job["start"].match?(/\A\d{4}-/) ? job["start"] : "9" }
              .map     { |job| redact_cluster_job(job, staff: staff, viewer: viewer) }
 
   {
-    error:      error,
-    node:       node,
-    staff:      staff,
-    jobs:       jobs,
+    error:         error,
+    node:          node,
+    staff:         staff,
+    staff_capable: staff_capable,
+    jobs:          jobs,
     # How to list other people's jobs is only spelled out for staff.
     command:    staff ? cluster_display_command(command, ctx[:ssh_wrapper]) : nil,
     fetched_at: Time.now.strftime("%H:%M:%S")
@@ -1517,7 +1521,7 @@ get "/jobs/data" do
   ctx = cluster_jobs_context(conf, params["cluster"])
   next({ error: "Unknown cluster." }.to_json) if ctx.nil?
 
-  staff  = staff_user?(conf)
+  staff, staff_capable = job_viewer(conf, params)
   viewer = current_user_name
   jobs, error, command = fetch_cluster_jobs(ctx)
   next({ error: error }.to_json) if error
@@ -1528,8 +1532,9 @@ get "/jobs/data" do
   categories.each { |category| category["note"] = large_memory_note(thresholds) if category["key"] == "large_memory" }
 
   {
-    error:      error,
-    staff:      staff,
+    error:         error,
+    staff:         staff,
+    staff_capable: staff_capable,
     categories: redact_job_categories(categories, staff: staff, viewer: viewer),
     # Counted like the categories: a pending job array once per task.
     running:    categories.sum { |category| category["running"] },

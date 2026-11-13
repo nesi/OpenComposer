@@ -133,11 +133,21 @@
         <div id="_nodeJobsError" class="alert alert-danger mb-0" style="display:none;"></div>
         <div id="_nodeJobsContent" style="display:none;">
           <p class="small mb-2" id="_nodeJobsPrivacy"></p>
-          <div class="d-flex gap-2 flex-wrap align-items-center small mb-2" id="_nodeJobsSummary"></div>
-          <div id="_nodeJobsTable"></div>
-          <div id="_nodeJobsCmdSection" class="mt-3" style="display:none;">
-            <p class="small text-muted mb-1">This list is built from the output of this command on the cluster:</p>
-            <pre class="border rounded p-2 mb-0 small" style="white-space:pre-wrap;word-break:break-all;"><code id="_nodeJobsCmd"></code></pre>
+          <%# The node's jobs %>
+          <div id="_nodeJobsList">
+            <div class="d-flex gap-2 flex-wrap align-items-center small mb-2" id="_nodeJobsSummary"></div>
+            <div id="_nodeJobsTable"></div>
+            <div id="_nodeJobsCmdSection" class="mt-3" style="display:none;">
+              <p class="small text-muted mb-1">This list is built from the output of this command on the cluster:</p>
+              <pre class="border rounded p-2 mb-0 small" style="white-space:pre-wrap;word-break:break-all;"><code id="_nodeJobsCmd"></code></pre>
+            </div>
+          </div>
+          <%# All the details of the job clicked in the list %>
+          <div id="_nodeJobDetail" style="display:none;">
+            <button type="button" class="btn btn-sm btn-outline-secondary mb-2" id="_nodeJobBack">
+              &larr; All jobs on <span id="_nodeJobBackNode"></span>
+            </button>
+            <div id="_nodeJobDetailBody"></div>
           </div>
         </div>
       </div>
@@ -462,9 +472,11 @@
     errorBox.style.display = 'none';
     content.style.display  = 'none';
     fetchedAt.textContent  = '';
+    showNodeJobList();
 
-    var url = JOBS_URL + '?node=' + encodeURIComponent(node.row.node) +
-              (CLUSTER ? '&cluster=' + encodeURIComponent(CLUSTER) : '');
+    var view = ocJobs.viewParam();
+    var url  = JOBS_URL + '?node=' + encodeURIComponent(node.row.node) +
+               (CLUSTER ? '&cluster=' + encodeURIComponent(CLUSTER) : '') + (view ? '&' + view : '');
     fetch(url, { credentials: 'same-origin', cache: 'no-store' })
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -509,14 +521,21 @@
     if (mine) parts.push('<span class="badge bg-success">' + mine + ' yours</span>');
     document.getElementById('_nodeJobsSummary').innerHTML =
       parts.map(function(part) { return '<span>' + part + '</span>'; }).join('<span class="text-muted">·</span>');
-    document.getElementById('_nodeJobsPrivacy').innerHTML = ocJobs.privacyNotice(!!data.staff);
+    ocJobs.renderPrivacy(document.getElementById('_nodeJobsPrivacy'), data, loadNodeJobs);
 
     // Jobs that span several nodes count all of their CPUs and memory, not only
     // this node's share, so say so when there are any.
     var multi = jobs.some(function(j) { return j.nodes > 1; });
     ocJobs.renderTable(document.getElementById('_nodeJobsTable'), jobs, {
-      staff: !!data.staff, layout: 'node', emptyText: 'No jobs are running on this node.'
+      staff: !!data.staff, layout: 'node', emptyText: 'No jobs are running on this node.',
+      onRowClick: function(job) { showNodeJobDetail(node, job); }
     });
+    if (jobs.length) {
+      var hint = document.createElement('p');
+      hint.className   = 'small text-muted mt-2 mb-0';
+      hint.textContent = 'Click a job to see all of its details.';
+      document.getElementById('_nodeJobsTable').appendChild(hint);
+    }
     if (multi) {
       var note = document.createElement('p');
       note.className   = 'small text-muted mt-2 mb-0';
@@ -528,6 +547,22 @@
     document.getElementById('_nodeJobsCmd').textContent = data.command || '';
   }
 
+  // The popup shows either the node's job list or one job's details.
+  function showNodeJobList() {
+    document.getElementById('_nodeJobsList').style.display  = '';
+    document.getElementById('_nodeJobDetail').style.display = 'none';
+  }
+
+  function showNodeJobDetail(node, job) {
+    document.getElementById('_nodeJobBackNode').textContent = node.row.node;
+    ocJobs.renderJobDetail(document.getElementById('_nodeJobDetailBody'), job);
+    document.getElementById('_nodeJobsList').style.display  = 'none';
+    document.getElementById('_nodeJobDetail').style.display = '';
+    var body = document.querySelector('#_nodeJobsModal .modal-body');
+    if (body) body.scrollTop = 0;
+  }
+
+  document.getElementById('_nodeJobBack').addEventListener('click', showNodeJobList);
   document.getElementById('_nodeJobsRefresh').addEventListener('click', loadNodeJobs);
 
   function showError(msg) {

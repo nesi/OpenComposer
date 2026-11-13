@@ -19,6 +19,15 @@
   is one row, but the counts and totals include every task in it.
 - **Jobs on a node** — clicking a node on the Nodes page lists the jobs running on it, with the
   CPUs, memory and GPUs they have been given.
+- **All the details of a job** — clicking a job in a node's list shows everything Slurm reports
+  about it: QOS, tasks and CPUs per task, every TRES request and allocation, features, batch
+  host, submit, eligible, start and expected end times, time left, requeue and restart counts,
+  and (for staff and the job's owner) its job ID, name, user, group, account, array IDs,
+  dependency, reservation, comments, command, working directory and output files. Any detail
+  field that an older Slurm's `squeue` does not know is left out instead of failing the list.
+- **User view for staff** — staff can switch the Jobs page and the node job lists to exactly what
+  a user who is not staff sees, and back. The switch is remembered in the browser; the hiding is
+  still done by the server, and the switch can only hide, never reveal.
 - **Job identities are shown only to staff.** Job IDs, job names, users and accounts are sent
   to the browser only for members of `staff_groups` (default `nesi-staff`), and for the viewer's
   own jobs, which are marked *Yours*. Everyone else sees only each job's state and resources,

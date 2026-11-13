@@ -498,35 +498,132 @@ class Slurm < Scheduler
     ["name",          "Name",          200]
   ].freeze
 
+  # The extra squeue columns behind the job details on the Nodes page, as
+  # [key, squeue --Format field, width]. Who may see each one is decided by
+  # JOB_DETAIL_PUBLIC_KEYS and JOB_DETAIL_PRIVATE_KEYS in lib/jobs.rb. They are
+  # placed before the job ID and name, public ones first and the private
+  # free-text ones (paths, comments) last, as in SQUEUE_JOB_FIELDS.
+  SQUEUE_DETAIL_FIELDS = [
+    # Public: resources, placement, times and settings.
+    ["qos",             "QOS",             40],
+    ["batch_host",      "BatchHost",       40],
+    ["alloc_node",      "AllocNodes",      40],
+    ["num_tasks",       "NumTasks",        10],
+    ["cpus_per_task",   "cpus-per-task",   10],
+    ["ntasks_per_node", "NTPerNode",       10],
+    ["min_cpus",        "MinCpus",         10],
+    ["min_memory",      "MinMemory",       16],
+    ["min_tmp_disk",    "MinTmpDisk",      16],
+    ["sockets",         "Sockets",          6],
+    ["cores",           "Cores",            6],
+    ["threads",         "Threads",          6],
+    ["core_spec",       "CoreSpec",        10],
+    ["features",        "Feature",        100],
+    ["licenses",        "Licenses",       100],
+    ["tres_per_job",    "tres-per-job",   100],
+    ["tres_per_task",   "tres-per-task",  100],
+    ["tres_per_socket", "tres-per-socket", 60],
+    ["cpus_per_tres",   "cpus-per-tres",   60],
+    ["mem_per_tres",    "mem-per-tres",    60],
+    ["tres_bind",       "tres-bind",       40],
+    ["tres_freq",       "tres-freq",       40],
+    ["oversubscribe",   "OverSubscribe",   12],
+    ["contiguous",      "Contiguous",       4],
+    ["req_nodes",       "ReqNodes",       100],
+    ["exc_nodes",       "ExcNodes",       100],
+    ["eligible",        "EligibleTime",    22],
+    ["end",             "EndTime",         22],
+    ["time_left",       "TimeLeft",        16],
+    ["min_time",        "MinTime",         16],
+    ["deadline",        "Deadline",        22],
+    ["pending_time",    "PendingTime",     12],
+    ["requeue",         "Requeue",          4],
+    ["restarts",        "RestartCnt",       6],
+    ["batch",           "BatchFlag",        4],
+    ["exit_code",       "exit_code",       12],
+    ["nice",            "Nice",             8],
+    ["reboot",          "Reboot",           4],
+    ["network",         "Network",         40],
+    ["profile",         "Profile",         20],
+    # Private: IDs, groups, accounting labels, paths and comments.
+    ["array_job_id",    "ArrayJobID",      20],
+    ["array_task_id",   "ArrayTaskID",     20],
+    ["group",           "GroupName",       40],
+    ["wckey",           "WCKey",           40],
+    ["reservation",     "Reservation",     60],
+    ["dependency",      "Dependency",     150],
+    ["mcs_label",       "MCSLabel",        40],
+    ["command",         "Command",        400],
+    ["work_dir",        "WorkDir",        400],
+    ["stdin",           "STDIN",          300],
+    ["stdout",          "STDOUT",         300],
+    ["stderr",          "STDERR",         300],
+    ["comment",         "Comment",        250],
+    ["system_comment",  "system_comment", 250]
+  ].freeze
+
+  # Detail fields this cluster's squeue rejected ("Invalid job format
+  # specification" — an older Slurm), left out of later queries by this process.
+  SQUEUE_UNSUPPORTED_FIELDS = { mutex: Mutex.new, fields: [] }
+
   def supports_cluster_jobs?
     true
   end
 
   # Fetch every user's jobs in the queue via squeue (pending, running, suspended
   # and completing jobs — squeue's default set of states). With node:, only the
-  # jobs allocated to that node. A pending job array is one entry; each running
-  # array task is its own entry.
+  # jobs allocated to that node. With details:, also the SQUEUE_DETAIL_FIELDS
+  # (any of them this Slurm does not know are dropped). A pending job array is
+  # one entry; each running array task is its own entry.
   # Returns [jobs, nil, command] or [nil, error_message, command]; each job is a
-  # Hash keyed as in SQUEUE_JOB_FIELDS, every value a stripped String.
-  def cluster_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, node: nil)
+  # Hash keyed as in SQUEUE_JOB_FIELDS (and SQUEUE_DETAIL_FIELDS), every value a
+  # stripped String.
+  def cluster_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, node: nil, details: false)
     # The node name goes into a command line that a remote shell will parse.
     unless node.nil? || node.to_s.match?(/\A[A-Za-z0-9][A-Za-z0-9._-]*\z/)
       return nil, "Invalid node name.", nil
     end
 
-    squeue  = get_command_path("squeue", bin, bin_overrides)
-    format  = SQUEUE_JOB_FIELDS.map { |_key, field, width| "#{field}:#{width}" }.join(",")
-    command = [ssh_wrapper, SLURM_ENV, squeue, "--noheader", "--Format=#{format}",
-               (node ? "--nodelist=#{node}" : nil)].compact.join(" ")
-    stdout, stderr, status = Open3.capture3(command)
-    # The error is shown to every viewer, so it never includes stdout: on a
-    # failure part way through, that could hold other people's jobs.
-    unless status.success?
+    squeue = get_command_path("squeue", bin, bin_overrides)
+    fields = squeue_job_fields(details)
+    loop do
+      format  = fields.map { |_key, field, width| "#{field}:#{width}" }.join(",")
+      command = [ssh_wrapper, SLURM_ENV, squeue, "--noheader", "--Format=#{format}",
+                 (node ? "--nodelist=#{node}" : nil)].compact.join(" ")
+      stdout, stderr, status = Open3.capture3(command)
+      return [parse_squeue_jobs(stdout, fields), nil, command] if status.success?
+
+      # The error is shown to every viewer, so it never includes stdout: on a
+      # failure part way through, that could hold other people's jobs.
       message = to_utf8(stderr).strip
+      bad     = message[/Invalid job format specification: (\S+)/, 1]
+      if bad && SQUEUE_DETAIL_FIELDS.any? { |_key, field, _width| field == bad }
+        # An older Slurm without this detail field: drop it and ask again.
+        SQUEUE_UNSUPPORTED_FIELDS[:mutex].synchronize { SQUEUE_UNSUPPORTED_FIELDS[:fields] |= [bad] }
+        fields = fields.reject { |_key, field, _width| field == bad }
+        next
+      end
       return nil, (message.empty? ? "squeue failed (exit status #{status.exitstatus})." : message), command
     end
+  rescue => e
+    return nil, e.message, nil
+  end
 
-    jobs = stdout.b.each_line.filter_map do |line|
+  # The columns of the squeue query: SQUEUE_JOB_FIELDS, with the supported
+  # SQUEUE_DETAIL_FIELDS placed before the job ID and name when details are
+  # wanted.
+  def squeue_job_fields(details)
+    return SQUEUE_JOB_FIELDS unless details
+
+    unsupported = SQUEUE_UNSUPPORTED_FIELDS[:mutex].synchronize { SQUEUE_UNSUPPORTED_FIELDS[:fields].dup }
+    extra = SQUEUE_DETAIL_FIELDS.reject { |_key, field, _width| unsupported.include?(field) }
+    split = SQUEUE_JOB_FIELDS.index { |key, _field, _width| key == "id" }
+    SQUEUE_JOB_FIELDS[0...split] + extra + SQUEUE_JOB_FIELDS[split..]
+  end
+
+  # Cut squeue's fixed-width output into one Hash per job.
+  def parse_squeue_jobs(stdout, fields)
+    stdout.b.each_line.filter_map do |line|
       line = line.chomp
       next if line.strip.empty?
 
@@ -534,15 +631,11 @@ class Slurm < Scheduler
       # then read the bytes as UTF-8. scrub drops a character that the column
       # width cut in half. (to_utf8 would drop every non-ASCII character.)
       pos = 0
-      SQUEUE_JOB_FIELDS.each_with_object({}) do |(key, _field, width), job|
+      fields.each_with_object({}) do |(key, _field, width), job|
         job[key] = line.byteslice(pos, width).to_s.dup.force_encoding(Encoding::UTF_8).scrub("").strip
         pos += width
       end
     end
-
-    [jobs, nil, command]
-  rescue => e
-    return nil, e.message, nil
   end
 
   # Memory of the nodes in each partition via sinfo, grouped by identical node

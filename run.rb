@@ -1493,7 +1493,20 @@ get "/nodes/jobs" do
   jobs, error, command = fetch_cluster_jobs(ctx, node: node, details: true)
   jobs = jobs.select { |job| job["status"] == "running" }
              .sort_by { |job| job["start"].match?(/\A\d{4}-/) ? job["start"] : "9" }
-             .map     { |job| redact_cluster_job(job, staff: staff, viewer: viewer) }
+
+  # What each job has on this node, and on each of its others. squeue only gives
+  # a job's totals, so the jobs on more than one node are looked up.
+  multi_node  = jobs.select { |job| job["nodes"].to_i > 1 }.map { |job| job["id"] }
+  allocations = multi_node.empty? ? {} : ctx[:scheduler].job_node_allocations(multi_node, ctx[:bin], ctx[:bin_overrides], ctx[:ssh_wrapper])
+  jobs.each do |job|
+    per_node = job_per_node(job, allocations[job["id"]], node: node)
+    next unless per_node
+
+    job["per_node"] = per_node
+    here = job_on_node(per_node)
+    job["here"] = here if here
+  end
+  jobs = jobs.map { |job| redact_cluster_job(job, staff: staff, viewer: viewer) }
 
   {
     error:         error,
@@ -1579,6 +1592,13 @@ get "/jobs/job" do
 
   job = find_cluster_job(jobs, id)
   next({ error: gone }.to_json) if job.nil?
+
+  # What the job has on each of its nodes (squeue only gives its totals).
+  if job["status"] == "running" && job["nodes"].to_i > 1
+    allocations = ctx[:scheduler].job_node_allocations([job["id"]], ctx[:bin], ctx[:bin_overrides], ctx[:ssh_wrapper])[job["id"]]
+  end
+  per_node = job_per_node(job, allocations)
+  job["per_node"] = per_node if per_node
 
   {
     error:         nil,

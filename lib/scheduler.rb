@@ -112,6 +112,16 @@ class Scheduler
     [nil, "Listing jobs is not supported for this scheduler.", nil]
   end
 
+  # What running jobs have been given on each of their nodes, for jobs that run
+  # on more than one node (cluster_jobs only has each job's totals).
+  # @param job_ids [Array<String>] the IDs of running jobs.
+  # @return [Hash] { job_id => [{ "nodes" => node list, "cpus" => Integer,
+  #         "mem_mb" => Integer, "gpus" => Integer }] }, each entry giving what
+  #         each node in its node list has. Jobs it could not look up are left out.
+  def job_node_allocations(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    {}
+  end
+
   # Memory of the nodes in each partition, for working out which jobs need a
   # large-memory node (see large_memory_thresholds in lib/jobs.rb).
   # @return [Array<Hash, String>] [{ partition => [{ "memory_mb" => Integer, "nodes" => Integer, "gpu" => Boolean }] }, error_or_nil]

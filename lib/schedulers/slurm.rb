@@ -671,6 +671,88 @@ class Slurm < Scheduler
     return {}, e.message
   end
 
+  # The most jobs whose per-node allocation one request looks up (one scontrol
+  # call each), and how many of those calls run at once.
+  NODE_ALLOCATION_LOOKUPS     = 64
+  NODE_ALLOCATION_CONCURRENCY = 8
+
+  # What running jobs have been given on each of their nodes, via
+  # `scontrol -d show job` (squeue only knows a job's totals), for jobs that run
+  # on more than one node. scontrol takes one job at a time, so the calls run a
+  # few at once. Only the per-node lines of its output are read.
+  # Returns { job_id => [{ "nodes", "cpus", "mem_mb", "gpus" }] }; a job whose
+  # lookup failed (e.g. it has just ended) is left out.
+  def job_node_allocations(job_ids, bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    # The IDs go into a command line that a remote shell will parse.
+    ids = job_ids.map(&:to_s).select { |id| id.match?(/\A\d+(?:_\d+)?(?:\+\d+)?\z/) }
+                 .uniq.first(NODE_ALLOCATION_LOOKUPS)
+    scontrol = get_command_path("scontrol", bin, bin_overrides)
+    queue    = Queue.new
+    ids.each { |id| queue << id }
+    results  = {}
+    mutex    = Mutex.new
+    workers  = Array.new([NODE_ALLOCATION_CONCURRENCY, ids.size].min) do
+      Thread.new do
+        until queue.empty?
+          id = begin
+            queue.pop(true)
+          rescue ThreadError
+            break
+          end
+          begin
+            command = [ssh_wrapper, scontrol, "-d", "show", "job", id].compact.join(" ")
+            stdout, _stderr, status = Open3.capture3(command)
+            allocations = status.success? ? parse_node_allocations(to_utf8(stdout)) : []
+            mutex.synchronize { results[id] = allocations } unless allocations.empty?
+          rescue StandardError
+            next
+          end
+        end
+      end
+    end
+    workers.each(&:join)
+    results
+  end
+
+  # The per-node lines of `scontrol -d show job`, e.g.
+  #   "     Nodes=m001 CPU_IDs=2-5 Mem=1024 GRES="
+  #   "     Nodes=c[001-002] CPU_IDs=0-31 Mem=65536 GRES=gpu:a100:2(IDX:0-1)"
+  # (nodes given the same are listed together) as
+  # [{ "nodes" => "c[001-002]", "cpus" => 32, "mem_mb" => 65536, "gpus" => 2 }].
+  def parse_node_allocations(text)
+    text.to_s.scan(/(?:^|\s)Nodes=(\S+)\s+CPU_IDs=(\S+)(?:\s+Mem=(\d+))?(?:\s+GRES(?:_IDX)?=(\S*))?/).map do |nodes, cpu_ids, mem, gres|
+      { "nodes" => nodes, "cpus" => slurm_id_count(cpu_ids), "mem_mb" => mem&.to_i, "gpus" => gres_detail_gpus(gres) }
+    end
+  end
+
+  # How many IDs a Slurm ID list such as "0-3,8,10-11" names (7), or nil if it
+  # is not one.
+  def slurm_id_count(list)
+    parts = list.to_s.split(",")
+    return nil if parts.empty? || !parts.all? { |part| part.match?(/\A\d+(?:-\d+)?\z/) }
+
+    parts.sum do |part|
+      first, last = part.split("-").map(&:to_i)
+      last ? [last - first + 1, 0].max : 1
+    end
+  end
+
+  # How many GPUs a per-node GRES detail holds, e.g. "gpu:h100:2(IDX:0-1)" (2),
+  # "gpu:a100:1(IDX:0),gpu:l4:1(IDX:4)" (2) or "gpu(IDX:0,2)" (2). The indexes
+  # are counted where given; other GRES (MPS shares, or ones whose name only
+  # starts with "gpu", such as gpumem) are not GPUs.
+  def gres_detail_gpus(gres)
+    gres.to_s.scan(/(?:\A|,)gpu(?=[:(,]|\z)((?::[^:(),]+)*)(?:\(([^)]*)\))?/).sum do |spec, detail|
+      indexes = slurm_id_count(detail.to_s[/IDX:([\d,\-]+)/, 1])
+      count   = spec.split(":").reject(&:empty?).last
+      if indexes then indexes
+      elsif detail.to_s =~ /CNT:(\d+)/ then Regexp.last_match(1).to_i
+      elsif count&.match?(/\A\d+\z/) then count.to_i
+      else 1
+      end
+    end
+  end
+
   # Fetch the batch script for a job via sacct --batch-script (-B).
   # Returns [script_content, nil] or [nil, nil] when not available.
   def batch_script(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)

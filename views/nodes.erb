@@ -132,7 +132,7 @@
         </div>
         <div id="_nodeJobsError" class="alert alert-danger mb-0" style="display:none;"></div>
         <div id="_nodeJobsContent" style="display:none;">
-          <p class="small mb-2" id="_nodeJobsPrivacy"></p>
+          <div class="small mb-2" id="_nodeJobsPrivacy"></div>
           <%# The node's jobs %>
           <div id="_nodeJobsList">
             <div class="d-flex gap-2 flex-wrap align-items-center small mb-2" id="_nodeJobsSummary"></div>
@@ -504,7 +504,8 @@
 
   function renderNodeJobs(node, data) {
     var jobs = data.jobs || [];
-    var sum  = function(key) { return jobs.reduce(function(s, j) { return s + (j[key] || 0); }, 0); };
+    // What the jobs have on this node (for a job on several nodes, its share).
+    var sum  = function(key) { return jobs.reduce(function(s, j) { return s + (ocJobs.onNode(j, key) || 0); }, 0); };
     var mine = jobs.filter(function(j) { return j.mine; }).length;
 
     // What the jobs on this node have been given, against what the node has.
@@ -523,9 +524,10 @@
       parts.map(function(part) { return '<span>' + part + '</span>'; }).join('<span class="text-muted">·</span>');
     ocJobs.renderPrivacy(document.getElementById('_nodeJobsPrivacy'), data, loadNodeJobs);
 
-    // Jobs that span several nodes count all of their CPUs and memory, not only
-    // this node's share, so say so when there are any.
-    var multi = jobs.some(function(j) { return j.nodes > 1; });
+    // A job on several nodes shows its share of this node, out of its total; one
+    // whose share could not be looked up shows its total, so say which.
+    var shared  = jobs.some(function(j) { return j.nodes > 1 && j.here; });
+    var unknown = jobs.some(function(j) { return j.nodes > 1 && !j.here; });
     ocJobs.renderTable(document.getElementById('_nodeJobsTable'), jobs, {
       staff: !!data.staff, layout: 'node', emptyText: 'No jobs are running on this node.',
       onRowClick: function(job) { showNodeJobDetail(node, job); }
@@ -536,12 +538,17 @@
       hint.textContent = 'Click a job to see all of its details.';
       document.getElementById('_nodeJobsTable').appendChild(hint);
     }
-    if (multi) {
+    var notes = [];
+    if (shared)  notes.push('A job that runs on more than one node shows the CPUs, memory and GPUs it has on this ' +
+                            'node, then the whole job\'s after "of". Its details list every node.');
+    if (unknown) notes.push('A job on more than one node without "of" shows the CPUs, memory and GPUs of the whole ' +
+                            'job: what it has on this node could not be looked up.');
+    notes.forEach(function(text) {
       var note = document.createElement('p');
       note.className   = 'small text-muted mt-2 mb-0';
-      note.textContent = 'Jobs that run on more than one node show the CPUs, memory and GPUs of the whole job.';
+      note.textContent = text;
       document.getElementById('_nodeJobsTable').appendChild(note);
-    }
+    });
 
     document.getElementById('_nodeJobsCmdSection').style.display = data.command ? '' : 'none';
     document.getElementById('_nodeJobsCmd').textContent = data.command || '';

@@ -19,7 +19,8 @@ require "securerandom"
 # listed here. ("reason" is listed, but cut down for other people's jobs — see
 # public_job_reason.)
 JOB_PUBLIC_KEYS  ||= %w[status state partition cpus mem_mb nodes gpus gpu_types
-                        time_used time_limit submit start priority reason nodelist array tasks].freeze
+                        time_used time_limit submit start priority reason nodelist array tasks
+                        per_node here].freeze
 
 # The keys that say whose job it is. Added back only for staff and for the
 # viewer's own jobs.
@@ -194,6 +195,11 @@ def normalize_cluster_job(raw)
     per_node, per_node_types = parse_gres_gpus_per_node(raw["tres_per_node"])
     gpus      = per_node * nodes
     gpu_types = per_node_types.transform_values { |n| n * nodes }
+  elsif gpu_types.empty?
+    # The TRES string counts the GPUs but not their type (a Slurm that tracks
+    # only gres/gpu): take the type from the job's request, if it named one.
+    _, asked  = parse_gres_gpus_per_node(raw["tres_per_node"])
+    gpu_types = asked.size == 1 ? { asked.keys.first => gpus } : asked.transform_values { |n| n * nodes }
   end
 
   id      = raw["id"].to_s.strip
@@ -383,6 +389,66 @@ def job_viewer(conf, params)
   [capable && params["view"].to_s != "user", capable]
 end
 
+# ── What a job has on each node ───────────────────────────────────────────────
+
+# The node names in a Slurm node list, e.g. "c[001-003,007],gpu01" ->
+# ["c001", "c002", "c003", "c007", "gpu01"]; at most `limit` of them.
+def expand_hostlist(list, limit = 10_000)
+  names = []
+  # Split at the commas between names, not those inside brackets.
+  list.to_s.scan(/(?:[^,\[]|\[[^\]]*\])+/).each do |term|
+    break if names.size >= limit
+
+    expand_hostlist_term(term.strip, names, limit)
+  end
+  names
+end
+
+def expand_hostlist_term(term, names, limit)
+  match = term.match(/\A([^\[]*)\[([^\]]*)\](.*)\z/)
+  return names << term unless match
+
+  prefix, ranges, rest = match.captures
+  ranges.split(",").each do |range|
+    next unless range.match?(/\A\d+(?:-\d+)?\z/)
+
+    first, last = range.split("-")
+    (first.to_i..(last || first).to_i).each do |n|
+      return names if names.size >= limit
+
+      expand_hostlist_term("#{prefix}#{n.to_s.rjust(first.length, '0')}#{rest}", names, limit)
+    end
+  end
+  names
+end
+
+# What a running job has on each of its nodes, for its details: for a job on one
+# node, its totals; for a job on several, the scheduler's per-node allocations
+# (Scheduler#job_node_allocations; nil when they could not be looked up). Each
+# entry gives what each node of its node list has, how many nodes that is and,
+# when `node` is given, whether that node is one of them.
+def job_per_node(job, allocations, node: nil)
+  return nil unless job["status"] == "running" && !job["nodelist"].to_s.empty?
+
+  if job["nodes"].to_i <= 1
+    allocations = [{ "nodes" => job["nodelist"], "cpus" => job["cpus"], "mem_mb" => job["mem_mb"], "gpus" => job["gpus"] }]
+  end
+  return nil if allocations.nil? || allocations.empty?
+
+  allocations.map do |allocation|
+    names = expand_hostlist(allocation["nodes"])
+    entry = allocation.slice("nodes", "cpus", "mem_mb", "gpus").merge("node_count" => names.size)
+    entry["this_node"] = names.include?(node) if node
+    entry
+  end
+end
+
+# What a job has on the node its per-node entries were made for (job_per_node
+# with node:), or nil.
+def job_on_node(per_node)
+  per_node&.find { |entry| entry["this_node"] }&.slice("cpus", "mem_mb", "gpus")
+end
+
 # ── Large-memory threshold ────────────────────────────────────────────────────
 
 # Memory (MB) of the standard node of a partition: the most common size among
@@ -483,16 +549,17 @@ end
 # exactly one: a job with GPUs is a GPU job whatever its memory; a job without
 # GPUs is large-memory if it is over the threshold; every other job is compute.
 #
-# GPU jobs are grouped by GPU type and architecture ("A100 · milan"), because
-# one Slurm GPU type can be different hardware in different partitions (on
-# Mahuika, "a100" is a 40 GB card on genoa and an 80 GB card on milan). A job
-# that asked for GPUs without naming a type is "Any type" until it starts.
+# GPU jobs are grouped by GPU type alone, whatever their partition: the type a
+# running job is using, or the type a pending job is waiting for. A job that
+# asked for GPUs without naming a type is "Any type" until it starts.
 def classify_cluster_job(job, thresholds, architecture_labels)
-  architecture = job_architecture(job["partition"], architecture_labels)
   if job["gpus"].to_i > 0
     types = job["gpu_types"].keys.sort
-    ["gpu", "#{types.empty? ? 'Any type' : types.map(&:upcase).join(' + ')} · #{architecture}"]
-  elsif large_memory_job?(job, thresholds)
+    return ["gpu", types.empty? ? "Any type" : types.map(&:upcase).join(" + ")]
+  end
+
+  architecture = job_architecture(job["partition"], architecture_labels)
+  if large_memory_job?(job, thresholds)
     ["large_memory", architecture]
   else
     ["compute", architecture]
@@ -522,7 +589,7 @@ def build_job_categories(jobs, thresholds, architecture_labels)
   end
 
   JOB_CATEGORIES.map do |category|
-    groups = grouped[category["key"]].sort_by { |name, _| [name.start_with?("Any type") ? 1 : 0, name.downcase] }.map do |name, lists|
+    groups = grouped[category["key"]].sort_by { |name, _| [name == "Any type" ? 1 : 0, name.downcase] }.map do |name, lists|
       running = lists["running"].sort_by { |j| j["start"].match?(/\A\d{4}-/) ? j["start"] : "9" }
       pending = lists["pending"].sort_by { |j| [-j["priority"], j["submit"]] }
       {

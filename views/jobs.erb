@@ -44,7 +44,7 @@
   <div id="_jobsContent" style="display:none;">
 
     <%# What this viewer can and cannot see %>
-    <p class="small mb-2" id="_jobsPrivacy"></p>
+    <div class="small mb-2" id="_jobsPrivacy"></div>
 
     <%# Summary badges %>
     <div class="d-flex gap-2 flex-wrap mb-3 align-items-center" id="_jobsSummary"></div>
@@ -99,8 +99,9 @@
         <p>This page lists every job in the cluster's queue, from all users. <strong>Running</strong> jobs
           have started; <strong>pending</strong> jobs are waiting to start. Each job is in one category:</p>
         <ul>
-          <li><strong>GPU jobs</strong>: jobs that use or ask for GPUs, grouped by GPU type and partition.
-            A job that asked for GPUs without naming a type is listed under <em>Any type</em> until it starts.</li>
+          <li><strong>GPU jobs</strong>: jobs that use or ask for GPUs, grouped by GPU type: the type a
+            running job is using, or the type a pending job is waiting for. A job that asked for GPUs
+            without naming a type is listed under <em>Any type</em> until it starts.</li>
           <li><strong>Large-memory jobs</strong>: jobs without GPUs that ask for more memory per node than a
             standard node of their partition has, so they need one of its large-memory nodes.
             <span id="_jobsInfoLargeMemory"></span></li>
@@ -202,14 +203,6 @@
     return plural(t.cpus, 'CPU');
   }
 
-  // "A100 · genoa" -> bold type, muted partition.
-  function groupLabelHtml(label) {
-    var i = label.indexOf(' · ');
-    if (i < 0) return esc(label);
-    return '<span class="fw-semibold">' + esc(label.slice(0, i)) + '</span> ' +
-           '<span class="text-muted small">' + esc(label.slice(i + 3)) + '</span>';
-  }
-
   function findGroup(categoryKey, groupLabel) {
     var category = (state.data.categories || []).filter(function(c) { return c.key === categoryKey; })[0];
     if (!category) return null;
@@ -274,7 +267,7 @@
         return '<tr class="jobs-group-row' + (selected ? ' jobs-selected' : '') + '" tabindex="0"' +
                ' data-category="' + esc(c.key) + '" data-group="' + esc(g.label) + '"' +
                ' title="Show these jobs">' +
-               '<td>' + groupLabelHtml(g.label) + '</td>' +
+               '<td>' + esc(g.label) + '</td>' +
                '<td class="text-end text-nowrap">' + ocJobs.formatNumber(g.running.jobs) +
                  '<div class="small text-muted">' + esc(resourceText(c, g.running)) + '</div></td>' +
                '<td class="text-end text-nowrap">' + ocJobs.formatNumber(g.pending.jobs) +
@@ -332,7 +325,7 @@
 
     var c = found.category, g = found.group, staff = !!state.data.staff;
     titleEl.innerHTML = '<i class="' + ICONS[c.key] + ' text-secondary me-2" aria-hidden="true"></i>' +
-                        esc(c.label) + ' <span class="text-muted">›</span> ' + groupLabelHtml(g.label);
+                        esc(c.label) + ' <span class="text-muted">›</span> ' + esc(g.label);
 
     document.getElementById('_jobsRunningCount').textContent  = ocJobs.formatNumber(g.running.jobs);
     document.getElementById('_jobsRunningTotals').textContent = totalsText(g.running);

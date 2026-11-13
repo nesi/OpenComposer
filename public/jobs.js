@@ -95,6 +95,20 @@ var ocJobs = (function() {
 
   var YOURS = ' <span class="badge bg-success" title="This is your job.">Yours</span>';
 
+  // On the Nodes page: what a job has on the node being looked at (job.here,
+  // from the server), or its totals when that is not known.
+  function onNode(j, key) {
+    return j.here && j.here[key] !== null && j.here[key] !== undefined ? j.here[key] : j[key];
+  }
+
+  // A job on more than one node shows what it has on this node, then "of" the
+  // whole job's amount.
+  function onNodeHtml(j, key, format) {
+    var html = esc(format(onNode(j, key)));
+    if (j.here && j.nodes > 1) html += ' <span class="text-muted small text-nowrap">of ' + esc(format(j[key])) + '</span>';
+    return html;
+  }
+
   // value(): what the column sorts by. html(): the cell.
   var COLUMNS = {
     id:        { label: 'Job ID',     value: function(j) { return j.id || ''; },
@@ -126,6 +140,17 @@ var ocJobs = (function() {
                  html: function(j) { return esc(formatMemory(j.mem_mb)); } },
     gpus:      { label: 'GPUs',       value: function(j) { return j.gpus || 0; }, numeric: true,
                  html: function(j) { return esc(gpuText(j)); } },
+    // The same three, as what the job has on the node being looked at.
+    cpus_here: { label: 'CPUs',       value: function(j) { return onNode(j, 'cpus') || 0; }, numeric: true,
+                 html: function(j) { return onNodeHtml(j, 'cpus', formatNumber); } },
+    mem_here:  { label: 'Memory',     value: function(j) { return onNode(j, 'mem_mb') || 0; }, numeric: true,
+                 html: function(j) { return onNodeHtml(j, 'mem_mb', formatMemory); } },
+    gpus_here: { label: 'GPUs',       value: function(j) { return onNode(j, 'gpus') || 0; }, numeric: true,
+                 html: function(j) {
+                   if (!(j.here && j.nodes > 1) || !j.gpus) return esc(gpuText(j));
+                   return esc(formatNumber(j.here.gpus)) +
+                          ' <span class="text-muted small text-nowrap">of ' + esc(gpuText(j)) + '</span>';
+                 } },
     used:      { label: 'Elapsed',    value: function(j) { return durationSeconds(j.time_used); }, numeric: true,
                  html: function(j) { return esc(j.time_used); } },
     limit:     { label: 'Time limit', value: function(j) { return durationSeconds(j.time_limit); }, numeric: true,
@@ -138,7 +163,7 @@ var ocJobs = (function() {
 
   // The columns after the identifying ones, by kind of list.
   var LAYOUTS = {
-    node:    ['state', 'partition', 'cpus', 'mem', 'gpus', 'nodes', 'used', 'limit'],
+    node:    ['state', 'partition', 'cpus_here', 'mem_here', 'gpus_here', 'nodes', 'used', 'limit'],
     running: ['state', 'partition', 'nodelist', 'cpus', 'mem', 'gpus', 'used', 'limit'],
     pending: ['state', 'partition', 'reason', 'cpus', 'mem', 'gpus', 'limit', 'submit', 'priority']
   };
@@ -283,8 +308,13 @@ var ocJobs = (function() {
     return getView() === 'user' ? 'view=user' : '';
   }
 
+  // Set when a staff member flips the view switch while it has the keyboard
+  // focus, so that the switch drawn with the new data gets the focus back: the
+  // old one is replaced (and in the node pop-up, hidden while the jobs reload).
+  var refocusSwitch = false;
+
   // The line that tells the viewer what they are, and are not, being shown,
-  // with the staff/user view switch for staff. onChange() reloads the data.
+  // with the "User view" switch for staff. onChange() reloads the data.
   function renderPrivacy(el, data, onChange) {
     var html;
     if (data.staff) {
@@ -301,16 +331,34 @@ var ocJobs = (function() {
              'You can see them for your own jobs, which are marked <span class="badge bg-success">Yours</span>.</span>';
     }
     if (data.staff_capable) {
-      html += ' <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline jobs-view-toggle">' +
-              (data.staff ? 'See what users see' : 'Back to the staff view') + '</button>';
+      // On the right, so it stays put when the text beside it changes.
+      var id = (el.id || 'ocJobs') + 'ViewSwitch';
+      html = '<div class="d-flex flex-wrap align-items-center gap-2">' +
+               '<div class="flex-grow-1">' + html + '</div>' +
+               '<div class="form-check form-switch mb-0 ms-auto text-nowrap" title="See exactly what a user who is not staff sees">' +
+                 '<input class="form-check-input jobs-view-switch" type="checkbox" role="switch" id="' + id + '"' +
+                   (data.staff ? '' : ' checked') + '>' +
+                 '<label class="form-check-label" for="' + id + '">User view</label>' +
+               '</div>' +
+             '</div>';
     }
+    var refocus = refocusSwitch || el.contains(document.activeElement);
+    refocusSwitch = false;
     el.innerHTML = html;
-    var toggle = el.querySelector('.jobs-view-toggle');
-    if (toggle) {
-      toggle.addEventListener('click', function() {
-        setView(data.staff ? 'user' : 'staff');
-        if (onChange) onChange();
-      });
+    var sw = el.querySelector('.jobs-view-switch');
+    if (!sw) return;
+    sw.addEventListener('change', function() {
+      setView(sw.checked ? 'user' : 'staff');
+      refocusSwitch = document.activeElement === sw;
+      if (onChange) onChange();
+    });
+    if (refocus) {
+      // Once the caller has shown the list again, and only if the viewer has
+      // not moved on to something else in the meantime.
+      setTimeout(function() {
+        var active = document.activeElement;
+        if (sw.isConnected && (!active || active === document.body)) sw.focus({ preventScroll: true });
+      }, 0);
     }
   }
 
@@ -404,6 +452,31 @@ var ocJobs = (function() {
     }
   }
 
+  // What a running job has on each of its nodes (job.per_node, from the
+  // server). Nodes that were given the same are one row.
+  function perNodeHtml(job) {
+    var rows = job.per_node || [];
+    if (!rows.length) return '';
+    var gpus = rows.some(function(r) { return r.gpus; });
+    var cell = function(v, format) { return v === null || v === undefined ? muted('—') : esc(format(v)); };
+    var body = rows.map(function(r) {
+      return '<tr' + (r.this_node ? ' class="table-info"' : '') + '>' +
+             '<td class="text-break"><code>' + esc(r.nodes) + '</code>' +
+               (r.node_count > 1 ? ' <span class="text-muted">' + formatNumber(r.node_count) + ' nodes, each</span>' : '') +
+               (r.this_node ? ' <span class="badge text-bg-info">this node</span>' : '') + '</td>' +
+             '<td class="text-end">' + cell(r.cpus, formatNumber) + '</td>' +
+             '<td class="text-end text-nowrap">' + cell(r.mem_mb, formatMemory) + '</td>' +
+             (gpus ? '<td class="text-end">' + (r.gpus ? esc(formatNumber(r.gpus)) : muted('—')) + '</td>' : '') +
+             '</tr>';
+    }).join('');
+    return '<div class="col"><div class="card h-100 border-secondary-subtle jobs-per-node">' +
+           '<div class="card-header py-1 small fw-semibold">On each node</div>' +
+           '<div class="card-body py-2" style="max-height:16rem;overflow:auto;">' +
+           '<table class="table table-sm small mb-0"><thead><tr><th>Node</th><th class="text-end">CPUs</th>' +
+           '<th class="text-end">Memory</th>' + (gpus ? '<th class="text-end">GPUs</th>' : '') + '</tr></thead>' +
+           '<tbody>' + body + '</tbody></table></div></div></div>';
+  }
+
   // Draw every detail of `job` that the viewer is allowed to see.
   function renderJobDetail(container, job) {
     var title = job.id
@@ -420,7 +493,7 @@ var ocJobs = (function() {
     if (!job.details) {
       html += '<p class="small text-muted mb-2">This cluster did not report further details for this job.</p>';
     }
-    html += '<div class="row row-cols-1 row-cols-lg-2 g-2">' + DETAIL_SECTIONS.map(function(section) {
+    var cards = DETAIL_SECTIONS.map(function(section) {
       var items = section.fields.map(function(f) {
         if (f[3] && f[3] !== job.status) return '';
         var value = detailHtml(job, f[0], f[2]);
@@ -432,7 +505,11 @@ var ocJobs = (function() {
                      '<div class="card-header py-1 small fw-semibold">' + esc(section.title) + '</div>' +
                      '<div class="card-body py-2"><dl class="row small mb-0">' + items + '</dl></div></div></div>'
                    : '';
-    }).join('') + '</div>';
+    });
+    // What it has on each node goes next to where it runs.
+    var placement = DETAIL_SECTIONS.map(function(s) { return s.title; }).indexOf('Placement');
+    cards.splice(placement + 1, 0, perNodeHtml(job));
+    html += '<div class="row row-cols-1 row-cols-lg-2 g-2">' + cards.join('') + '</div>';
     container.innerHTML = html;
   }
 
@@ -440,6 +517,7 @@ var ocJobs = (function() {
     esc:             esc,
     formatMemory:    formatMemory,
     formatNumber:    formatNumber,
+    onNode:          onNode,
     renderTable:     renderTable,
     renderPrivacy:   renderPrivacy,
     renderJobDetail: renderJobDetail,

@@ -8,9 +8,9 @@
 
 - **Jobs tab** — lists every job in the cluster's queue, from all users, in three categories,
   each split into running and pending:
-  - **GPU jobs**, grouped by GPU type and partition (e.g. `A100 · genoa` and `A100 · milan`,
-    because one Slurm GPU type can be different hardware in different partitions). A job that
-    asked for GPUs without naming a type is listed under *Any type* until it starts.
+  - **GPU jobs**, grouped by GPU type (e.g. `A100`, `H100`): the type a running job is using,
+    or the type a pending job is waiting for. A job that asked for GPUs without naming a type
+    is listed under *Any type* until it starts.
   - **Large-memory jobs**: jobs without GPUs that ask for more memory per node than a standard
     node of their partition has, grouped by architecture (partition).
   - **Compute jobs**: all other jobs, grouped by architecture.
@@ -18,21 +18,26 @@
   Clicking a group lists its running and pending jobs in sortable tables. A waiting job array
   is one row, but the counts and totals include every task in it.
 - **Jobs on a node** — clicking a node on the Nodes page lists the jobs running on it, with the
-  CPUs, memory and GPUs they have been given.
+  CPUs, memory and GPUs each has on that node. A job on more than one node shows its share of
+  this node and then its total (e.g. `4 of 6`), so the node's summary adds up to what is in use
+  on the node. `squeue` only knows a job's totals, so the share is read from
+  `scontrol -d show job`, once for each job on the node that runs on more than one node.
 - **All the details of a job** — clicking a job in a node's list shows everything Slurm reports
   about it: QOS, tasks and CPUs per task, every TRES request and allocation, features, batch
   host, submit, eligible, start and expected end times, time left, requeue and restart counts,
-  and (for staff and the job's owner) its job ID, name, user, group, account, array IDs,
-  dependency, reservation, comments, command, working directory and output files. Any detail
-  field that an older Slurm's `squeue` does not know is left out instead of failing the list.
+  the CPUs, memory and GPUs it has on each of its nodes (if it is running), and (for staff and
+  the job's owner) its job ID, name, user, group, account, array IDs, dependency, reservation,
+  comments, command, working directory and output files. Any detail field that an older
+  Slurm's `squeue` does not know is left out instead of failing the list.
 - **Job details on the Jobs page** — clicking a job in the Jobs page opens the same details,
   fetched for that one job when it is clicked (`GET /jobs/job`). The page names the job by an
   encrypted reference rather than its ID, so other users' job IDs still never reach the browser
   of a user who is not staff. The key for these references is kept in `data_dir` as
   `.job-ref.key`, readable only by the user; without it the list still works, unclickable.
-- **User view for staff** — staff can switch the Jobs page and the node job lists to exactly what
-  a user who is not staff sees, and back. The switch is remembered in the browser; the hiding is
-  still done by the server, and the switch can only hide, never reveal.
+- **User view for staff** — staff can turn on the *User view* switch to see the Jobs page and the
+  node job lists exactly as a user who is not staff sees them, and turn it off to go back. The
+  switch is remembered in the browser; the hiding is still done by the server, and the switch
+  can only hide, never reveal.
 - **Job identities are shown only to staff.** Job IDs, job names, users and accounts are sent
   to the browser only for members of `staff_groups` (default `nesi-staff`), and for the viewer's
   own jobs, which are marked *Yours*. Everyone else sees only each job's state and resources,

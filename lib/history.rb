@@ -68,25 +68,29 @@ helpers do
     HTML
   end
 
-  # Output compact ascending/descending sort controls for a History table column.
-  def output_history_sort_controls(sort_key)
-    asc_class = ["history-sort-link", (@sort == sort_key && @order == "asc" ? "history-sort-active" : nil)].compact.join(" ")
-    desc_class = ["history-sort-link", (@sort == sort_key && @order == "desc" ? "history-sort-active" : nil)].compact.join(" ")
+  # Output a sortable History column heading, like the Jobs page's tables: the
+  # whole heading sorts by the column (ascending first, then the other way), and
+  # a mark shows which column the table is sorted by, and which way.
+  def output_history_sort_header(label, sort_key)
+    active = @sort == sort_key
+    order  = active && @order == "asc" ? "desc" : "asc"
+    mark   = if !active then "&#8645;"
+             elsif @order == "asc" then "&#9650;"
+             else "&#9660;"
+             end
+    link_class = ["history-sort-link", (active ? "history-sort-active" : nil)].compact.join(" ")
+    label_html = escape_html(label.to_s)
 
     <<~HTML
-    <span class="history-sort-controls">
-      <a
-        href="#{history_path_with_query(sort: sort_key, order: 'asc', p: 1)}"
-        class="#{asc_class}"
-        aria-label="Sort #{sort_key} ascending"
-      ><span class="history-sort-icon">&#9650;</span></a>
-      <a
-        href="#{history_path_with_query(sort: sort_key, order: 'desc', p: 1)}"
-        class="#{desc_class}"
-        aria-label="Sort #{sort_key} descending"
-      ><span class="history-sort-icon">&#9660;</span></a>
-    </span>
+    <a href="#{history_path_with_query(sort: sort_key, order: order, p: 1)}" class="#{link_class}" title="Click to sort" aria-label="Sort by #{label_html}, #{order == 'asc' ? 'ascending' : 'descending'}">#{label_html} <span class="history-sort-mark">#{mark}</span></a>
     HTML
+  end
+
+  # A date and time such as "2026-11-13T21:15:27+00:00" as "2026-11-13 21:15:27",
+  # as the Jobs page shows them; any other text as it is.
+  def history_time_text(value)
+    match = value.to_s.match(/\A(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/)
+    match ? "#{match[1]} #{match[2]}" : value.to_s
   end
 
   # Output a modal for displaying live job details fetched from scontrol/sacct.
@@ -220,8 +224,8 @@ helpers do
 
   # Output a pagination component for navigating through pages of history records.
   def output_pagination(current_page, page_size, rows)
-    html = "<nav class=\"mt-1\">\n"
-    html += "  <ul class=\"pagination justify-content-center\">\n"
+    html = "<nav aria-label=\"Pages of jobs\">\n"
+    html += "  <ul class=\"pagination pagination-sm mb-0\">\n"
 
     if current_page == 1
       html += "    <li class=\"page-item disabled\"><a href=\"#\" class=\"page-link\">&laquo;</a></li>\n"
@@ -601,7 +605,7 @@ helpers do
                                else                              ["bg-secondary", "Unknown"]
                                end
 
-    "<span class=\"badge fs-6 #{badge_class}\">#{status_text}</span>\n"
+    "<span class=\"badge #{badge_class}\">#{status_text}</span>\n"
   end
 
   def output_text(text, filter)

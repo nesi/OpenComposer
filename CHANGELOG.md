@@ -51,6 +51,14 @@
 - New routes: `GET /jobs`, `GET /jobs/data` and `GET /nodes/jobs`. Slurm only; for other
   schedulers the Jobs tab and the node click-through are not shown.
 
+### Changed
+
+- **History page looks like the Jobs page.** The job table is a compact table with a light
+  header inside a card, its text is no longer centred, and the status badges are normal size.
+  Clicking a column heading sorts by it, and clicking it again reverses the order. Start and
+  end times read `2026-11-13 21:15:27` (the full value on hover), and the job count, rows per
+  page and page links sit under the table.
+
 ### Fixed
 
 - **First job submission failed and only succeeded on a second click.** The SSH key check ran

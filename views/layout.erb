@@ -159,39 +159,24 @@
         vertical-align: middle;
       }
 
-      .history-sort-controls {
-        display: inline-flex;
-        flex-direction: column;
-        gap: 0;
-        margin-left: 0.15rem;
-        vertical-align: middle;
-      }
-
+      /* Sortable headings, as on the Jobs page: the heading is the link. */
       .history-sort-link {
-        color: #C3C8C8;
-        display: block;
-        font-size: 0.62rem;
-        font-weight: 700;
-        height: 0.56rem;
-        line-height: 0.56rem;
-        min-width: 0.7rem;
-        padding: 0;
-        text-align: center;
+        color: inherit;
         text-decoration: none;
-      }
-
-      .history-sort-icon {
-        display: inline-block;
-        transform: scaleX(1.55);
-        transform-origin: center;
+        white-space: nowrap;
       }
 
       .history-sort-link:hover {
-        color: #00B9E4;
+        color: var(--bs-link-hover-color);
       }
 
-      .history-sort-link.history-sort-active {
-        color: #001C36;
+      .history-sort-mark {
+        color: var(--bs-secondary-color);
+        font-size: 0.7em;
+      }
+
+      .history-sort-link.history-sort-active .history-sort-mark {
+        color: var(--bs-primary);
       }
 
       .history-modal-match-cell {

@@ -99,13 +99,14 @@
         <p>This page lists every job in the cluster's queue, from all users. <strong>Running</strong> jobs
           have started; <strong>pending</strong> jobs are waiting to start. Each job is in one category:</p>
         <ul>
+          <li><strong>Compute jobs</strong>: jobs without GPUs that fit in the memory of a standard node of
+            their partition, grouped by partition (architecture).</li>
           <li><strong>GPU jobs</strong>: jobs that use or ask for GPUs, grouped by GPU type: the type a
             running job is using, or the type a pending job is waiting for. A job that asked for GPUs
             without naming a type is listed under <em>Any type</em> until it starts.</li>
           <li><strong>Large-memory jobs</strong>: jobs without GPUs that ask for more memory per node than a
             standard node of their partition has, so they need one of its large-memory nodes.
             <span id="_jobsInfoLargeMemory"></span></li>
-          <li><strong>Compute jobs</strong>: all other jobs, grouped by partition (architecture).</li>
         </ul>
         <p>A waiting job array is shown as one row, but the counts and totals include every task in it.</p>
         <p class="mb-0">

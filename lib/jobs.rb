@@ -45,13 +45,14 @@ JOB_DETAIL_UNSET ||= ["(null)", "N/A", "NA", "*", "NONE", "None", "Unknown", "No
 # allocation and is counted as running.
 JOB_PENDING_STATES ||= %w[PENDING REQUEUED REQUEUE_HOLD REQUEUE_FED RESV_DEL_HOLD SPECIAL_EXIT].freeze
 
+# The job categories, in the order the Jobs page shows them, left to right.
 JOB_CATEGORIES ||= [
+  { "key" => "compute",      "label" => "Compute jobs",      "group_label" => "Architecture", "resource" => "cpus",
+    "empty" => "No compute jobs in the queue." },
   { "key" => "gpu",          "label" => "GPU jobs",          "group_label" => "GPU type",     "resource" => "gpus",
     "empty" => "No GPU jobs in the queue." },
   { "key" => "large_memory", "label" => "Large-memory jobs", "group_label" => "Architecture", "resource" => "mem_mb",
-    "empty" => "No large-memory jobs in the queue." },
-  { "key" => "compute",      "label" => "Compute jobs",      "group_label" => "Architecture", "resource" => "cpus",
-    "empty" => "No compute jobs in the queue." }
+    "empty" => "No large-memory jobs in the queue." }
 ].freeze
 
 TRES_MEMORY_UNITS ||= { "" => 1.0, "K" => 1.0 / 1024, "M" => 1.0, "G" => 1024.0, "T" => 1024.0**2, "P" => 1024.0**3 }.freeze

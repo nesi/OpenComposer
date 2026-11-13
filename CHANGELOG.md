@@ -7,13 +7,14 @@
 #### Jobs page and the jobs on a node
 
 - **Jobs tab** — lists every job in the cluster's queue, from all users, in three categories,
-  each split into running and pending:
+  shown left to right and each split into running and pending:
+  - **Compute jobs**: jobs without GPUs that fit in the memory of a standard node of their
+    partition, grouped by architecture (partition).
   - **GPU jobs**, grouped by GPU type (e.g. `A100`, `H100`): the type a running job is using,
     or the type a pending job is waiting for. A job that asked for GPUs without naming a type
     is listed under *Any type* until it starts.
   - **Large-memory jobs**: jobs without GPUs that ask for more memory per node than a standard
     node of their partition has, grouped by architecture (partition).
-  - **Compute jobs**: all other jobs, grouped by architecture.
 
   Clicking a group lists its running and pending jobs in sortable tables. A waiting job array
   is one row, but the counts and totals include every task in it.

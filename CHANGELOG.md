@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Added
+
+#### Jobs page and the jobs on a node
+
+- **Jobs tab** — lists every job in the cluster's queue, from all users, in three categories,
+  each split into running and pending:
+  - **GPU jobs**, grouped by GPU type and partition (e.g. `A100 · genoa` and `A100 · milan`,
+    because one Slurm GPU type can be different hardware in different partitions). A job that
+    asked for GPUs without naming a type is listed under *Any type* until it starts.
+  - **Large-memory jobs**: jobs without GPUs that ask for more memory per node than a standard
+    node of their partition has, grouped by architecture (partition).
+  - **Compute jobs**: all other jobs, grouped by architecture.
+
+  Clicking a group lists its running and pending jobs in sortable tables. A waiting job array
+  is one row, but the counts and totals include every task in it.
+- **Jobs on a node** — clicking a node on the Nodes page lists the jobs running on it, with the
+  CPUs, memory and GPUs they have been given.
+- **Job identities are shown only to staff.** Job IDs, job names, users and accounts are sent
+  to the browser only for members of `staff_groups` (default `nesi-staff`), and for the viewer's
+  own jobs, which are marked *Yours*. Everyone else sees only each job's state and resources,
+  and for a pending job only Slurm's reason code (free-text reasons become *Other*). The
+  filtering happens on the server, so hidden values never reach the page. Group membership is
+  looked up on the OnDemand host (e.g. IPA groups through SSSD).
+- New settings in `conf.yml.erb`: `show_jobs`, `staff_groups`, `jobs_large_memory_gb` and
+  `jobs_architectures`. The large-memory threshold of each partition is worked out from the
+  cluster unless set by hand.
+- New routes: `GET /jobs`, `GET /jobs/data` and `GET /nodes/jobs`. Slurm only; for other
+  schedulers the Jobs tab and the node click-through are not shown.
+
 ### Fixed
 
 - **First job submission failed and only succeeded on a second click.** The SSH key check ran

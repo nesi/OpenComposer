@@ -91,6 +91,32 @@ class Scheduler
     [nil, nil, nil]
   end
 
+  # Whether this scheduler can list every user's jobs (cluster_jobs below). The
+  # Jobs page and the per-node job list on the Nodes page are only offered when
+  # it can.
+  def supports_cluster_jobs?
+    false
+  end
+
+  # Fetch the jobs of ALL users that are currently in the queue, for the Jobs page
+  # and for the per-node job list on the Nodes page.
+  # @param node [String] when given, only the jobs allocated to that node.
+  # @return [Array<Array, String, String>] [jobs_array_or_nil, error_or_nil, command_or_nil]
+  #         Each job is a Hash of raw scheduler strings. It contains other users'
+  #         job IDs, job names and usernames, so it must go through
+  #         normalize_cluster_job and redact_cluster_job (lib/jobs.rb) before any
+  #         of it is sent to the browser.
+  def cluster_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, node: nil)
+    [nil, "Listing jobs is not supported for this scheduler.", nil]
+  end
+
+  # Memory of the nodes in each partition, for working out which jobs need a
+  # large-memory node (see large_memory_thresholds in lib/jobs.rb).
+  # @return [Array<Hash, String>] [{ partition => [{ "memory_mb" => Integer, "nodes" => Integer, "gpu" => Boolean }] }, error_or_nil]
+  def partition_node_memory(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    [{}, nil]
+  end
+
   # Return true if the given string is a valid job ID for this scheduler.
   # Override in subclasses to match each scheduler's ID format.
   def valid_job_id?(id)

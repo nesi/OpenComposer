@@ -18,6 +18,7 @@ require "./lib/index"
 require "./lib/form"
 require "./lib/history"
 require "./lib/scheduler"
+require "./lib/jobs"
 
 set :environment, ENV.fetch("RACK_ENV", "production").to_sym
 set :host_authorization, { permitted_hosts: [] } if ENV.fetch("RACK_ENV", "production") == "development"
@@ -540,7 +541,7 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   @script_name   = request.script_name
   @dir_name      = request.path_info.sub(/^\//, '')
   @cluster_name  = if @conf.key?("clusters")
-                     escape_html(params[["history", "nodes"].include?(@dir_name) ? "cluster" : HEADER_CLUSTER_NAME] || @conf["clusters"].keys.first)
+                     escape_html(params[["history", "nodes", "jobs"].include?(@dir_name) ? "cluster" : HEADER_CLUSTER_NAME] || @conf["clusters"].keys.first)
                    else
                      nil
                    end
@@ -566,6 +567,8 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   # User-saved custom templates. Loaded for every page so the navbar search
   # (ALL_APPS in layout.erb) can include them alongside the app templates.
   @templates     = load_templates(@conf)
+  # Whether to offer the Jobs tab and the per-node job list (see lib/jobs.rb).
+  @show_jobs     = cluster_jobs_enabled?(@conf)
 
   case @dir_name
   when ""
@@ -687,6 +690,9 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
   when "nodes"
     @name = "Nodes"
     return erb :nodes
+  when "jobs"
+    @name = "Jobs"
+    return erb :jobs
   when "load_script"
     @name            = @conf.fetch("load_script_label", "Load or Create a Script from Disk")
     @ls_home         = Dir.home
@@ -1422,7 +1428,119 @@ get "/nodes/data" do
   display_cmd = command.to_s
   display_cmd = display_cmd.sub(/\A#{Regexp.escape(ssh_wrapper_s.to_s)}\s*/, "") unless ssh_wrapper_s.to_s.empty?
   content_type :json
-  { error: error, rows: rows, command: display_cmd, fetched_at: Time.now.strftime("%H:%M:%S") }.to_json
+  { error: error, rows: rows, command: display_cmd, fetched_at: Time.now.strftime("%H:%M:%S"),
+    jobs_supported: conf.fetch("show_jobs", true) && scheduler_s.supports_cluster_jobs? }.to_json
+end
+
+# Whether the Jobs tab and the per-node job list are offered: "show_jobs:" is not
+# switched off in conf.yml.erb, and a configured scheduler can list every user's
+# jobs.
+def cluster_jobs_enabled?(conf)
+  return false unless conf.fetch("show_jobs", true)
+
+  schedulers = create_scheduler(conf)
+  (schedulers.is_a?(Hash) ? schedulers.values : [schedulers]).any?(&:supports_cluster_jobs?)
+end
+
+# Everything the job-listing routes need to reach one cluster's scheduler.
+# Returns nil when the requested cluster is not one of the configured clusters.
+def cluster_jobs_context(conf, requested_cluster)
+  if conf.key?("clusters")
+    cluster = requested_cluster.to_s.empty? ? conf["clusters"].keys.first : requested_cluster.to_s
+    return nil unless conf["clusters"].key?(cluster)
+
+    { cluster: cluster, scheduler: create_scheduler(conf)[cluster], bin: conf["bin"][cluster],
+      bin_overrides: conf["bin_overrides"][cluster], ssh_wrapper: conf["ssh_wrapper"][cluster] }
+  else
+    { cluster: nil, scheduler: create_scheduler(conf), bin: conf["bin"],
+      bin_overrides: conf["bin_overrides"], ssh_wrapper: conf["ssh_wrapper"] }
+  end
+end
+
+# The scheduler command as a user would type it on the cluster — without the ssh
+# wrapper the web app uses to reach the login node.
+def cluster_display_command(command, ssh_wrapper)
+  return command.to_s if ssh_wrapper.to_s.empty?
+
+  command.to_s.sub(/\A#{Regexp.escape(ssh_wrapper.to_s)}\s*/, "")
+end
+
+# Fetch one cluster's jobs (all of them, or those on one node) as normalized,
+# NOT yet redacted jobs. Returns [jobs, error, command].
+def fetch_cluster_jobs(ctx, node: nil)
+  raw, error, command = ctx[:scheduler].cluster_jobs(ctx[:bin], ctx[:bin_overrides], ctx[:ssh_wrapper], node: node)
+  [(raw || []).filter_map { |row| normalize_cluster_job(row) }, error, command]
+end
+
+# The jobs running on one node, for the Nodes page. Job IDs, job names, users and
+# accounts are included only for staff and for the viewer's own jobs.
+get "/nodes/jobs" do
+  content_type :json
+  conf = create_conf
+  next({ error: "The job list is switched off." }.to_json) unless conf.fetch("show_jobs", true)
+
+  ctx = cluster_jobs_context(conf, params["cluster"])
+  next({ error: "Unknown cluster." }.to_json) if ctx.nil?
+
+  node = params["node"].to_s.strip
+  next({ error: "No node specified." }.to_json) if node.empty?
+
+  staff  = staff_user?(conf)
+  viewer = current_user_name
+  jobs, error, command = fetch_cluster_jobs(ctx, node: node)
+  jobs = jobs.select { |job| job["status"] == "running" }
+             .sort_by { |job| job["start"].match?(/\A\d{4}-/) ? job["start"] : "9" }
+             .map     { |job| redact_cluster_job(job, staff: staff, viewer: viewer) }
+
+  {
+    error:      error,
+    node:       node,
+    staff:      staff,
+    jobs:       jobs,
+    # How to list other people's jobs is only spelled out for staff.
+    command:    staff ? cluster_display_command(command, ctx[:ssh_wrapper]) : nil,
+    fetched_at: Time.now.strftime("%H:%M:%S")
+  }.to_json
+rescue StandardError => e
+  content_type :json
+  { error: e.message }.to_json
+end
+
+# Every job in the queue, sorted into categories, for the Jobs page. Job IDs, job
+# names, users and accounts are included only for staff and for the viewer's own
+# jobs.
+get "/jobs/data" do
+  content_type :json
+  conf = create_conf
+  next({ error: "The Jobs page is switched off." }.to_json) unless conf.fetch("show_jobs", true)
+
+  ctx = cluster_jobs_context(conf, params["cluster"])
+  next({ error: "Unknown cluster." }.to_json) if ctx.nil?
+
+  staff  = staff_user?(conf)
+  viewer = current_user_name
+  jobs, error, command = fetch_cluster_jobs(ctx)
+  next({ error: error }.to_json) if error
+
+  thresholds    = large_memory_thresholds(conf, ctx[:cluster], ctx[:scheduler], ctx[:bin], ctx[:bin_overrides], ctx[:ssh_wrapper])
+  architectures = conf["jobs_architectures"].is_a?(Hash) ? conf["jobs_architectures"].transform_keys(&:to_s) : {}
+  categories    = build_job_categories(jobs, thresholds, architectures)
+  categories.each { |category| category["note"] = large_memory_note(thresholds) if category["key"] == "large_memory" }
+
+  {
+    error:      error,
+    staff:      staff,
+    categories: redact_job_categories(categories, staff: staff, viewer: viewer),
+    # Counted like the categories: a pending job array once per task.
+    running:    categories.sum { |category| category["running"] },
+    pending:    categories.sum { |category| category["pending"] },
+    # How to list other people's jobs is only spelled out for staff.
+    command:    staff ? cluster_display_command(command, ctx[:ssh_wrapper]) : nil,
+    fetched_at: Time.now.strftime("%H:%M:%S")
+  }.to_json
+rescue StandardError => e
+  content_type :json
+  { error: e.message }.to_json
 end
 
 # Persist the drag-and-drop order of the My Custom Templates grid.

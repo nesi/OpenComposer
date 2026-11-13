@@ -25,7 +25,8 @@ Open Composer is an Open OnDemand app in the "Jobs" category. Unlike Batch Conne
 - Customizable per-application headers and labels
 - Path selector widget for file and directory selection
 - My Templates — save, manage, and reuse form configurations
-- Nodes page with dynamic GRES columns auto-discovered from the scheduler
+- Nodes page with dynamic GRES columns auto-discovered from the scheduler; click a node to see the jobs running on it
+- Jobs page listing every job in the queue by category (GPU type, large memory, architecture), running and pending, with job IDs, names and users shown only to staff
 - Navbar search bar for quickly finding templates by name, category, or description
 - Fully customisable navbar and footer (colours, logo, links)
 - Bilingual documentation (English and Japanese)

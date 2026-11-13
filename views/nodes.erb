@@ -71,6 +71,7 @@
     <p class="text-muted small mb-1">
       Showing <strong><span id="_nodesCount">0</span></strong>
       of <span id="_nodesTotal">0</span> node(s)
+      <span id="_nodesJobsHint" style="display:none;">· Click a node to see the jobs running on it.</span>
     </p>
 
     <%# ── Table ──────────────────────────────────────────────────── %>
@@ -113,10 +114,53 @@
   </div>
 </div>
 
+<%# ── Jobs running on a node popup ─────────────────────────────── %>
+<div class="modal fade" id="_nodeJobsModal" tabindex="-1" aria-hidden="true" aria-labelledby="_nodeJobsTitle">
+  <%# Wider than modal-xl: staff get four extra columns (job ID, name, user, account). %>
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width:min(1400px, 95vw);">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h5 class="modal-title fs-6" id="_nodeJobsTitle">Jobs running on <code id="_nodeJobsName"></code></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="_nodeJobsLoading" class="text-center py-4">
+          <div class="spinner-border spinner-border-sm text-secondary" role="status">
+            <span class="visually-hidden">Loading…</span>
+          </div>
+          <span class="text-muted small ms-2">Fetching jobs…</span>
+        </div>
+        <div id="_nodeJobsError" class="alert alert-danger mb-0" style="display:none;"></div>
+        <div id="_nodeJobsContent" style="display:none;">
+          <p class="small mb-2" id="_nodeJobsPrivacy"></p>
+          <div class="d-flex gap-2 flex-wrap align-items-center small mb-2" id="_nodeJobsSummary"></div>
+          <div id="_nodeJobsTable"></div>
+          <div id="_nodeJobsCmdSection" class="mt-3" style="display:none;">
+            <p class="small text-muted mb-1">This list is built from the output of this command on the cluster:</p>
+            <pre class="border rounded p-2 mb-0 small" style="white-space:pre-wrap;word-break:break-all;"><code id="_nodeJobsCmd"></code></pre>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <span class="text-muted small me-auto" id="_nodeJobsFetchedAt"></span>
+        <a class="btn btn-outline-secondary btn-sm"
+           href="<%= @script_name %>/jobs<%= @cluster_name ? "?cluster=#{ERB::Util.u(@cluster_name)}" : "" %>">All jobs</a>
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="_nodeJobsRefresh">&#8635; Refresh</button>
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="<%= @script_name %>/jobs.js"></script>
 <script>
 (function() {
   var CLUSTER  = '<%= escape_html(@cluster_name.to_s) %>';
   var DATA_URL = '<%= @script_name %>/nodes/data';
+  var JOBS_URL = '<%= @script_name %>/nodes/jobs';
+
+  // Set from the node data: whether a node can be clicked for its job list.
+  var jobsSupported = false;
 
   var tbody      = document.getElementById('_nodesTbody');
   var countEl    = document.getElementById('_nodesCount');
@@ -352,8 +396,18 @@
         : '<span class="text-muted small">—</span>';
       var memHtml = nodeResourceBar(freememMb, memoryMb, freeGb + ' / ' + totalGb + ' GB');
 
+      // With a job list available, the node name opens it (a declarative
+      // Bootstrap trigger, so it works with OOD's Bootstrap when embedded too).
+      var nodeHtml = jobsSupported && row.node
+        ? '<button type="button" class="btn btn-link p-0 border-0 align-baseline text-decoration-none nodes-jobs-btn"' +
+          ' data-bs-toggle="modal" data-bs-target="#_nodeJobsModal"' +
+          ' title="Show the jobs running on ' + escHtml(row.node) + '">' +
+          '<code>' + escHtml(row.node) + '</code>' +
+          '<i class="fas fa-list-ul ms-1 text-secondary" style="font-size:.75em;" aria-hidden="true"></i></button>'
+        : '<code>' + escHtml(row.node || '') + '</code>';
+
       tr.innerHTML =
-        '<td><code>' + escHtml(row.node || '') + '</code></td>' +
+        '<td>' + nodeHtml + '</td>' +
         '<td>' + nodeStateBadge(row.state || '') + '</td>' +
         '<td>' + cpuHtml + '</td>' +
         '<td>' + memHtml + '</td>';
@@ -364,10 +418,117 @@
         tr.appendChild(td);
       });
 
+      var jobsBtn = tr.querySelector('.nodes-jobs-btn');
+      if (jobsBtn) {
+        jobsBtn.addEventListener('click', function() {
+          openNodeJobs({ row: row, cpu: cpu, memoryMb: memoryMb, gpus: gresTotal(totalGres.gpu) });
+        });
+        // A click anywhere else on the row does the same.
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', function(e) {
+          if (!e.target.closest('button, a, input, label')) jobsBtn.click();
+        });
+      }
+
       tbody.appendChild(tr);
       allRows.push(tr);
     });
   }
+
+  // Sum of a GRES type's counts over its subtypes ({ a100: { val: 2 } } -> 2).
+  function gresTotal(subs) {
+    return Object.keys(subs || {}).reduce(function(sum, sub) { return sum + (subs[sub].val || 0); }, 0);
+  }
+
+  // ── Jobs running on a node ──────────────────────────────────────
+  var nodeJobs      = null; // the node whose jobs the popup shows
+  var nodeJobsToken = 0;    // ignores a reply for a node clicked earlier
+
+  function openNodeJobs(node) {
+    nodeJobs = node;
+    document.getElementById('_nodeJobsName').textContent = node.row.node;
+    loadNodeJobs();
+  }
+
+  function loadNodeJobs() {
+    if (!nodeJobs) return;
+    var node      = nodeJobs;
+    var token     = ++nodeJobsToken;
+    var loading   = document.getElementById('_nodeJobsLoading');
+    var errorBox  = document.getElementById('_nodeJobsError');
+    var content   = document.getElementById('_nodeJobsContent');
+    var fetchedAt = document.getElementById('_nodeJobsFetchedAt');
+    loading.style.display  = '';
+    errorBox.style.display = 'none';
+    content.style.display  = 'none';
+    fetchedAt.textContent  = '';
+
+    var url = JOBS_URL + '?node=' + encodeURIComponent(node.row.node) +
+              (CLUSTER ? '&cluster=' + encodeURIComponent(CLUSTER) : '');
+    fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(data) {
+        if (token !== nodeJobsToken) return;
+        loading.style.display = 'none';
+        if (data.error) {
+          errorBox.textContent   = 'Could not list the jobs on ' + node.row.node + ': ' + data.error;
+          errorBox.style.display = '';
+          return;
+        }
+        renderNodeJobs(node, data);
+        content.style.display = '';
+        fetchedAt.textContent = 'Fetched at ' + data.fetched_at;
+      })
+      .catch(function(err) {
+        if (token !== nodeJobsToken) return;
+        loading.style.display  = 'none';
+        errorBox.textContent   = 'Failed to fetch the jobs on ' + node.row.node + ': ' + err.message;
+        errorBox.style.display = '';
+      });
+  }
+
+  function renderNodeJobs(node, data) {
+    var jobs = data.jobs || [];
+    var sum  = function(key) { return jobs.reduce(function(s, j) { return s + (j[key] || 0); }, 0); };
+    var mine = jobs.filter(function(j) { return j.mine; }).length;
+
+    // What the jobs on this node have been given, against what the node has.
+    // (Each part is one span: the summary is a flex row, which would otherwise
+    // pull "4" and "running jobs" apart.)
+    var parts = [nodeStateBadge(node.row.state || ''),
+                 '<strong>' + jobs.length + '</strong> running job' + (jobs.length === 1 ? '' : 's')];
+    if (jobs.length) {
+      parts.push(sum('cpus') + (node.cpu ? ' of ' + node.cpu.total : '') + ' CPUs');
+      if (node.gpus || sum('gpus')) parts.push(sum('gpus') + (node.gpus ? ' of ' + node.gpus : '') + ' GPUs');
+      if (sum('mem_mb')) parts.push(escHtml(ocJobs.formatMemory(sum('mem_mb'))) +
+                                    (node.memoryMb ? ' of ' + escHtml(ocJobs.formatMemory(node.memoryMb)) : '') + ' memory');
+    }
+    if (mine) parts.push('<span class="badge bg-success">' + mine + ' yours</span>');
+    document.getElementById('_nodeJobsSummary').innerHTML =
+      parts.map(function(part) { return '<span>' + part + '</span>'; }).join('<span class="text-muted">·</span>');
+    document.getElementById('_nodeJobsPrivacy').innerHTML = ocJobs.privacyNotice(!!data.staff);
+
+    // Jobs that span several nodes count all of their CPUs and memory, not only
+    // this node's share, so say so when there are any.
+    var multi = jobs.some(function(j) { return j.nodes > 1; });
+    ocJobs.renderTable(document.getElementById('_nodeJobsTable'), jobs, {
+      staff: !!data.staff, layout: 'node', emptyText: 'No jobs are running on this node.'
+    });
+    if (multi) {
+      var note = document.createElement('p');
+      note.className   = 'small text-muted mt-2 mb-0';
+      note.textContent = 'Jobs that run on more than one node show the CPUs, memory and GPUs of the whole job.';
+      document.getElementById('_nodeJobsTable').appendChild(note);
+    }
+
+    document.getElementById('_nodeJobsCmdSection').style.display = data.command ? '' : 'none';
+    document.getElementById('_nodeJobsCmd').textContent = data.command || '';
+  }
+
+  document.getElementById('_nodeJobsRefresh').addEventListener('click', loadNodeJobs);
 
   function showError(msg) {
     loadingEl.style.display = 'none';
@@ -393,6 +554,8 @@
       .then(function(data) {
         if (data.error) { showError(data.error); return; }
         var rows = data.rows || [];
+        jobsSupported = !!data.jobs_supported;
+        document.getElementById('_nodesJobsHint').style.display = jobsSupported ? '' : 'none';
 
         var uniqueStates = [], statesSeen = {};
         rows.forEach(function(r) {

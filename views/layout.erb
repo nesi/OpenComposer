@@ -211,6 +211,32 @@
         color: #000 !important;
       }
       <% end %>
+      <% if @dir_name == "jobs" %>
+      .jobs-group-row {
+        cursor: pointer;
+      }
+      .jobs-group-table th:first-child,
+      .jobs-group-table td:first-child {
+        padding-left: 1rem;
+      }
+      .jobs-group-table th:last-child,
+      .jobs-group-table td:last-child {
+        padding-right: 1rem;
+      }
+      /* Bootstrap paints table cells with an inset shadow in the state colour,
+         so the selection sets that colour rather than a background. */
+      .jobs-group-row.jobs-selected > td {
+        --bs-table-bg-state: rgba(0, 185, 228, 0.14);
+        --bs-table-accent-bg: rgba(0, 185, 228, 0.14);
+      }
+      .jobs-group-row.jobs-selected > td:first-child {
+        box-shadow: inset 3px 0 0 #00B9E4, inset 0 0 0 9999px rgba(0, 185, 228, 0.14);
+      }
+      .jobs-group-row:focus-visible {
+        outline: 2px solid #00B9E4;
+        outline-offset: -2px;
+      }
+      <% end %>
      </style>
   </head>
 
@@ -245,6 +271,11 @@
               <li class="nav-item">
                 <a href="<%= @script_name %>/nodes" class="nav-link <%= active?("nodes" == @dir_name) %>">Nodes</a>
               </li>
+              <% if @show_jobs %>
+                <li class="nav-item">
+                  <a href="<%= @script_name %>/jobs" class="nav-link <%= active?("jobs" == @dir_name) %>">Jobs</a>
+                </li>
+              <% end %>
             </ul>
 
             <ul class="navbar-nav ms-auto">

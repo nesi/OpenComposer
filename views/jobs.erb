@@ -1,0 +1,395 @@
+<div class="container-fluid mt-3 px-3">
+
+  <%# ── Header ─────────────────────────────────────────────────── %>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex align-items-center gap-2">
+      <h4 class="mb-0">Job Status</h4>
+      <button type="button" class="btn btn-sm btn-link p-0 text-secondary" style="line-height:1;"
+              data-bs-toggle="modal" data-bs-target="#_jobsInfoModal" title="About this page">
+        <i class="fas fa-circle-info" style="font-size:18px;vertical-align:middle;"></i>
+      </button>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <% if @conf.key?("clusters") && @conf["clusters"].size > 1 %>
+        <% @conf["clusters"].each_key do |name| %>
+          <div class="form-check form-check-inline mb-0">
+            <input class="form-check-input jobs-cluster-radio" type="radio"
+                   name="_jobsCluster" id="_jobsCluster_<%= ERB::Util.h(name) %>"
+                   value="<%= ERB::Util.h(name) %>" <%= 'checked' if @cluster_name == name %>>
+            <label class="form-check-label small" for="_jobsCluster_<%= ERB::Util.h(name) %>"><%= ERB::Util.h(name) %></label>
+          </div>
+        <% end %>
+      <% end %>
+      <% if @show_jobs %>
+        <span class="text-muted small" id="_jobsFetchedAt"></span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="_jobsRefresh">&#8635; Refresh</button>
+      <% end %>
+    </div>
+  </div>
+
+<% if @show_jobs %>
+
+  <%# ── Loading indicator ───────────────────────────────────────── %>
+  <div id="_jobsLoading" class="text-center py-5">
+    <div class="spinner-border text-secondary" role="status">
+      <span class="visually-hidden">Loading…</span>
+    </div>
+    <p class="text-muted mt-2 small">Fetching jobs…</p>
+  </div>
+
+  <%# ── Error ──────────────────────────────────────────────────── %>
+  <div id="_jobsErrorAlert" class="alert alert-danger" style="display:none;"></div>
+
+  <%# ── Content ─────────────────────────────────────────────────── %>
+  <div id="_jobsContent" style="display:none;">
+
+    <%# What this viewer can and cannot see %>
+    <p class="small mb-2" id="_jobsPrivacy"></p>
+
+    <%# Summary badges %>
+    <div class="d-flex gap-2 flex-wrap mb-3 align-items-center" id="_jobsSummary"></div>
+
+    <%# One card per category: its groups, with running and pending counts %>
+    <div class="row g-3 mb-3" id="_jobsCategories"></div>
+
+    <%# The jobs of the selected group %>
+    <div class="card border-secondary-subtle mb-3" id="_jobsDetail">
+      <div class="card-header py-2 d-flex flex-wrap align-items-center gap-2">
+        <h5 class="mb-0 fs-6" id="_jobsDetailTitle"></h5>
+      </div>
+      <div class="card-body">
+        <div id="_jobsDetailEmpty" class="text-muted small" style="display:none;"></div>
+        <div id="_jobsDetailLists">
+          <h6 class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+            <span>Running</span>
+            <span class="badge bg-primary" id="_jobsRunningCount"></span>
+            <span class="text-muted small fw-normal" id="_jobsRunningTotals"></span>
+          </h6>
+          <div id="_jobsRunning" class="mb-4"></div>
+          <h6 class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+            <span>Pending</span>
+            <span class="badge bg-secondary" id="_jobsPendingCount"></span>
+            <span class="text-muted small fw-normal" id="_jobsPendingTotals"></span>
+          </h6>
+          <div id="_jobsPending"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<% else %>
+
+  <div class="alert alert-secondary">The job list is not available on this site.</div>
+
+<% end %>
+
+</div>
+
+<%# ── "About this page" popup ─────────────────────────────────── %>
+<div class="modal fade" id="_jobsInfoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h5 class="modal-title fs-6">About the Job Status page</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body small">
+        <p>This page lists every job in the cluster's queue, from all users. <strong>Running</strong> jobs
+          have started; <strong>pending</strong> jobs are waiting to start. Each job is in one category:</p>
+        <ul>
+          <li><strong>GPU jobs</strong>: jobs that use or ask for GPUs, grouped by GPU type and partition.
+            A job that asked for GPUs without naming a type is listed under <em>Any type</em> until it starts.</li>
+          <li><strong>Large-memory jobs</strong>: jobs without GPUs that ask for more memory per node than a
+            standard node of their partition has, so they need one of its large-memory nodes.
+            <span id="_jobsInfoLargeMemory"></span></li>
+          <li><strong>Compute jobs</strong>: all other jobs, grouped by partition (architecture).</li>
+        </ul>
+        <p>A waiting job array is shown as one row, but the counts and totals include every task in it.</p>
+        <p class="mb-0">
+          Job IDs, job names, users and accounts are shown only to staff<%
+            groups = staff_groups(@conf)
+            unless groups.empty? %> (members of <%= groups.map { |g| "<code>#{ERB::Util.h(g)}</code>" }.join(" or ") %>)<% end %>.
+          You can see them for your own jobs. Everyone else sees only the state and resources of each job.
+        </p>
+        <div id="_jobsCmdSection" style="display:none;">
+          <p class="mt-3 mb-2">The list is built from the output of this command on the cluster:</p>
+          <pre class="border rounded p-2 mb-0" style="white-space:pre-wrap;word-break:break-all;"><code id="_jobsCmd"></code></pre>
+        </div>
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if @show_jobs %>
+<script src="<%= @script_name %>/jobs.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  var CLUSTER  = <%= @cluster_name.to_s.to_json.gsub('</', '<\/') %>;
+  var DATA_URL = '<%= @script_name %>/jobs/data';
+
+  var ICONS = { gpu: 'fas fa-microchip', large_memory: 'fas fa-memory', compute: 'fas fa-server' };
+
+  var loadingEl    = document.getElementById('_jobsLoading');
+  var errorEl      = document.getElementById('_jobsErrorAlert');
+  var contentEl    = document.getElementById('_jobsContent');
+  var fetchedEl    = document.getElementById('_jobsFetchedAt');
+  var refreshBtn   = document.getElementById('_jobsRefresh');
+  var privacyEl    = document.getElementById('_jobsPrivacy');
+  var summaryEl    = document.getElementById('_jobsSummary');
+  var categoriesEl = document.getElementById('_jobsCategories');
+  var detailEl     = document.getElementById('_jobsDetail');
+
+  var esc = ocJobs.esc;
+  var state = { data: null, category: null, group: null, token: 0 };
+
+  function plural(n, word) {
+    return ocJobs.formatNumber(n) + ' ' + word + (n === 1 ? '' : 's');
+  }
+
+  // "12 CPUs · 6 GPUs · 233 GB memory" for a running or pending block.
+  function totalsText(t) {
+    if (!t || !t.jobs) return '';
+    var parts = [plural(t.cpus, 'CPU')];
+    if (t.gpus) parts.push(plural(t.gpus, 'GPU'));
+    if (t.mem_mb) parts.push(ocJobs.formatMemory(t.mem_mb) + ' memory');
+    return parts.join(' · ');
+  }
+
+  // The resource a category is about, as shown under its counts.
+  function resourceText(category, t) {
+    if (!t || !t.jobs) return '';
+    if (category.resource === 'gpus')   return plural(t.gpus, 'GPU');
+    if (category.resource === 'mem_mb') return ocJobs.formatMemory(t.mem_mb);
+    return plural(t.cpus, 'CPU');
+  }
+
+  // "A100 · genoa" -> bold type, muted partition.
+  function groupLabelHtml(label) {
+    var i = label.indexOf(' · ');
+    if (i < 0) return esc(label);
+    return '<span class="fw-semibold">' + esc(label.slice(0, i)) + '</span> ' +
+           '<span class="text-muted small">' + esc(label.slice(i + 3)) + '</span>';
+  }
+
+  function findGroup(categoryKey, groupLabel) {
+    var category = (state.data.categories || []).filter(function(c) { return c.key === categoryKey; })[0];
+    if (!category) return null;
+    var group = category.groups.filter(function(g) { return g.label === groupLabel; })[0];
+    return group ? { category: category, group: group } : null;
+  }
+
+  // ── Selection, kept in the URL hash so a reload shows the same group ──────
+  function readHash() {
+    var m = (window.location.hash || '').match(/^#([a-z_]+)\/(.+)$/);
+    if (!m) return null;
+    try { return { category: m[1], group: decodeURIComponent(m[2]) }; } catch (e) { return null; }
+  }
+
+  function writeHash() {
+    var hash = '#' + state.category + '/' + encodeURIComponent(state.group);
+    try { window.history.replaceState(null, '', hash); } catch (e) { window.location.hash = hash; }
+  }
+
+  // Keep the current group if it is still in the queue; otherwise the one in the
+  // URL; otherwise the first group of the first category that has jobs.
+  function pickSelection() {
+    if (state.category && findGroup(state.category, state.group)) return;
+    var fromHash = readHash();
+    if (fromHash && findGroup(fromHash.category, fromHash.group)) {
+      state.category = fromHash.category;
+      state.group    = fromHash.group;
+      return;
+    }
+    state.category = state.group = null;
+    (state.data.categories || []).some(function(c) {
+      if (!c.groups.length) return false;
+      state.category = c.key;
+      state.group    = c.groups[0].label;
+      return true;
+    });
+  }
+
+  // ── Drawing ───────────────────────────────────────────────────────────────
+  function renderSummary(data) {
+    var mineRunning = 0, minePending = 0;
+    (data.categories || []).forEach(function(c) {
+      c.groups.forEach(function(g) {
+        g.running.list.forEach(function(j) { if (j.mine) mineRunning += 1; });
+        g.pending.list.forEach(function(j) { if (j.mine) minePending += Math.max(j.tasks || 1, 1); });
+      });
+    });
+    var html = '<span class="badge bg-dark" style="font-size:.85rem;">' + plural(data.running + data.pending, 'job') + ' in the queue</span>' +
+               '<span class="badge bg-primary">' + ocJobs.formatNumber(data.running) + ' running</span>' +
+               '<span class="badge bg-secondary">' + ocJobs.formatNumber(data.pending) + ' pending</span>';
+    if (mineRunning || minePending) {
+      html += '<span class="badge bg-success">Yours: ' + ocJobs.formatNumber(mineRunning) + ' running · ' +
+              ocJobs.formatNumber(minePending) + ' pending</span>';
+    }
+    summaryEl.innerHTML = html;
+  }
+
+  function renderCategories(data) {
+    categoriesEl.innerHTML = (data.categories || []).map(function(c) {
+      var rows = c.groups.map(function(g) {
+        var selected = c.key === state.category && g.label === state.group;
+        return '<tr class="jobs-group-row' + (selected ? ' jobs-selected' : '') + '" tabindex="0"' +
+               ' data-category="' + esc(c.key) + '" data-group="' + esc(g.label) + '"' +
+               ' title="Show these jobs">' +
+               '<td>' + groupLabelHtml(g.label) + '</td>' +
+               '<td class="text-end text-nowrap">' + ocJobs.formatNumber(g.running.jobs) +
+                 '<div class="small text-muted">' + esc(resourceText(c, g.running)) + '</div></td>' +
+               '<td class="text-end text-nowrap">' + ocJobs.formatNumber(g.pending.jobs) +
+                 '<div class="small text-muted">' + esc(resourceText(c, g.pending)) + '</div></td>' +
+               '</tr>';
+      }).join('');
+
+      var body = c.groups.length
+        ? '<table class="table table-sm table-hover mb-0 align-middle">' +
+            '<thead class="table-light"><tr>' +
+              '<th class="ps-3">' + esc(c.group_label) + '</th>' +
+              '<th class="text-end">Running</th>' +
+              '<th class="text-end pe-3">Pending</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table>'
+        : '<p class="text-muted small mb-0 p-3">' + esc(c.empty || 'None in the queue.') + '</p>';
+
+      return '<div class="col-lg-4">' +
+               '<div class="card h-100 border-secondary-subtle">' +
+                 '<div class="card-header py-2 d-flex justify-content-between align-items-center gap-2">' +
+                   '<span class="fw-semibold"><i class="' + ICONS[c.key] + ' text-secondary me-2" aria-hidden="true"></i>' + esc(c.label) + '</span>' +
+                   '<span class="d-flex gap-1">' +
+                     '<span class="badge bg-primary">' + ocJobs.formatNumber(c.running) + ' running</span>' +
+                     '<span class="badge bg-secondary">' + ocJobs.formatNumber(c.pending) + ' pending</span>' +
+                   '</span>' +
+                 '</div>' +
+                 '<div class="card-body p-0 jobs-group-table">' + body + '</div>' +
+                 (c.note ? '<div class="card-footer small text-muted">' + esc(c.note) + '</div>' : '') +
+               '</div>' +
+             '</div>';
+    }).join('');
+
+    Array.prototype.forEach.call(categoriesEl.querySelectorAll('.jobs-group-row'), function(tr) {
+      tr.addEventListener('click', function() { select(tr.dataset.category, tr.dataset.group, true); });
+      tr.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(tr.dataset.category, tr.dataset.group, true); }
+      });
+    });
+  }
+
+  function renderDetail() {
+    var titleEl = document.getElementById('_jobsDetailTitle');
+    var emptyEl = document.getElementById('_jobsDetailEmpty');
+    var listsEl = document.getElementById('_jobsDetailLists');
+    var found   = state.category ? findGroup(state.category, state.group) : null;
+
+    if (!found) {
+      titleEl.textContent   = 'Jobs';
+      emptyEl.textContent   = 'There are no jobs in the queue.';
+      emptyEl.style.display = '';
+      listsEl.style.display = 'none';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listsEl.style.display = '';
+
+    var c = found.category, g = found.group, staff = !!state.data.staff;
+    titleEl.innerHTML = '<i class="' + ICONS[c.key] + ' text-secondary me-2" aria-hidden="true"></i>' +
+                        esc(c.label) + ' <span class="text-muted">›</span> ' + groupLabelHtml(g.label);
+
+    document.getElementById('_jobsRunningCount').textContent  = ocJobs.formatNumber(g.running.jobs);
+    document.getElementById('_jobsRunningTotals').textContent = totalsText(g.running);
+    document.getElementById('_jobsPendingCount').textContent  = ocJobs.formatNumber(g.pending.jobs);
+    document.getElementById('_jobsPendingTotals').textContent = totalsText(g.pending);
+
+    ocJobs.renderTable(document.getElementById('_jobsRunning'), g.running.list,
+                       { staff: staff, layout: 'running', emptyText: 'None of these jobs are running.' });
+    ocJobs.renderTable(document.getElementById('_jobsPending'), g.pending.list,
+                       { staff: staff, layout: 'pending', emptyText: 'None of these jobs are waiting to start.' });
+  }
+
+  function select(categoryKey, groupLabel, scroll) {
+    if (!findGroup(categoryKey, groupLabel)) return;
+    state.category = categoryKey;
+    state.group    = groupLabel;
+    writeHash();
+    Array.prototype.forEach.call(categoriesEl.querySelectorAll('.jobs-group-row'), function(tr) {
+      tr.classList.toggle('jobs-selected', tr.dataset.category === categoryKey && tr.dataset.group === groupLabel);
+    });
+    renderDetail();
+    // Bring the job list into view if it starts below the window.
+    if (scroll && detailEl.getBoundingClientRect().top > window.innerHeight - 120) {
+      detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function render() {
+    var data = state.data;
+    loadingEl.style.display = 'none';
+    contentEl.style.display = '';
+    fetchedEl.textContent   = 'Fetched at ' + data.fetched_at;
+    privacyEl.innerHTML     = ocJobs.privacyNotice(!!data.staff);
+
+    var largeMemory = (data.categories || []).filter(function(c) { return c.key === 'large_memory'; })[0];
+    document.getElementById('_jobsInfoLargeMemory').textContent = largeMemory && largeMemory.note ? largeMemory.note : '';
+    document.getElementById('_jobsCmdSection').style.display = data.command ? '' : 'none';
+    document.getElementById('_jobsCmd').textContent = data.command || '';
+
+    pickSelection();
+    renderSummary(data);
+    renderCategories(data);
+    renderDetail();
+  }
+
+  function showError(message) {
+    loadingEl.style.display = 'none';
+    errorEl.textContent     = message;
+    errorEl.style.display   = '';
+  }
+
+  // ── Fetching ──────────────────────────────────────────────────────────────
+  function load() {
+    var token = ++state.token;
+    refreshBtn.disabled   = true;
+    errorEl.style.display = 'none';
+    var url = DATA_URL + (CLUSTER ? '?cluster=' + encodeURIComponent(CLUSTER) : '');
+    fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(data) {
+        if (token !== state.token) return;
+        if (data.error) {
+          showError('Could not list the jobs: ' + data.error);
+          return;
+        }
+        state.data = data;
+        render();
+      })
+      .catch(function(err) {
+        if (token === state.token) showError('Failed to fetch the job list: ' + err.message);
+      })
+      .then(function() {
+        if (token === state.token) refreshBtn.disabled = false;
+      });
+  }
+
+  refreshBtn.addEventListener('click', load);
+  document.querySelectorAll('.jobs-cluster-radio').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      var url = new URL(window.location.href);
+      url.searchParams.set('cluster', radio.value);
+      url.hash = '';
+      window.location.href = url.toString();
+    });
+  });
+
+  load();
+})();
+</script>
+<% end %>

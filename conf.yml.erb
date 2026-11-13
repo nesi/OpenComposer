@@ -72,7 +72,42 @@ history:
     label: "Output File"
   OC_HISTORY_ERROR_FILE:
     label: "Error File"
-  
+
+## Jobs page and the job list of a node
+# The Jobs tab lists every job in the queue by category (GPU jobs by GPU type
+# and partition, large-memory jobs, and compute jobs by architecture), each split
+# into running and pending. Clicking a node on the Nodes page lists the jobs
+# running on it. Set show_jobs to false to remove both. (Slurm only.)
+show_jobs: true
+
+# Job IDs, job names, usernames and accounts are shown only to members of these
+# groups — and to everyone for their own jobs. All other viewers see each job's
+# state and resources, but nothing that says whose job it is. These are Unix
+# groups as this web server resolves them (for example IPA groups through SSSD).
+# With no group listed, nobody is treated as staff.
+staff_groups:
+  - "nesi-staff"
+
+# A job without GPUs is listed under "Large-memory jobs" when it asks for more
+# memory per node than a threshold. By default each partition's threshold is
+# taken from the cluster: the memory of the partition's standard (most common,
+# non-GPU) node, so that a large-memory job is one that needs a bigger node.
+# To set it by hand, give a number of GB for every partition, or values for some
+# partitions (the rest are still taken from the cluster, unless a "default" is
+# given). A partition made only of large-memory nodes can be given 0, so that
+# every job in it is listed as large-memory.
+#jobs_large_memory_gb: 512
+#jobs_large_memory_gb:
+#  genoa:   358
+#  hugemem: 0
+
+# Compute and large-memory jobs are grouped by architecture, which is taken from
+# the job's partition. Partitions can be given a display name here; partitions
+# given the same name are grouped together.
+#jobs_architectures:
+#  genoa: "AMD Genoa"
+#  milan: "AMD Milan"
+
 ## Layout
 favicon:                 "favicon.ico"             # Browser tab icon (file in the public/ dir). Set to "" to disable.
 

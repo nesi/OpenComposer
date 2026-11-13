@@ -464,6 +464,118 @@ class Slurm < Scheduler
     return nil, e.message, nil
   end
 
+  # The squeue columns behind the Jobs page and the per-node job list, as
+  # [key, squeue --Format field, width].
+  #
+  # squeue --Format prints fixed-width columns with nothing between them, so each
+  # line is cut by byte position (the same approach as sinfo_nodes). That needs no
+  # delimiter to survive the SSH hop, and no delimiter a job name could contain.
+  #
+  # THE ORDER MATTERS FOR PRIVACY. The username and account come first: they are
+  # short and set by administrators, so they always fit their column. Everything
+  # after them, up to the job ID, is scheduler-generated and says nothing about
+  # whose job it is. The job ID and the free-text job name come last. So if a
+  # value were ever wider than its column and squeue did not cut it, the columns
+  # to its right would slide — but only non-identifying data could slide into a
+  # column that every user is shown, never a username, job ID or job name.
+  SQUEUE_JOB_FIELDS = [
+    ["user",          "UserName",       40],
+    ["account",       "Account",        40],
+    ["state",         "State",          20],
+    ["partition",     "Partition",      60],
+    ["cpus",          "NumCPUs",        12],
+    ["nodes",         "NumNodes",       10],
+    ["time_used",     "TimeUsed",       16],
+    ["time_limit",    "TimeLimit",      16],
+    ["submit",        "SubmitTime",     22],
+    ["start",         "StartTime",      22],
+    ["priority",      "PriorityLong",   14],
+    ["reason",        "Reason",         40],
+    ["tres_per_node", "tres-per-node",  80],
+    ["tres",          "tres-alloc",    300],
+    ["nodelist",      "NodeList",      300],
+    ["id",            "JobArrayID",     60],
+    ["name",          "Name",          200]
+  ].freeze
+
+  def supports_cluster_jobs?
+    true
+  end
+
+  # Fetch every user's jobs in the queue via squeue (pending, running, suspended
+  # and completing jobs — squeue's default set of states). With node:, only the
+  # jobs allocated to that node. A pending job array is one entry; each running
+  # array task is its own entry.
+  # Returns [jobs, nil, command] or [nil, error_message, command]; each job is a
+  # Hash keyed as in SQUEUE_JOB_FIELDS, every value a stripped String.
+  def cluster_jobs(bin = nil, bin_overrides = nil, ssh_wrapper = nil, node: nil)
+    # The node name goes into a command line that a remote shell will parse.
+    unless node.nil? || node.to_s.match?(/\A[A-Za-z0-9][A-Za-z0-9._-]*\z/)
+      return nil, "Invalid node name.", nil
+    end
+
+    squeue  = get_command_path("squeue", bin, bin_overrides)
+    format  = SQUEUE_JOB_FIELDS.map { |_key, field, width| "#{field}:#{width}" }.join(",")
+    command = [ssh_wrapper, SLURM_ENV, squeue, "--noheader", "--Format=#{format}",
+               (node ? "--nodelist=#{node}" : nil)].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    # The error is shown to every viewer, so it never includes stdout: on a
+    # failure part way through, that could hold other people's jobs.
+    unless status.success?
+      message = to_utf8(stderr).strip
+      return nil, (message.empty? ? "squeue failed (exit status #{status.exitstatus})." : message), command
+    end
+
+    jobs = stdout.b.each_line.filter_map do |line|
+      line = line.chomp
+      next if line.strip.empty?
+
+      # squeue pads and cuts each column by bytes, so cut by bytes and only
+      # then read the bytes as UTF-8. scrub drops a character that the column
+      # width cut in half. (to_utf8 would drop every non-ASCII character.)
+      pos = 0
+      SQUEUE_JOB_FIELDS.each_with_object({}) do |(key, _field, width), job|
+        job[key] = line.byteslice(pos, width).to_s.dup.force_encoding(Encoding::UTF_8).scrub("").strip
+        pos += width
+      end
+    end
+
+    [jobs, nil, command]
+  rescue => e
+    return nil, e.message, nil
+  end
+
+  # Memory of the nodes in each partition via sinfo, grouped by identical node
+  # configuration (--exact stops sinfo merging different sizes into "1000+").
+  # Returns [{ partition => [{ "memory_mb", "nodes", "gpu" }] }, nil], or
+  # [{}, error_message].
+  def partition_node_memory(bin = nil, bin_overrides = nil, ssh_wrapper = nil)
+    sinfo   = get_command_path("sinfo", bin, bin_overrides)
+    widths  = [60, 20, 12, 200]
+    command = [ssh_wrapper, sinfo, "--noheader", "--exact",
+               "--Format=PartitionName:60,Memory:20,Nodes:12,Gres:200"].compact.join(" ")
+    stdout, stderr, status = Open3.capture3(command)
+    return {}, to_utf8([stdout, stderr].join(" ")).strip unless status.success?
+
+    partitions = {}
+    to_utf8(stdout).each_line do |line|
+      next if line.strip.empty?
+
+      pos = 0
+      partition, memory, nodes, gres = widths.map { |w| v = line[pos, w].to_s.strip; pos += w; v }
+      next if partition.empty? || memory.to_i <= 0 || nodes.to_i <= 0
+
+      (partitions[partition] ||= []) << {
+        "memory_mb" => memory.to_i,
+        "nodes"     => nodes.to_i,
+        "gpu"       => gres.split(",").any? { |g| g.strip.match?(/\Agpu(\z|[:(])/) }
+      }
+    end
+    [partitions, nil]
+  rescue => e
+    return {}, e.message
+  end
+
   # Fetch the batch script for a job via sacct --batch-script (-B).
   # Returns [script_content, nil] or [nil, nil] when not available.
   def batch_script(job_id, bin = nil, bin_overrides = nil, ssh_wrapper = nil)

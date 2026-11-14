@@ -300,7 +300,7 @@ class Slurm < Scheduler
     available = help_status.success? ? help_out.split : []
 
     wanted = %w[JobID JobName Partition State Submit Start End Elapsed
-                WorkDir Account TotalCPU AllocCPUS ReqMem ExitCode NodeList Stdout Stderr SubmitLine]
+                WorkDir Account TotalCPU AllocCPUS ReqMem ExitCode NodeList Stdout Stderr SubmitLine Priority]
     # Use case-insensitive match so Slurm variants (Stdout vs StdOut) are accepted.
     fields = available.empty? ? wanted : wanted.select { |f| available.any? { |a| a.casecmp?(f) } }
 
@@ -403,25 +403,27 @@ class Slurm < Scheduler
     # Use -o short format (same style as NeSI's qme alias) with @ as the field
     # separator. @ is not a shell metacharacter so it survives SSH wrapping
     # without any quoting, unlike | which gets interpreted as a pipe operator
-    # by the remote shell. %i=JOBID %j=NAME %P=PARTITION %T=STATE %V=SUBMIT %S=START
+    # by the remote shell. %i=JOBID %P=PARTITION %T=STATE %V=SUBMIT %S=START
+    # %Q=PRIORITY %j=NAME. The name goes last, so an @ in it stays in the name.
     command = [ssh_wrapper, SLURM_ENV, squeue,
                "--user=#{user}", "--noheader",
-               "-o", "%i@%j@%P@%T@%V@%S"].compact.join(" ")
+               "-o", "%i@%P@%T@%V@%S@%Q@%j"].compact.join(" ")
     stdout, stderr, status = Open3.capture3(command)
     stdout = to_utf8(stdout)
     return [[], [stdout, stderr].join(" ").strip] unless status.success?
 
     jobs = []
     stdout.lines.each do |line|
-      parts = line.chomp.split('@', 6)
-      next if parts.size < 4
+      parts = line.chomp.split('@', 7)
+      next if parts.size < 3
       jobs << {
         "JobID"     => parts[0].to_s.strip,
-        "JobName"   => parts[1].to_s.strip,
-        "Partition" => parts[2].to_s.strip,
-        "State"     => parts[3].to_s.strip,
-        "Submit"    => parts[4].to_s.strip,
-        "Start"     => parts[5].to_s.strip,
+        "JobName"   => parts[6].to_s.strip,
+        "Partition" => parts[1].to_s.strip,
+        "State"     => parts[2].to_s.strip,
+        "Submit"    => parts[3].to_s.strip,
+        "Start"     => parts[4].to_s.strip,
+        "Priority"  => parts[5].to_s.strip,
         "End"       => "",
         "StdOut"    => "",
         "StdErr"    => ""

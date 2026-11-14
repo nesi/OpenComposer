@@ -183,6 +183,8 @@ var ocJobs = (function() {
   function renderTable(container, jobs, options) {
     options = options || {};
     var keys      = identityColumns(jobs, !!options.staff).concat(LAYOUTS[options.layout] || LAYOUTS.running);
+    // Staff also get each job's priority (the pending lists show it to everyone).
+    if (options.staff && keys.indexOf('priority') < 0) keys.push('priority');
     var pageSize  = options.pageSize || 50;
     var rows      = jobs.slice();
     var shown     = pageSize;

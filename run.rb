@@ -630,7 +630,11 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
     (squeue_jobs || []).each do |j|
       jid = j["JobID"].to_s.strip
       next unless valid_oc_job_id?(jid, scheduler_s)
-      next if sacct_map.key?(jid)
+      if sacct_map.key?(jid)
+        # A job still in the queue: its priority now, not the one sacct recorded.
+        sacct_map[jid]["Priority"] = j["Priority"] unless j["Priority"].to_s.empty?
+        next
+      end
       sacct_map[jid] = j
     end
 
@@ -663,6 +667,11 @@ def show_website(job_id = nil, error_msg = nil, error_params = nil, script_path 
       else
         { "key" => k, "job_key" => k, "label" => label, "type" => "text", "sortable" => false, "responsive" => true }
       end
+    end
+    # Staff also get each job's priority, as on the Jobs and Nodes pages.
+    if staff_user?(@conf)
+      @conf_history_cols << { "key" => "OC_HISTORY_PRIORITY", "job_key" => "Priority", "label" => "Priority",
+                              "type" => "number", "sortable" => true, "responsive" => false }
     end
     extra_field_keys = history_conf.keys.reject { |k| k.start_with?("OC_HISTORY_") }
 

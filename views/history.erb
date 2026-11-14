@@ -240,7 +240,7 @@
           <th class="text-nowrap"><%= output_history_sort_header("Script Name", HEADER_SCRIPT_NAME) %></th>
           <% (@conf_history_cols || []).each do |col| %>
           <% _col_cls = col["responsive"] ? " d-none d-lg-table-cell" : "" %>
-          <th class="text-nowrap<%= _col_cls %>">
+          <th class="text-nowrap<%= ' text-end' if col['type'] == 'number' %><%= _col_cls %>">
             <% if col["sortable"] %><%= output_history_sort_header(col["label"], col["job_key"]) %><% else %><%= escape_html(col["label"]) %><% end %>
           </th>
           <% end %>
@@ -301,6 +301,9 @@
             <% case col["type"]
                when "job_name" %>
             <td class="text-wrap text-break<%= _col_cls %>"><%= output_text(job[col["job_key"]], job_name_filter) %></td>
+            <% when "number" %>
+            <% _n = job[col["job_key"]].to_s.strip %>
+            <td class="text-end text-nowrap<%= _col_cls %>"><%= _n.match?(/\A\d+\z/) ? _n.to_i.to_s.reverse.scan(/\d{1,3}/).join(",").reverse : (_n.empty? ? '<span class="text-muted">—</span>' : escape_html(_n)) %></td>
             <% when "file_link" %>
             <td class="text-wrap text-break<%= _col_cls %>">
               <% _fp = job[col["job_key"]].to_s.strip %>

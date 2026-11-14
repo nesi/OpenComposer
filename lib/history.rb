@@ -474,6 +474,8 @@ helpers do
                jobs.sort_by { |j| [j["Start"].to_s, history_job_id_sort_key(j[JOB_ID])] }
              when "End"
                jobs.sort_by { |j| [j["End"].to_s, history_job_id_sort_key(j[JOB_ID])] }
+             when "Priority"
+               jobs.sort_by { |j| [j["Priority"].to_s.strip.empty? ? -1 : j["Priority"].to_i, history_job_id_sort_key(j[JOB_ID])] }
              when JOB_STATUS_ID
                status_order = {
                  JOB_STATUS["queued"]    => 0,
@@ -516,6 +518,7 @@ helpers do
         "End"                  => normalize_time_for_db(sacct_row&.[]("End")),
         "StdOut"               => sacct_row&.[]("StdOut"),
         "StdErr"               => sacct_row&.[]("StdErr"),
+        "Priority"             => sacct_row&.[]("Priority"),
         "_has_db"              => db1_row ? 1 : 0
       }.merge(
         extra_sacct_fields.each_with_object({}) { |f, h| h[f] = sacct_row&.[](f) }
@@ -558,6 +561,7 @@ helpers do
       [JOB_NAME,               "Job Name"],
       ["Start",                "Start Time"],
       ["End",                  "End Time"],
+      ["Priority",             "Priority"],
       [JOB_STATUS_ID,          "Status"]
     ]
   end

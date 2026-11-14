@@ -45,9 +45,14 @@
   and for a pending job only Slurm's reason code (free-text reasons become *Other*). The
   filtering happens on the server, so hidden values never reach the page. Group membership is
   looked up on the OnDemand host (e.g. IPA groups through SSSD).
+- **Priority for staff** — staff see each job's priority in every job list: the running and
+  pending lists on the Jobs page, a node's job list, and the History page. (The pending lists
+  show it to everyone, as before.) On History, a job still in the queue shows its priority now;
+  a finished job shows the one `sacct` recorded.
 - New settings in `conf.yml.erb`: `show_jobs`, `staff_groups`, `jobs_large_memory_gb` and
   `jobs_architectures`. The large-memory threshold of each partition is worked out from the
-  cluster unless set by hand.
+  cluster unless set by hand. Mahuika's `hugemem` partition is set to 0, so every job in it is
+  a large-memory job.
 - New routes: `GET /jobs`, `GET /jobs/data` and `GET /nodes/jobs`. Slurm only; for other
   schedulers the Jobs tab and the node click-through are not shown.
 

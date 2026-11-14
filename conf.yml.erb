@@ -96,10 +96,16 @@ staff_groups:
 # partitions (the rest are still taken from the cluster, unless a "default" is
 # given). A partition made only of large-memory nodes can be given 0, so that
 # every job in it is listed as large-memory.
-#jobs_large_memory_gb: 512
-#jobs_large_memory_gb:
-#  genoa:   358
-#  hugemem: 0
+# For example:
+#   jobs_large_memory_gb: 512
+# or
+#   jobs_large_memory_gb:
+#     genoa:   358
+#     hugemem: 0
+# On Mahuika, hugemem is made only of large-memory nodes, so every job in it is
+# a large-memory job; the other partitions' thresholds come from the cluster.
+jobs_large_memory_gb:
+  hugemem: 0
 
 # Compute and large-memory jobs are grouped by architecture, which is taken from
 # the job's partition. Partitions can be given a display name here; partitions
